@@ -1,0 +1,260 @@
+import { useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { fetchModule } from '@/api/systems.api'
+import { fetchLogicNodes, createLogicNode, updateLogicNode, deleteLogicNode } from '@/api/logicNodes.api'
+import type { LogicNode, CreateLogicNodeInput, UpdateLogicNodeInput } from '@/types/logic-node.types'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog'
+import { LogicNodeEditor } from '@/components/editor/LogicNodeEditor'
+import { toast } from 'sonner'
+import { ArrowLeft, Plus, Pencil, Trash2, FileText, Network } from 'lucide-react'
+
+export function ModuleDetailPage() {
+  const { moduleId } = useParams<{ moduleId: string }>()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const [isEditorOpen, setIsEditorOpen] = useState(false)
+  const [editingNode, setEditingNode] = useState<LogicNode | null>(null)
+
+  const { data: module, isLoading: loadingModule } = useQuery({
+    queryKey: ['module', moduleId],
+    queryFn: () => fetchModule(moduleId!)
+  })
+
+  const { data: nodes = [], isLoading: loadingNodes } = useQuery({
+    queryKey: ['logicNodes', moduleId],
+    queryFn: () => fetchLogicNodes(moduleId!)
+  })
+
+  const createMutation = useMutation({
+    mutationFn: (data: CreateLogicNodeInput) => createLogicNode(moduleId!, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['logicNodes', moduleId] })
+      toast.success('创建成功')
+      setIsEditorOpen(false)
+    },
+    onError: (error) => {
+      toast.error(error.message || '创建失败')
+    }
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateLogicNodeInput }) =>
+      updateLogicNode(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['logicNodes', moduleId] })
+      queryClient.invalidateQueries({ queryKey: ['logicNode', editingNode?.id] })
+      toast.success('更新成功')
+      setIsEditorOpen(false)
+      setEditingNode(null)
+    },
+    onError: (error) => {
+      toast.error(error.message || '更新失败')
+    }
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteLogicNode,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['logicNodes', moduleId] })
+      toast.success('删除成功')
+    },
+    onError: (error) => {
+      toast.error(error.message || '删除失败')
+    }
+  })
+
+  const handleSave = (data: CreateLogicNodeInput | UpdateLogicNodeInput) => {
+    if (editingNode) {
+      updateMutation.mutate({ id: editingNode.id, data: data as UpdateLogicNodeInput })
+    } else {
+      createMutation.mutate(data as CreateLogicNodeInput)
+    }
+  }
+
+  const handleEdit = (node: LogicNode) => {
+    setEditingNode(node)
+    setIsEditorOpen(true)
+  }
+
+  const handleDelete = (nodeId: string) => {
+    if (confirm('确定要删除此节点吗？')) {
+      deleteMutation.mutate(nodeId)
+    }
+  }
+
+  const openNewNodeDialog = () => {
+    setEditingNode(null)
+    setIsEditorOpen(true)
+  }
+
+  // 转换 LogicNode 为 LogicNodeForm 类型
+  const getNodeForm = (node: LogicNode) => ({
+    name: node.name,
+    summary: node.summary || undefined,
+    trigger: node.trigger || undefined,
+    dependsOn: node.dependsOn || undefined,
+    mainFlow: node.mainFlow || undefined,
+    branches: node.branches || [],
+    edgeCases: node.edgeCases || [],
+    codeRef: node.codeRef || undefined,
+    tags: node.tags || [],
+    notes: node.notes || undefined
+  })
+
+  if (loadingModule) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center text-gray-500">加载中...</div>
+      </div>
+    )
+  }
+
+  if (!module) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center text-gray-500">模块不存在</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white border-b">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="sm" onClick={() => navigate(`/systems/${module.systemId}`)}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              返回
+            </Button>
+            <div>
+              <h1 className="text-lg font-bold">{module.name}</h1>
+              <p className="text-sm text-gray-500">{module.description || module.slug}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate(`/modules/${moduleId}/graph`)}>
+              <Network className="h-4 w-4 mr-2" />
+              图谱视图
+            </Button>
+            <Button onClick={openNewNodeDialog}>
+              <Plus className="h-4 w-4 mr-2" />
+              创建节点
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-8">
+        {loadingNodes ? (
+          <div className="text-center text-gray-500 py-12">加载节点列表...</div>
+        ) : nodes.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-lg border">
+            <FileText className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">暂无逻辑节点</h3>
+            <p className="text-gray-500 mb-4">创建第一个逻辑节点来开始管理业务规则</p>
+            <Button onClick={openNewNodeDialog}>
+              <Plus className="h-4 w-4 mr-2" />
+              创建节点
+            </Button>
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {nodes.map((node) => (
+              <Card key={node.id} className="hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg">{node.name}</CardTitle>
+                      <div className="flex gap-2 mt-2">
+                        <Badge variant={
+                          node.status === 'APPROVED' ? 'default' :
+                          node.status === 'REVIEW' ? 'outline' :
+                          node.status === 'DEPRECATED' ? 'destructive' :
+                          'secondary'
+                        }>
+                          {node.status === 'DRAFT' && '草稿'}
+                          {node.status === 'REVIEW' && '待评审'}
+                          {node.status === 'APPROVED' && '已确认'}
+                          {node.status === 'DEPRECATED' && '已废弃'}
+                        </Badge>
+                        <Badge variant={
+                          node.priority === 'HIGH' ? 'destructive' :
+                          node.priority === 'LOW' ? 'secondary' :
+                          'outline'
+                        }>
+                          {node.priority === 'HIGH' && '高优先级'}
+                          {node.priority === 'NORMAL' && '普通'}
+                          {node.priority === 'LOW' && '低优先级'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+                {node.summary && (
+                  <CardContent className="pt-0">
+                    <p className="text-sm text-gray-600 line-clamp-2 mb-4">{node.summary}</p>
+                    <div className="flex items-center justify-between text-sm text-gray-500">
+                      <span>
+                        分支：{node.branches?.length || 0} |
+                        边界：{node.edgeCases?.length || 0}
+                      </span>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(node)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(node.id)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                )}
+              </Card>
+            ))}
+          </div>
+        )}
+      </main>
+
+      {/* 节点编辑器 Dialog */}
+      <Dialog open={isEditorOpen} onOpenChange={setIsEditorOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingNode ? '编辑节点' : '创建新节点'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingNode
+                ? `编辑：${editingNode.name}`
+                : `在"${module.name}"下创建逻辑节点`}
+            </DialogDescription>
+          </DialogHeader>
+          <LogicNodeEditor
+            node={editingNode ? getNodeForm(editingNode) : undefined}
+            onSave={handleSave}
+            onCancel={() => setIsEditorOpen(false)}
+            isLoading={createMutation.isPending || updateMutation.isPending}
+          />
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}

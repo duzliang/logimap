@@ -1,0 +1,178 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── 用户与团队 ──────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  memberships  TeamMember[]
+  createdNodes LogicNode[] @relation("CreatedBy")
+  updatedNodes LogicNode[] @relation("UpdatedBy")
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members  TeamMember[]
+  systems  System[]
+}
+
+model TeamMember {
+  id        String     @id @default(cuid())
+  role      TeamRole   @default(MEMBER)
+  joinedAt  DateTime   @default(now())
+
+  userId    String
+  teamId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team      Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, teamId])
+}
+
+enum TeamRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+// ── 核心业务模型 ─────────────────────────────────
+
+model System {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String
+  description String?
+  icon        String?  @default("layers")
+  color       String?  @default("#1A56A8")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  teamId      String
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  modules     Module[]
+
+  @@unique([teamId, slug])
+}
+
+model Module {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String
+  description String?
+  order       Int      @default(0)
+  color       String?  @default("#0F6E56")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  systemId    String
+  system      System   @relation(fields: [systemId], references: [id], onDelete: Cascade)
+  logicNodes  LogicNode[]
+
+  @@unique([systemId, slug])
+}
+
+model LogicNode {
+  id          String          @id @default(cuid())
+  name        String                           // 节点名称，如「工单结算」
+  summary     String?                          // 一句话概述
+  status      LogicNodeStatus @default(DRAFT)
+  priority    NodePriority    @default(NORMAL)
+
+  // ── 6 个核心字段 ──
+  trigger     String?  @db.Text              // 触发条件
+  dependsOn   String?  @db.Text              // 前置依赖（文本描述）
+  mainFlow    String?  @db.Text              // 主流程（富文本 JSON）
+  branches    Json?                           // 分支条件列表
+  edgeCases   Json?                           // 边界处理列表
+  codeRef     String?                         // 代码关联（文件路径/函数名）
+
+  // ── 图谱位置 ──
+  positionX   Float    @default(0)
+  positionY   Float    @default(0)
+
+  // ── 元数据 ──
+  tags        String[]
+  notes       String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  moduleId    String
+  module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  createdById String?
+  updatedById String?
+  createdBy   User?    @relation("CreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("UpdatedBy", fields: [updatedById], references: [id])
+
+  // 作为连线的源/目标
+  outgoing    Connection[] @relation("SourceNode")
+  incoming    Connection[] @relation("TargetNode")
+  versions    LogicNodeVersion[]
+}
+
+enum LogicNodeStatus {
+  DRAFT         // 草稿
+  REVIEW        // 待评审
+  APPROVED      // 已确认
+  DEPRECATED    // 已废弃
+}
+
+enum NodePriority {
+  HIGH
+  NORMAL
+  LOW
+}
+
+model Connection {
+  id          String         @id @default(cuid())
+  label       String?
+  type        ConnectionType @default(TRIGGERS)
+  description String?
+  createdAt   DateTime       @default(now())
+
+  sourceId    String
+  targetId    String
+  source      LogicNode      @relation("SourceNode", fields: [sourceId], references: [id], onDelete: Cascade)
+  target      LogicNode      @relation("TargetNode", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, targetId])
+}
+
+enum ConnectionType {
+  TRIGGERS      // A 触发 B
+  DEPENDS_ON    // A 依赖 B
+  BLOCKS        // A 阻断 B
+  EXTENDS       // A 扩展 B
+}
+
+model LogicNodeVersion {
+  id          String    @id @default(cuid())
+  version     Int
+  snapshot    Json                          // 完整节点快照
+  changeNote  String?
+  createdAt   DateTime  @default(now())
+
+  nodeId      String
+  node        LogicNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@unique([nodeId, version])
+}
