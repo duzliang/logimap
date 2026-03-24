@@ -1,0 +1,174 @@
+/* apps/web/src/styles/graph.css */
+/* LogiMap React Flow 图谱样式 v1.0 */
+
+/* 图谱画布背景 */
+.react-flow {
+  background-color: #FAFAF9; /* bg-base */
+}
+
+.dark .react-flow {
+  background-color: #0C0A09;
+}
+
+/* 点阵背景（取代默认的十字线） */
+.react-flow__background pattern circle {
+  fill: #D6D3D1; /* neutral-300 */
+}
+
+.dark .react-flow__background pattern circle {
+  fill: #44403C;
+}
+
+/* 连线样式 */
+.react-flow__edge-path {
+  stroke: #A8A29E;      /* neutral-400 */
+  stroke-width: 1.5px;
+}
+
+.react-flow__edge.selected .react-flow__edge-path,
+.react-flow__edge:hover .react-flow__edge-path {
+  stroke: #4F46E5;      /* violet-600 */
+  stroke-width: 2px;
+}
+
+.dark .react-flow__edge-path {
+  stroke: #57534E;
+}
+
+.dark .react-flow__edge.selected .react-flow__edge-path,
+.dark .react-flow__edge:hover .react-flow__edge-path {
+  stroke: #818CF8;
+}
+
+/* 连线终点箭头 */
+.react-flow__arrowhead path {
+  fill: #A8A29E;
+}
+
+.react-flow__edge.selected .react-flow__arrowhead path,
+.react-flow__edge:hover .react-flow__arrowhead path {
+  fill: #4F46E5;
+}
+
+.dark .react-flow__arrowhead path {
+  fill: #57534E;
+}
+
+.dark .react-flow__edge.selected .react-flow__arrowhead path,
+.dark .react-flow__edge:hover .react-flow__arrowhead path {
+  fill: #818CF8;
+}
+
+/* 连线标签 */
+.react-flow__edge-label {
+  font-size: 11px;
+  background: white;
+  border: 1px solid #E7E5E4;
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: #57534E;
+}
+
+.dark .react-flow__edge-label {
+  background: #1C1917;
+  border-color: #44403C;
+  color: #A8A29E;
+}
+
+/* 小地图 */
+.react-flow__minimap {
+  background-color: #F5F5F4;
+  border: 1px solid #E7E5E4;
+  border-radius: 8px;
+}
+
+.dark .react-flow__minimap {
+  background-color: #1C1917;
+  border-color: #292524;
+}
+
+/* 控制条 */
+.react-flow__controls {
+  border: 1px solid #E7E5E4;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+
+.react-flow__controls-button {
+  background: white;
+  border-bottom: 1px solid #E7E5E4;
+}
+
+.react-flow__controls-button:hover {
+  background: #F5F5F4;
+}
+
+.react-flow__controls-button svg {
+  fill: #57534E;
+}
+
+.dark .react-flow__controls {
+  border-color: #292524;
+}
+
+.dark .react-flow__controls-button {
+  background: #1C1917;
+  border-bottom-color: #292524;
+}
+
+.dark .react-flow__controls-button:hover {
+  background: #292524;
+}
+
+.dark .react-flow__controls-button svg {
+  fill: #A8A29E;
+}
+
+/* ───────────────────────────────────── */
+/* 连线类型样式                          */
+/* ───────────────────────────────────── */
+
+/* 触发关系 - 紫色实线 */
+.react-flow__edge[data-connection-type="TRIGGERS"] .react-flow__edge-path {
+  stroke: #4F46E5;
+  stroke-dasharray: none;
+}
+
+/* 依赖关系 - 灰色虚线 */
+.react-flow__edge[data-connection-type="DEPENDS_ON"] .react-flow__edge-path {
+  stroke: #A8A29E;
+  stroke-dasharray: 4 4;
+}
+
+/* 阻断关系 - 红色实线 */
+.react-flow__edge[data-connection-type="BLOCKS"] .react-flow__edge-path {
+  stroke: #EF4444;
+  stroke-dasharray: none;
+}
+
+/* 扩展关系 - 绿色长虚线 */
+.react-flow__edge[data-connection-type="EXTENDS"] .react-flow__edge-path {
+  stroke: #10B981;
+  stroke-dasharray: 8 4;
+}
+
+/* ───────────────────────────────────── */
+/* 节点选中/悬停状态                     */
+/* ───────────────────────────────────── */
+
+.react-flow__node.selected {
+  outline: none;
+}
+
+.react-flow__node:focus-visible {
+  outline: 2px solid #4F46E5;
+  outline-offset: 2px;
+}
+
+/* ───────────────────────────────────── */
+/* Attribution 隐藏                      */
+/* ───────────────────────────────────── */
+.react-flow__attribution {
+  display: none;
+}

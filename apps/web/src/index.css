@@ -1,7 +1,13 @@
+@import './styles/tokens.css';
+@import './styles/graph.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ───────────────────────────────────── */
+/* shadcn/ui 兼容的 CSS 变量             */
+/* ───────────────────────────────────── */
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -10,42 +16,93 @@
   color-scheme: light;
 
   --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
+  --foreground: 20 14.3% 4.1%;
 
   --card: 0 0% 100%;
-  --card-foreground: 222.2 84% 4.9%;
+  --card-foreground: 20 14.3% 4.1%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
+  --popover-foreground: 20 14.3% 4.1%;
 
-  --primary: 221.2 83.2% 53.3%;
-  --primary-foreground: 210 40% 98%;
+  --primary: 245 58% 51%;  /* Violet 600 */
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
+  --secondary: 30 5% 96%;
+  --secondary-foreground: 20 14.3% 4.1%;
 
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
+  --muted: 30 5% 96%;
+  --muted-foreground: 25 5.3% 44.7%;
 
-  --accent: 210 40% 96.1%;
-  --accent-foreground: 222.2 47.4% 11.2%;
+  --accent: 30 5% 96%;
+  --accent-foreground: 20 14.3% 4.1%;
 
   --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
+  --destructive-foreground: 0 0% 98%;
 
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 221.2 83.2% 53.3%;
+  --border: 20 5.9% 90%;
+  --input: 20 5.9% 90%;
+  --ring: 245 58% 51%;  /* Violet 600 */
 
   --radius: 0.5rem;
 }
 
+/* ───────────────────────────────────── */
+/* 暗色模式                              */
+/* ───────────────────────────────────── */
+.dark {
+  color-scheme: dark;
+  --background: 0 0% 5%;
+  --foreground: 0 0% 98%;
+
+  --card: 0 0% 9%;
+  --card-foreground: 0 0% 98%;
+
+  --popover: 0 0% 9%;
+  --popover-foreground: 0 0% 98%;
+
+  --primary: 245 58% 51%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 0 0% 14.9%;
+  --secondary-foreground: 0 0% 98%;
+
+  --muted: 0 0% 14.9%;
+  --muted-foreground: 0 0% 63.9%;
+
+  --accent: 0 0% 14.9%;
+  --accent-foreground: 0 0% 98%;
+
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+
+  --border: 0 0% 14.9%;
+  --input: 0 0% 14.9%;
+  --ring: 245 58% 51%;
+}
+
+/* ───────────────────────────────────── */
+/* 全局 Reset                            */
+/* ───────────────────────────────────── */
+
+/* ★ 防止任何全局 reset 破坏背景色 */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* 禁止 body 背景透明 */
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #f9fafb;
-  color: hsl(var(--foreground));
+  background-color: #FAFAF9;  /* neutral-50 */
+  color: #1C1917;             /* neutral-900 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.dark body {
+  background-color: #0C0A09;
+  color: #FAFAF9;
 }
 
 #root {
@@ -53,6 +110,53 @@ body {
   min-height: 100vh;
 }
 
-* {
-  border-color: hsl(var(--border));
+/* 确保 Radix Portal 层不影响布局流 */
+[data-radix-portal] {
+  position: relative;
+  z-index: 0;
+}
+
+/* ───────────────────────────────────── */
+/* 滚动条样式                            */
+/* ───────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D6D3D1;  /* neutral-300 */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #A8A29E;  /* neutral-400 */
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #44403C;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #57534E;
+}
+
+/* ───────────────────────────────────── */
+/* 选中文本样式                          */
+/* ───────────────────────────────────── */
+::selection {
+  background-color: rgba(79, 70, 229, 0.20);  /* violet-600 with opacity */
+  color: inherit;
+}
+
+/* ───────────────────────────────────── */
+/* Focus 样式                            */
+/* ───────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid #4F46E5;  /* violet-600 */
+  outline-offset: 2px;
 }

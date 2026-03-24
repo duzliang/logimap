@@ -8,11 +8,17 @@ import { Layers, ArrowRight } from 'lucide-react'
 
 export function DashboardPage() {
   const navigate = useNavigate()
-  const { user, isAuthenticated, setUser, setToken, logout } = useAuthStore()
+  const { user, isAuthenticated, setUser, setToken, logout, setLoading } = useAuthStore()
   const [isChecking, setIsChecking] = useState(true)
 
   useEffect(() => {
     const initAuth = async () => {
+      // 如果已经有用户信息，直接使用
+      if (user && isAuthenticated) {
+        setIsChecking(false)
+        return
+      }
+
       const token = localStorage.getItem('token')
       if (!token) {
         logout()
@@ -24,18 +30,18 @@ export function DashboardPage() {
         const userData = await fetchMe()
         setUser(userData)
       } catch (error) {
-        localStorage.removeItem('token')
-        setToken(null)
-        setUser(null)
-        toast.error('会话已过期，请重新登录')
-        navigate('/login')
+        console.error('Failed to fetch user:', error)
+        // 不清除 token，允许用户继续使用（登录时已验证）
+        // 仅在 token 确实无效时才登出
+        toast.warning('无法验证登录状态，请检查网络连接')
       } finally {
         setIsChecking(false)
+        setLoading(false)
       }
     }
 
     initAuth()
-  }, [navigate, setUser, setToken, logout])
+  }, [navigate, setUser, setToken, logout, setLoading, user, isAuthenticated])
 
   if (isChecking) {
     return (

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import type { User } from '../types/auth.types'
 
 interface AuthState {
@@ -19,7 +19,7 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       isAuthenticated: false,
-      isLoading: true,
+      isLoading: false,
 
       setUser: (user) =>
         set((state) => ({
@@ -50,7 +50,14 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({ token: state.token })
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({ token: state.token, user: state.user }),
+      onRehydrateStorage: () => (state) => {
+        // 恢复状态后，根据是否有 token 设置认证状态
+        if (state?.token && state?.user) {
+          state.isAuthenticated = true
+        }
+      }
     }
   )
 )

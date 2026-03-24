@@ -11,7 +11,7 @@ import { useAuthStore } from '@/stores/auth.store'
 
 // 受保护的路由组件
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuthStore()
+  const { isAuthenticated, isLoading, token } = useAuthStore()
 
   if (isLoading) {
     return (
@@ -24,7 +24,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     )
   }
 
-  if (!isAuthenticated) {
+  // 检查是否有 token（可能来自 localStorage 或 zustand persist）
+  const hasToken = token || localStorage.getItem('token')
+  if (!isAuthenticated && !hasToken) {
     return <Navigate to="/login" replace />
   }
 

@@ -5,7 +5,9 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Trash2, X } from 'lucide-react'
+import { Plus, Trash2, X, Sparkles, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { generateNodeContent, suggestEdgeCases } from '@/api/ai.api'
 import type { Branch, EdgeCase } from '@/types/logic-node.types'
 
 interface LogicNodeForm {
@@ -26,12 +28,14 @@ interface LogicNodeEditorProps {
   onSave: (data: LogicNodeForm) => void
   onCancel: () => void
   isLoading?: boolean
+  moduleContext?: string
 }
 
-export function LogicNodeEditor({ node, onSave, onCancel, isLoading }: LogicNodeEditorProps) {
+export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleContext }: LogicNodeEditorProps) {
   const [tagInput, setTagInput] = useState('')
+  const [isAiLoading, setIsAiLoading] = useState(false)
 
-  const { register, handleSubmit, control, setValue, watch } = useForm<LogicNodeForm>({
+  const { register, handleSubmit, control, setValue, watch, getValues } = useForm<LogicNodeForm>({
     defaultValues: {
       name: node?.name || '',
       summary: node?.summary || '',
@@ -47,6 +51,7 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading }: LogicNode
   })
 
   const tags = watch('tags')
+  const nodeName = watch('name')
 
   const {
     fields: branchFields,
@@ -84,8 +89,129 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading }: LogicNode
     }
   }
 
+  // AI 生成节点内容
+  const handleAiGenerate = async () => {
+    if (!nodeName) {
+      toast.error('请先输入节点名称')
+      return
+    }
+
+    setIsAiLoading(true)
+    try {
+      const result = await generateNodeContent({
+        nodeName,
+        moduleContext,
+        existingContent: {
+          trigger: getValues('trigger'),
+          dependsOn: getValues('dependsOn'),
+          mainFlow: getValues('mainFlow')
+        }
+      })
+
+      // 填充 AI 生成的内容
+      if (result.trigger) setValue('trigger', result.trigger)
+      if (result.dependsOn) setValue('dependsOn', result.dependsOn)
+      if (result.mainFlow) setValue('mainFlow', result.mainFlow)
+
+      // 添加分支条件
+      result.branches?.forEach((branch) => {
+        appendBranch({ id: Date.now().toString() + Math.random(), condition: branch.condition, action: branch.action })
+      })
+
+      // 添加边界条件
+      result.edgeCases?.forEach((edgeCase) => {
+        appendEdgeCase({
+          id: Date.now().toString() + Math.random(),
+          scenario: edgeCase.scenario,
+          handling: edgeCase.handling,
+          severity: edgeCase.severity
+        })
+      })
+
+      toast.success('AI 内容已生成')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'AI 生成失败'
+      toast.error(message)
+    } finally {
+      setIsAiLoading(false)
+    }
+  }
+
+  // AI 建议边界条件
+  const handleAiSuggestEdgeCases = async () => {
+    const mainFlow = getValues('mainFlow')
+    if (!nodeName) {
+      toast.error('请先输入节点名称')
+      return
+    }
+    if (!mainFlow) {
+      toast.error('请先填写主流程')
+      return
+    }
+
+    setIsAiLoading(true)
+    try {
+      const existingEdgeCases = getValues('edgeCases').map(e => ({
+        scenario: e.scenario,
+        handling: e.handling,
+        severity: e.severity as 'critical' | 'warning' | 'info'
+      }))
+
+      const result = await suggestEdgeCases({
+        nodeName,
+        mainFlow,
+        existingEdgeCases
+      })
+
+      // 添加建议的边界条件
+      result.forEach((edgeCase) => {
+        appendEdgeCase({
+          id: Date.now().toString() + Math.random(),
+          scenario: edgeCase.scenario,
+          handling: edgeCase.handling,
+          severity: edgeCase.severity
+        })
+      })
+
+      toast.success(`已添加 ${result.length} 个边界条件建议`)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'AI 建议生成失败'
+      toast.error(message)
+    } finally {
+      setIsAiLoading(false)
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit(onSave)} className="space-y-6">
+      {/* AI 辅助按钮 */}
+      <div className="flex gap-2 p-3 bg-purple-50 rounded-lg border border-purple-200">
+        <Sparkles className="h-5 w-5 text-purple-600" />
+        <span className="text-sm text-purple-700 font-medium">AI 辅助</span>
+        <div className="flex gap-2 ml-auto">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleAiGenerate}
+            disabled={isAiLoading || !nodeName}
+            className="bg-purple-600 text-white hover:bg-purple-700"
+          >
+            {isAiLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+            生成内容
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleAiSuggestEdgeCases}
+            disabled={isAiLoading || !nodeName}
+          >
+            边界建议
+          </Button>
+        </div>
+      </div>
+
       {/* 基本信息 */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">基本信息</h3>

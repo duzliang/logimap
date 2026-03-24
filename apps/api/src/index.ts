@@ -8,6 +8,11 @@ import { systemsRoutes } from './routes/systems.routes.js'
 import { modulesRoutes } from './routes/modules.routes.js'
 import { logicNodesRoutes } from './routes/logic-nodes.routes.js'
 import { graphRoutes } from './routes/graph.routes.js'
+import { aiRoutes } from './routes/ai.routes.js'
+import { authMiddleware } from './middleware/auth.middleware.js'
+import { ModulesService } from './services/modules.service.js'
+
+const modulesService = new ModulesService()
 
 const app = new Hono()
 
@@ -37,11 +42,28 @@ app.get('/api/v1', (c) => {
 app.route('/api/v1/auth', authRoutes)
 app.route('/api/v1/systems', systemsRoutes)
 app.route('/api/v1/systems/:systemId/modules', modulesRoutes)
+
+// 独立的模块详情路由
+app.get('/api/v1/modules/:moduleId', authMiddleware, async (c) => {
+  try {
+    const moduleId = c.req.param('moduleId')
+    if (!moduleId) {
+      return c.json({ error: '缺少模块 ID', code: 'MISSING_MODULE_ID' }, 400)
+    }
+    const result = await modulesService.getById(moduleId)
+    return c.json({ data: result })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '获取模块详情失败'
+    return c.json({ error: message, code: 'GET_MODULE_FAILED' }, 404)
+  }
+})
+
 app.route('/api/v1/modules/:moduleId/nodes', logicNodesRoutes)
 app.route('/api/v1/modules/:moduleId/graph', graphRoutes)
 app.route('/api/v1/nodes', logicNodesRoutes)
 app.route('/api/v1/nodes/:nodeId', logicNodesRoutes)
 app.route('/api/v1/graph', graphRoutes)
+app.route('/api/v1/ai', aiRoutes)
 
 // Start server
 const port = Number(process.env.PORT) || 3001
