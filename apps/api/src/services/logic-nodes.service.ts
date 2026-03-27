@@ -1,4 +1,5 @@
 import { prisma } from '../db/prisma.js'
+import { generateId } from '../lib/id-generator.js'
 import type { CreateLogicNodeInput, UpdateLogicNodeInput, UpdatePositionInput } from '../lib/validators.logic-node.js'
 
 export class LogicNodesService {
@@ -58,12 +59,6 @@ export class LogicNodesService {
   }
 
   async create(moduleId: string, input: CreateLogicNodeInput, userId: string) {
-    const generateId = () => {
-      const timestamp = Date.now().toString(36)
-      const random = Math.random().toString(36).substring(2, 8)
-      return `${timestamp}${random}`
-    }
-
     const node = await prisma.logicNode.create({
       data: {
         id: generateId(),
@@ -96,35 +91,40 @@ export class LogicNodesService {
       throw new Error('节点不存在')
     }
 
-    // 创建版本快照
-    await prisma.logicNodeVersion.create({
-      data: {
-        id: `${nodeId}-${Date.now()}`,
-        nodeId,
-        version: await this.getNextVersion(nodeId),
-        snapshot: {
-          ...existingNode,
-          branches: existingNode.branches,
-          edgeCases: existingNode.edgeCases
-        } as any,
-        changeNote: input.name ? `更新节点：${existingNode.name}` : undefined
-      }
-    })
-
-    // 更新节点
-    const updateData: any = { ...input }
-    if (input.branches !== undefined) updateData.branches = input.branches as any
-    if (input.edgeCases !== undefined) updateData.edgeCases = input.edgeCases as any
-    updateData.updatedById = userId
-
-    const node = await prisma.logicNode.update({
-      where: { id: nodeId },
-      data: updateData,
-      include: {
-        module: {
-          select: { id: true, name: true }
+    // 使用事务确保版本快照和节点更新同时成功
+    const node = await prisma.$transaction(async (tx) => {
+      // 创建版本快照
+      await tx.logicNodeVersion.create({
+        data: {
+          id: generateId(),
+          nodeId,
+          version: await this.getNextVersion(nodeId, tx),
+          snapshot: {
+            ...existingNode,
+            branches: existingNode.branches,
+            edgeCases: existingNode.edgeCases
+          } as any,
+          changeNote: input.name ? `更新节点：${existingNode.name}` : undefined
         }
-      }
+      })
+
+      // 更新节点
+      const updateData: any = { ...input }
+      if (input.branches !== undefined) updateData.branches = input.branches as any
+      if (input.edgeCases !== undefined) updateData.edgeCases = input.edgeCases as any
+      updateData.updatedById = userId
+
+      const node = await tx.logicNode.update({
+        where: { id: nodeId },
+        data: updateData,
+        include: {
+          module: {
+            select: { id: true, name: true }
+          }
+        }
+      })
+
+      return node
     })
 
     return {
@@ -193,7 +193,7 @@ export class LogicNodesService {
     if (existingNode) {
       await prisma.logicNodeVersion.create({
         data: {
-          id: `${nodeId}-${Date.now()}-before-restore`,
+          id: generateId(),
           nodeId,
           version: await this.getNextVersion(nodeId),
           snapshot: {
@@ -234,8 +234,9 @@ export class LogicNodesService {
     }
   }
 
-  private async getNextVersion(nodeId: string): Promise<number> {
-    const lastVersion = await prisma.logicNodeVersion.findFirst({
+  private async getNextVersion(nodeId: string, tx?: any): Promise<number> {
+    const prismaClient = tx || prisma
+    const lastVersion = await prismaClient.logicNodeVersion.findFirst({
       where: { nodeId },
       orderBy: { version: 'desc' }
     })

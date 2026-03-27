@@ -1,4 +1,5 @@
 import { prisma } from '../db/prisma.js'
+import { generateId } from '../lib/id-generator.js'
 import type { CreateSystemInput, UpdateSystemInput } from '../lib/validators.system.js'
 
 export class SystemsService {
@@ -49,12 +50,6 @@ export class SystemsService {
 
     if (existing) {
       throw new Error('系统标识已存在')
-    }
-
-    const generateId = () => {
-      const timestamp = Date.now().toString(36)
-      const random = Math.random().toString(36).substring(2, 8)
-      return `${timestamp}${random}`
     }
 
     const system = await prisma.system.create({

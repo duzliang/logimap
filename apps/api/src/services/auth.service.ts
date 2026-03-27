@@ -1,6 +1,7 @@
 import { prisma } from '../db/prisma.js'
 import { hashPassword } from '../lib/auth.js'
 import { signToken } from '../lib/jwt.js'
+import { generateId } from '../lib/id-generator.js'
 import type { RegisterInput } from '../lib/validators.js'
 
 export class AuthService {
@@ -14,44 +15,46 @@ export class AuthService {
       throw new Error('该邮箱已被注册')
     }
 
-    // 生成 cuid
-    const generateId = () => {
-      const timestamp = Date.now().toString(36)
-      const random = Math.random().toString(36).substring(2, 8)
-      return `${timestamp}${random}`
-    }
-
     const userId = generateId()
+    const teamId = generateId()
+    const membershipId = generateId()
 
-    // 创建用户和团队
-    const user = await prisma.user.create({
-      data: {
-        id: userId,
-        email: input.email,
-        name: input.name,
-        passwordHash: await hashPassword(input.password),
-        // 自动创建个人团队
-        memberships: {
-          create: {
-            id: generateId(),
-            role: 'OWNER',
-            team: {
-              create: {
-                id: generateId(),
-                name: `${input.name} 的团队`,
-                slug: `team-${userId}`
-              }
+    // 使用事务确保用户、团队、成员关系同时创建成功
+    const user = await prisma.$transaction(async (tx) => {
+      // 创建团队
+      const team = await tx.team.create({
+        data: {
+          id: teamId,
+          name: `${input.name} 的团队`,
+          slug: `team-${userId}`
+        }
+      })
+
+      // 创建用户并关联团队和成员身份
+      const user = await tx.user.create({
+        data: {
+          id: userId,
+          email: input.email,
+          name: input.name,
+          passwordHash: await hashPassword(input.password),
+          memberships: {
+            create: {
+              id: membershipId,
+              role: 'OWNER',
+              teamId: team.id
+            }
+          }
+        },
+        include: {
+          memberships: {
+            include: {
+              team: true
             }
           }
         }
-      },
-      include: {
-        memberships: {
-          include: {
-            team: true
-          }
-        }
-      }
+      })
+
+      return user
     })
 
     const token = await signToken({

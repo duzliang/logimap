@@ -1,4 +1,5 @@
 import { prisma } from '../db/prisma.js'
+import { generateId } from '../lib/id-generator.js'
 import type { CreateModuleInput, UpdateModuleInput } from '../lib/validators.system.js'
 
 export class ModulesService {
@@ -49,12 +50,6 @@ export class ModulesService {
 
     if (existing) {
       throw new Error('模块标识已存在')
-    }
-
-    const generateId = () => {
-      const timestamp = Date.now().toString(36)
-      const random = Math.random().toString(36).substring(2, 8)
-      return `${timestamp}${random}`
     }
 
     const module = await prisma.module.create({

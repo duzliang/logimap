@@ -52,6 +52,7 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleConte
 
   const tags = watch('tags')
   const nodeName = watch('name')
+  const edgeCases = watch('edgeCases')
 
   const {
     fields: branchFields,
@@ -108,17 +109,14 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleConte
         }
       })
 
-      // 填充 AI 生成的内容
       if (result.trigger) setValue('trigger', result.trigger)
       if (result.dependsOn) setValue('dependsOn', result.dependsOn)
       if (result.mainFlow) setValue('mainFlow', result.mainFlow)
 
-      // 添加分支条件
       result.branches?.forEach((branch) => {
         appendBranch({ id: Date.now().toString() + Math.random(), condition: branch.condition, action: branch.action })
       })
 
-      // 添加边界条件
       result.edgeCases?.forEach((edgeCase) => {
         appendEdgeCase({
           id: Date.now().toString() + Math.random(),
@@ -163,7 +161,6 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleConte
         existingEdgeCases
       })
 
-      // 添加建议的边界条件
       result.forEach((edgeCase) => {
         appendEdgeCase({
           id: Date.now().toString() + Math.random(),
@@ -185,9 +182,9 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleConte
   return (
     <form onSubmit={handleSubmit(onSave)} className="space-y-6">
       {/* AI 辅助按钮 */}
-      <div className="flex gap-2 p-3 bg-purple-50 rounded-lg border border-purple-200">
-        <Sparkles className="h-5 w-5 text-purple-600" />
-        <span className="text-sm text-purple-700 font-medium">AI 辅助</span>
+      <div className="flex gap-2 p-3 bg-violet-50 rounded-lg border border-violet-200">
+        <Sparkles className="h-5 w-5 text-violet-600" />
+        <span className="text-sm text-violet-700 font-medium">AI 辅助</span>
         <div className="flex gap-2 ml-auto">
           <Button
             type="button"
@@ -195,7 +192,7 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleConte
             size="sm"
             onClick={handleAiGenerate}
             disabled={isAiLoading || !nodeName}
-            className="bg-purple-600 text-white hover:bg-purple-700"
+            className="bg-violet-600 text-white hover:bg-violet-700"
           >
             {isAiLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
             生成内容
@@ -280,21 +277,19 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleConte
           </div>
           <div className="space-y-2">
             {branchFields.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-4">暂无分支条件</p>
+              <p className="text-sm text-neutral-500 text-center py-4">暂无分支条件</p>
             ) : (
               branchFields.map((field, index) => (
                 <div key={field.id} className="flex gap-2 items-start">
                   <Input
                     placeholder="如果..."
-                    value={field.condition}
-                    onChange={(e) => setValue(`branches.${index}.condition`, e.target.value)}
+                    {...register(`branches.${index}.condition`)}
                     className="flex-1"
                   />
-                  <span className="text-gray-400 pt-2">→</span>
+                  <span className="text-neutral-400 pt-2">→</span>
                   <Input
                     placeholder="那么..."
-                    value={field.action}
-                    onChange={(e) => setValue(`branches.${index}.action`, e.target.value)}
+                    {...register(`branches.${index}.action`)}
                     className="flex-1"
                   />
                   <Button
@@ -302,7 +297,7 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleConte
                     variant="ghost"
                     size="sm"
                     onClick={() => removeBranch(index)}
-                    className="text-red-500 hover:text-red-700"
+                    className="text-rose-500 hover:text-rose-700"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -328,48 +323,48 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleConte
           </div>
           <div className="space-y-2">
             {edgeCaseFields.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-4">暂无边界条件</p>
+              <p className="text-sm text-neutral-500 text-center py-4">暂无边界条件</p>
             ) : (
-              edgeCaseFields.map((field, index) => (
-                <div key={field.id} className="grid gap-2 p-3 border rounded-md">
-                  <div className="flex gap-2">
+              edgeCaseFields.map((field, index) => {
+                const severity = edgeCases?.[index]?.severity || 'warning'
+                return (
+                  <div key={field.id} className="grid gap-2 p-3 border border-neutral-200 rounded-lg">
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="场景描述"
+                        {...register(`edgeCases.${index}.scenario`)}
+                        className="flex-1"
+                      />
+                      <select
+                        {...register(`edgeCases.${index}.severity`)}
+                        className={cn(
+                          'h-10 rounded-lg border px-3 text-sm',
+                          severity === 'critical' ? 'border-rose-500 bg-rose-50' :
+                          severity === 'warning' ? 'border-amber-500 bg-amber-50' :
+                          'border-sky-500 bg-sky-50'
+                        )}
+                      >
+                        <option value="critical">严重</option>
+                        <option value="warning">警告</option>
+                        <option value="info">提示</option>
+                      </select>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeEdgeCase(index)}
+                        className="text-rose-500 hover:text-rose-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                     <Input
-                      placeholder="场景描述"
-                      value={field.scenario}
-                      onChange={(e) => setValue(`edgeCases.${index}.scenario`, e.target.value)}
-                      className="flex-1"
+                      placeholder="处理方式"
+                      {...register(`edgeCases.${index}.handling`)}
                     />
-                    <select
-                      value={field.severity}
-                      onChange={(e) => setValue(`edgeCases.${index}.severity`, e.target.value as 'critical' | 'warning' | 'info')}
-                      className={cn(
-                        'h-10 rounded-md border px-3 text-sm',
-                        field.severity === 'critical' ? 'border-red-500 bg-red-50' :
-                        field.severity === 'warning' ? 'border-yellow-500 bg-yellow-50' :
-                        'border-blue-500 bg-blue-50'
-                      )}
-                    >
-                      <option value="critical">严重</option>
-                      <option value="warning">警告</option>
-                      <option value="info">提示</option>
-                    </select>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeEdgeCase(index)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
                   </div>
-                  <Input
-                    placeholder="处理方式"
-                    value={field.handling}
-                    onChange={(e) => setValue(`edgeCases.${index}.handling`, e.target.value)}
-                  />
-                </div>
-              ))
+                )
+              })
             )}
           </div>
         </div>
@@ -392,7 +387,7 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleConte
           {tags.map((tag) => (
             <Badge key={tag} variant="secondary" className="gap-1">
               {tag}
-              <button type="button" onClick={() => removeTag(tag)} className="hover:text-red-500">
+              <button type="button" onClick={() => removeTag(tag)} className="hover:text-rose-500">
                 <X className="h-3 w-3" />
               </button>
             </Badge>
@@ -423,7 +418,7 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleConte
       </div>
 
       {/* 操作按钮 */}
-      <div className="flex justify-end gap-2 pt-4 border-t">
+      <div className="flex justify-end gap-2 pt-4 border-t border-neutral-200">
         <Button type="button" variant="outline" onClick={onCancel}>
           取消
         </Button>
