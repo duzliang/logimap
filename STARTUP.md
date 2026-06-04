@@ -29,14 +29,14 @@ docker run -d \
 ### 2. 安装依赖并生成 Prisma 客户端
 
 ```bash
-cd /Users/zhiliangdu/Github/logimap
+cd <project-root>
 pnpm install
 ```
 
 ### 3. 运行数据库迁移
 
 ```bash
-cd /Users/zhiliangdu/Github/logimap
+cd <project-root>
 npx prisma migrate dev
 ```
 
@@ -44,14 +44,14 @@ npx prisma migrate dev
 
 **终端 1 - 启动后端：**
 ```bash
-cd /Users/zhiliangdu/Github/logimap/apps/api
+cd apps/api
 pnpm dev
 # 后端运行在 http://localhost:3001
 ```
 
 **终端 2 - 启动前端：**
 ```bash
-cd /Users/zhiliangdu/Github/logimap/apps/web
+cd apps/web
 pnpm dev
 # 前端运行在 http://localhost:5173
 ```

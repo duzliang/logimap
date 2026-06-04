@@ -28,7 +28,8 @@ COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY . .
 
 WORKDIR /app/apps/web
-ENV VITE_API_URL=http://localhost:3001
+ARG VITE_API_URL=http://localhost:3001
+ENV VITE_API_URL=${VITE_API_URL}
 RUN pnpm build
 
 # Production image with nginx

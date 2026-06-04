@@ -21,14 +21,21 @@ app.use('*', logger())
 app.use('*', prettyJSON())
 app.use('*', cors({
   origin: (origin) => {
-    // 允许所有 localhost 端口
-    if (origin && (
+    const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173')
+      .split(',')
+      .map((o) => o.trim())
+    // 开发环境允许 localhost
+    const isDev = process.env.NODE_ENV !== 'production'
+    if (isDev && origin && (
       origin.startsWith('http://localhost:') ||
       origin.startsWith('http://127.0.0.1:')
     )) {
       return origin
     }
-    return 'http://localhost:5173'
+    if (origin && allowedOrigins.includes(origin)) {
+      return origin
+    }
+    return null
   },
   credentials: true,
 }))

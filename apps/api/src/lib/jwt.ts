@@ -1,9 +1,11 @@
 import { SignJWT, jwtVerify } from 'jose'
 import type { JWTPayload } from 'jose'
 
-const secret = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-super-secret-key-change-in-production'
-)
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required')
+}
+
+const secret = new TextEncoder().encode(process.env.JWT_SECRET)
 
 const expires = process.env.JWT_EXPIRES_IN || '7d'
 
