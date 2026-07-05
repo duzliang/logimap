@@ -23,7 +23,9 @@
     /* Path alias */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@logimap/ui": ["../../packages/ui/src/index.ts"],
+      "@logimap/types": ["../../packages/types/src/index.ts"]
     }
   },
   "include": ["src"],

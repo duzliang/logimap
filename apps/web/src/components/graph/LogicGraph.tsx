@@ -10,16 +10,19 @@ import {
   useReactFlow,
   type Connection,
   type Node,
-  type Edge
+  type Edge,
+  type NodeTypes,
+  type EdgeTypes
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useParams, useNavigate } from 'react-router-dom'
 import { toPng } from 'html-to-image'
 import dagre from '@dagrejs/dagre'
-import { fetchGraphData, updateNodePosition, createConnection } from '@/api/graph.api'
+import { fetchGraphData, updateNodePosition, createConnection, type GraphConnection } from '@/api/graph.api'
 import { fetchModule } from '@/api/systems.api'
-import { updateConnection, deleteConnection, type ConnectionType } from '@/api/connection.api'
+import { updateConnection, deleteConnection } from '@/api/connection.api'
+import type { Branch, EdgeCase, ConnectionType, LogicNodeStatus, NodePriority } from '@logimap/types'
 import { LogicNodeComponent } from './LogicNode'
 import { LogicEdge } from './LogicEdge'
 import { GraphToolbar } from './GraphToolbar'
@@ -27,13 +30,14 @@ import { EdgeEditDialog } from './EdgeEditDialog'
 import { NodeDetailDialog } from './NodeDetailDialog'
 import { toast } from 'sonner'
 import { ArrowLeft } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@logimap/ui'
+import { useAuthStore } from '@/stores/auth.store'
 
-const nodeTypes = {
+const nodeTypes: NodeTypes = {
   logicNode: LogicNodeComponent
 }
 
-const edgeTypes = {
+const edgeTypes: EdgeTypes = {
   default: LogicEdge
 }
 
@@ -51,20 +55,19 @@ interface NodeDetailData {
   trigger?: string
   dependsOn?: string
   mainFlow?: string
-  branches?: any[]
-  edgeCases?: any[]
-  status: string
-  priority: string
+  branches?: Branch[]
+  edgeCases?: EdgeCase[]
+  status: LogicNodeStatus
+  priority: NodePriority
+  moduleId: string
 }
-
-// Dagre 布局配置
-const dagreGraph = new dagre.graphlib.Graph()
-dagreGraph.setDefaultEdgeLabel(() => ({}))
 
 const nodeWidth = 220
 const nodeHeight = 150
 
 const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => {
+  const dagreGraph = new dagre.graphlib.Graph()
+  dagreGraph.setDefaultEdgeLabel(() => ({}))
   dagreGraph.setGraph({ rankdir: direction, nodesep: 100, ranksep: 80 })
 
   nodes.forEach((node) => {
@@ -98,6 +101,9 @@ function LogicGraphInner() {
   const queryClient = useQueryClient()
   const { fitView } = useReactFlow()
   const flowRef = useRef<HTMLDivElement>(null)
+  const { currentTeamId, teams } = useAuthStore()
+  const currentTeam = teams.find((t) => t.id === currentTeamId)
+  const userRole = currentTeam?.role || 'VIEWER'
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
@@ -124,19 +130,20 @@ function LogicGraphInner() {
   const updatePositionMutation = useMutation({
     mutationFn: ({ nodeId, x, y }: { nodeId: string; x: number; y: number }) =>
       updateNodePosition(nodeId, x, y),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['graph', moduleId] })
+    onError: () => {
+      toast.error('保存节点位置失败')
     }
   })
 
   // 创建连线 mutation
   const createConnectionMutation = useMutation({
-    mutationFn: (data: any) => createConnection(data.source, data.target, data.type || 'TRIGGERS'),
+    mutationFn: (data: { source: string; target: string; type?: string }) =>
+      createConnection(data.source, data.target, data.type || 'TRIGGERS'),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['graph', moduleId] })
       toast.success('连线创建成功')
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error.message || '创建连线失败')
     }
   })
@@ -149,7 +156,7 @@ function LogicGraphInner() {
       queryClient.invalidateQueries({ queryKey: ['graph', moduleId] })
       toast.success('连线更新成功')
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error.message || '更新连线失败')
     }
   })
@@ -163,7 +170,7 @@ function LogicGraphInner() {
       setIsEdgeDialogOpen(false)
       setSelectedEdge(null)
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error.message || '删除连线失败')
     }
   })
@@ -171,14 +178,14 @@ function LogicGraphInner() {
   // 转换图谱数据为 React Flow 格式
   useEffect(() => {
     if (graphData) {
-      const flowNodes: Node[] = graphData.nodes.map((node: any) => ({
+      const flowNodes: Node[] = graphData.nodes.map((node) => ({
         id: node.id,
         type: 'logicNode',
         position: { x: node.positionX || 0, y: node.positionY || 0 },
-        data: node
+        data: node as unknown as Record<string, unknown>
       }))
 
-      const flowEdges: Edge[] = graphData.connections.map((conn: any) => ({
+      const flowEdges: Edge[] = graphData.connections.map((conn) => ({
         id: conn.id,
         source: conn.sourceId,
         target: conn.targetId,
@@ -186,7 +193,7 @@ function LogicGraphInner() {
         data: {
           connectionType: conn.type,
           label: conn.label || undefined
-        }
+        } as Record<string, unknown>
       }))
 
       setNodes(flowNodes)
@@ -196,7 +203,7 @@ function LogicGraphInner() {
 
   // 处理节点拖拽结束
   const onNodeDragStop = useCallback(
-    (_: any, node: Node) => {
+    (_: unknown, node: Node) => {
       updatePositionMutation.mutate({
         nodeId: node.id,
         x: node.position.x,
@@ -222,8 +229,8 @@ function LogicGraphInner() {
 
   // 处理边点击
   const onEdgeClick = useCallback(
-    (_: any, edge: Edge) => {
-      const conn = graphData?.connections.find((c: any) => c.id === edge.id)
+    (_: unknown, edge: Edge) => {
+      const conn = graphData?.connections.find((c: GraphConnection) => c.id === edge.id)
       if (conn) {
         setSelectedEdge({
           id: conn.id,
@@ -240,8 +247,9 @@ function LogicGraphInner() {
 
   // 处理节点双击
   const onNodeDoubleClick = useCallback(
-    (_: any, node: Node) => {
-      setSelectedNode(node.data as unknown as NodeDetailData)
+    (_: unknown, node: Node) => {
+      const data = node.data as unknown as NodeDetailData
+      setSelectedNode(data)
       setIsNodeDialogOpen(true)
     },
     []
@@ -293,7 +301,7 @@ function LogicGraphInner() {
 
     try {
       const dataUrl = await toPng(flowRef.current, {
-        backgroundColor: '#f9fafb',
+        backgroundColor: 'var(--color-bg-base)',
         quality: 1.0
       })
 
@@ -318,7 +326,7 @@ function LogicGraphInner() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-[calc(100vh-3.5rem)] bg-[var(--color-bg-base)] text-[var(--color-text-primary)]">
         <div className="text-center">
           <h1 className="text-xl font-semibold">加载图谱数据...</h1>
         </div>
@@ -327,7 +335,7 @@ function LogicGraphInner() {
   }
 
   return (
-    <div className="w-full h-screen bg-gray-50">
+    <div className="relative w-full h-[calc(100vh-3.5rem)] bg-[var(--color-bg-base)]">
       <GraphToolbar
         onCreateNode={handleCreateNode}
         onAutoLayout={handleAutoLayout}
@@ -354,24 +362,24 @@ function LogicGraphInner() {
           onNodeDragStop={onNodeDragStop}
           onEdgeClick={onEdgeClick}
           onNodeDoubleClick={onNodeDoubleClick}
-          nodeTypes={nodeTypes as any}
-          edgeTypes={edgeTypes as any}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           fitView
           snapToGrid
           snapGrid={[15, 15]}
           minZoom={0.25}
           maxZoom={2}
         >
-          <Background gap={20} size={1} color="#e5e7eb" />
-          <Controls className="bg-white border rounded-lg shadow-sm" />
+          <Background gap={20} size={1} color="var(--color-border-default)" />
+          <Controls className="bg-[var(--color-bg-elevated)] border border-[var(--color-border-default)] rounded-lg shadow-sm" />
           <MiniMap
-            className="bg-white border rounded-lg shadow-sm"
+            className="bg-[var(--color-bg-elevated)] border border-[var(--color-border-default)] rounded-lg shadow-sm"
             nodeColor={(node) => {
               const status = node.data?.status
-              if (status === 'APPROVED') return '#22c55e'
-              if (status === 'REVIEW') return '#eab308'
-              if (status === 'DEPRECATED') return '#ef4444'
-              return '#6b7280'
+              if (status === 'APPROVED') return 'var(--color-success-icon)'
+              if (status === 'REVIEW') return 'var(--color-warning-icon)'
+              if (status === 'DEPRECATED') return 'var(--color-error-icon)'
+              return 'var(--color-text-tertiary)'
             }}
           />
         </ReactFlow>
@@ -391,9 +399,13 @@ function LogicGraphInner() {
         open={isNodeDialogOpen}
         onOpenChange={setIsNodeDialogOpen}
         nodeData={selectedNode}
+        userRole={userRole}
         onEdit={() => {
           setIsNodeDialogOpen(false)
           navigate(`/modules/${moduleId}/nodes?edit=${selectedNode?.id}`)
+        }}
+        onStatusChange={() => {
+          queryClient.invalidateQueries({ queryKey: ['graph', moduleId] })
         }}
       />
     </div>

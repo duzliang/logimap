@@ -1,53 +1,28 @@
-import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import { LoginSchema, type LoginInput } from '@logimap/types'
 import { login } from '@/api/auth.api'
-import { useAuthStore } from '@/stores/auth.store'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { toast } from 'sonner'
-
-const loginSchema = z.object({
-  email: z.string().email('请输入有效的邮箱地址'),
-  password: z.string().min(1, '请输入密码')
-})
-
-type LoginFormData = z.infer<typeof loginSchema>
+import { useAuthSubmit } from '@/hooks/useAuthSubmit'
+import { Button, Input, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@logimap/ui'
 
 export function LoginPage() {
-  const navigate = useNavigate()
-  const { setToken, setUser } = useAuthStore()
-  const [isLoading, setIsLoading] = useState(false)
+  const { isLoading, submit: onSubmit } = useAuthSubmit({
+    onSubmit: login,
+    successMessage: '登录成功',
+    errorMessage: '登录失败，请检查账号密码'
+  })
 
   const {
     register,
     handleSubmit,
     formState: { errors }
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema)
+  } = useForm<LoginInput>({
+    resolver: zodResolver(LoginSchema)
   })
 
-  const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true)
-    try {
-      const response = await login(data)
-      setToken(response.token)
-      setUser(response.user)
-      toast.success('登录成功')
-      navigate('/dashboard')
-    } catch (error) {
-      const message = error instanceof Error ? error.message : '登录失败，请检查账号密码'
-      toast.error(message)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+    <div className="flex items-center justify-center min-h-screen bg-[var(--color-bg-base)]">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">LogiMap</CardTitle>
@@ -69,7 +44,7 @@ export function LoginPage() {
                 disabled={isLoading}
               />
               {errors.email && (
-                <p className="text-sm text-red-500">{errors.email.message}</p>
+                <p className="text-sm text-[var(--color-error-icon)]">{errors.email.message}</p>
               )}
             </div>
             <div className="space-y-2">
@@ -84,7 +59,7 @@ export function LoginPage() {
                 disabled={isLoading}
               />
               {errors.password && (
-                <p className="text-sm text-red-500">{errors.password.message}</p>
+                <p className="text-sm text-[var(--color-error-icon)]">{errors.password.message}</p>
               )}
             </div>
           </CardContent>
@@ -96,9 +71,9 @@ export function LoginPage() {
             >
               {isLoading ? '登录中...' : '登录'}
             </Button>
-            <p className="text-sm text-center text-gray-500">
+            <p className="text-sm text-center text-[var(--color-text-secondary)]">
               还没有账户？{' '}
-              <Link to="/register" className="text-blue-600 hover:underline">
+              <Link to="/register" className="text-[var(--color-text-brand)] hover:underline">
                 立即注册
               </Link>
             </p>

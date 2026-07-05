@@ -9,8 +9,10 @@ import type {
 } from '../types/system.types'
 
 // Systems API
-export async function fetchSystems(): Promise<System[]> {
-  const response = await apiClient.get('/api/v1/systems')
+export async function fetchSystems(teamId?: string): Promise<System[]> {
+  const response = await apiClient.get('/api/v1/systems', {
+    params: teamId ? { teamId } : undefined
+  })
   return response.data.data
 }
 
@@ -19,8 +21,13 @@ export async function fetchSystem(systemId: string): Promise<System> {
   return response.data.data
 }
 
-export async function createSystem(data: CreateSystemInput): Promise<System> {
-  const response = await apiClient.post('/api/v1/systems', data)
+export async function createSystem(
+  data: CreateSystemInput,
+  teamId: string
+): Promise<System> {
+  const response = await apiClient.post('/api/v1/systems', data, {
+    params: { teamId }
+  })
   return response.data.data
 }
 

@@ -1,5 +1,7 @@
+import { Prisma } from '@prisma/client'
 import { prisma } from '../db/prisma.js'
 import { generateId } from '../lib/id-generator.js'
+import type { Branch, EdgeCase, ConnectionType } from '@logimap/types'
 
 export class GraphService {
   async getGraphData(moduleId: string) {
@@ -28,8 +30,8 @@ export class GraphService {
     return {
       nodes: nodes.map((node) => ({
         ...node,
-        branches: node.branches as any[],
-        edgeCases: node.edgeCases as any[]
+        branches: node.branches as Branch[],
+        edgeCases: node.edgeCases as EdgeCase[]
       })),
       connections
     }
@@ -38,28 +40,23 @@ export class GraphService {
   async createConnection(
     sourceId: string,
     targetId: string,
-    type: string,
+    type: ConnectionType,
     label?: string,
     description?: string
   ) {
-    // 检查节点是否存在
-    const sourceNode = await prisma.logicNode.findUnique({
-      where: { id: sourceId }
-    })
+    const [sourceNode, targetNode] = await Promise.all([
+      prisma.logicNode.findUnique({ where: { id: sourceId } }),
+      prisma.logicNode.findUnique({ where: { id: targetId } })
+    ])
 
     if (!sourceNode) {
       throw new Error('源节点不存在')
     }
 
-    const targetNode = await prisma.logicNode.findUnique({
-      where: { id: targetId }
-    })
-
     if (!targetNode) {
       throw new Error('目标节点不存在')
     }
 
-    // 检查是否已存在
     const existing = await prisma.connection.findFirst({
       where: {
         sourceId,
@@ -76,7 +73,7 @@ export class GraphService {
         id: generateId(),
         sourceId,
         targetId,
-        type: type as any,
+        type,
         label,
         description
       }
@@ -85,9 +82,9 @@ export class GraphService {
 
   async updateConnection(
     connId: string,
-    data: { label?: string | null; description?: string | null; type?: 'TRIGGERS' | 'DEPENDS_ON' | 'BLOCKS' | 'EXTENDS' }
+    data: { label?: string | null; description?: string | null; type?: ConnectionType }
   ) {
-    const updateData: any = {}
+    const updateData: Prisma.ConnectionUpdateInput = {}
     if (data.label !== undefined) updateData.label = data.label
     if (data.description !== undefined) updateData.description = data.description
     if (data.type !== undefined) updateData.type = data.type

@@ -1,15 +1,20 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import type { User } from '../types/auth.types'
+import type { User, TeamSummary } from '../types/auth.types'
 
 interface AuthState {
   user: User | null
   token: string | null
   isAuthenticated: boolean
   isLoading: boolean
+  currentTeamId: string | null
+  teams: TeamSummary[]
   setUser: (user: User | null) => void
   setToken: (token: string | null) => void
+  setAuth: (user: User, token: string) => void
   setLoading: (loading: boolean) => void
+  setCurrentTeamId: (teamId: string | null) => void
+  setTeams: (teams: TeamSummary[]) => void
   logout: () => void
 }
 
@@ -20,6 +25,8 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       isAuthenticated: false,
       isLoading: false,
+      currentTeamId: null,
+      teams: [],
 
       setUser: (user) =>
         set((state) => ({
@@ -34,24 +41,38 @@ export const useAuthStore = create<AuthState>()(
         }))
       },
 
+      setAuth: (user, token) => {
+        set({ user, token, isAuthenticated: true })
+      },
+
       setLoading: (isLoading) => set({ isLoading }),
+
+      setCurrentTeamId: (currentTeamId) => set({ currentTeamId }),
+
+      setTeams: (teams) => set({ teams }),
 
       logout: () => {
         set({
           user: null,
           token: null,
-          isAuthenticated: false
+          isAuthenticated: false,
+          currentTeamId: null,
+          teams: []
         })
       }
     }),
     {
       name: 'auth-storage',
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ token: state.token, user: state.user }),
+      partialize: (state) => ({
+        token: state.token,
+        user: state.user,
+        currentTeamId: state.currentTeamId,
+        teams: state.teams
+      }),
       onRehydrateStorage: () => (state) => {
-        // 恢复状态后，根据是否有 token 设置认证状态
         if (state?.token && state?.user) {
-          state.isAuthenticated = true
+          return { isAuthenticated: true }
         }
       }
     }

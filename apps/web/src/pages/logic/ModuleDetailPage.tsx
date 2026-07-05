@@ -3,36 +3,38 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchModule } from '@/api/systems.api'
 import { fetchLogicNodes, createLogicNode, updateLogicNode, deleteLogicNode } from '@/api/logicNodes.api'
-import type { LogicNode, CreateLogicNodeInput, UpdateLogicNodeInput } from '@/types/logic-node.types'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog'
+import type { LogicNode } from '@/types/logic-node.types'
+import type { CreateLogicNodeInput, UpdateLogicNodeInput } from '@logimap/types'
+import { useAuthStore } from '@/stores/auth.store'
+import { NodeApprovalActions } from '@/components/approval/NodeApprovalActions'
+import { Button, Card, CardContent, CardHeader, CardTitle, Badge, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@logimap/ui'
 import { LogicNodeEditor } from '@/components/editor/LogicNodeEditor'
 import { toast } from 'sonner'
-import { ArrowLeft, Plus, Pencil, Trash2, FileText, Network } from 'lucide-react'
+import { ArrowLeft, Plus, Pencil, Trash2, FileText, Network, History } from 'lucide-react'
+import { VersionHistoryDialog } from '@/components/versions/VersionHistoryDialog'
 
 export function ModuleDetailPage() {
   const { moduleId } = useParams<{ moduleId: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { currentTeamId, teams } = useAuthStore()
+  const currentTeam = teams.find((t) => t.id === currentTeamId)
+  const userRole = currentTeam?.role || 'VIEWER'
   const [isEditorOpen, setIsEditorOpen] = useState(false)
   const [editingNode, setEditingNode] = useState<LogicNode | null>(null)
+  const [isVersionOpen, setIsVersionOpen] = useState(false)
+  const [versionNode, setVersionNode] = useState<LogicNode | null>(null)
 
   const { data: module, isLoading: loadingModule } = useQuery({
     queryKey: ['module', moduleId],
-    queryFn: () => fetchModule(moduleId!)
+    queryFn: () => fetchModule(moduleId!),
+    enabled: !!moduleId
   })
 
   const { data: nodes = [], isLoading: loadingNodes } = useQuery({
     queryKey: ['logicNodes', moduleId],
-    queryFn: () => fetchLogicNodes(moduleId!)
+    queryFn: () => fetchLogicNodes(moduleId!),
+    enabled: !!moduleId
   })
 
   const createMutation = useMutation({
@@ -97,7 +99,11 @@ export function ModuleDetailPage() {
     setIsEditorOpen(true)
   }
 
-  // 转换 LogicNode 为 LogicNodeForm 类型
+  const handleOpenVersions = (node: LogicNode) => {
+    setVersionNode(node)
+    setIsVersionOpen(true)
+  }
+
   const getNodeForm = (node: LogicNode) => ({
     name: node.name,
     summary: node.summary || undefined,
@@ -114,7 +120,7 @@ export function ModuleDetailPage() {
   if (loadingModule) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center text-gray-500">加载中...</div>
+        <div className="text-center text-[var(--color-text-secondary)]">加载中...</div>
       </div>
     )
   }
@@ -122,23 +128,23 @@ export function ModuleDetailPage() {
   if (!module) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center text-gray-500">模块不存在</div>
+        <div className="text-center text-[var(--color-text-secondary)]">模块不存在</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+    <div className="min-h-full bg-[var(--color-bg-base)]">
+      <main className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" onClick={() => navigate(`/systems/${module.systemId}`)}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               返回
             </Button>
             <div>
-              <h1 className="text-lg font-bold">{module.name}</h1>
-              <p className="text-sm text-gray-500">{module.description || module.slug}</p>
+              <h1 className="text-xl font-bold text-[var(--color-text-primary)]">{module.name}</h1>
+              <p className="text-sm text-[var(--color-text-secondary)]">{module.description || module.slug}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -152,16 +158,14 @@ export function ModuleDetailPage() {
             </Button>
           </div>
         </div>
-      </header>
 
-      <main className="container mx-auto px-4 py-8">
         {loadingNodes ? (
-          <div className="text-center text-gray-500 py-12">加载节点列表...</div>
+          <div className="text-center text-[var(--color-text-secondary)] py-12">加载节点列表...</div>
         ) : nodes.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg border">
-            <FileText className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">暂无逻辑节点</h3>
-            <p className="text-gray-500 mb-4">创建第一个逻辑节点来开始管理业务规则</p>
+          <div className="text-center py-12 bg-[var(--color-bg-elevated)] rounded-lg border border-[var(--color-border-default)]">
+            <FileText className="h-16 w-16 mx-auto text-[var(--color-text-tertiary)] mb-4" />
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">暂无逻辑节点</h3>
+            <p className="text-[var(--color-text-secondary)] mb-4">创建第一个逻辑节点来开始管理业务规则</p>
             <Button onClick={openNewNodeDialog}>
               <Plus className="h-4 w-4 mr-2" />
               创建节点
@@ -202,17 +206,26 @@ export function ModuleDetailPage() {
                 </CardHeader>
                 {node.summary && (
                   <CardContent className="pt-0">
-                    <p className="text-sm text-gray-600 line-clamp-2 mb-4">{node.summary}</p>
-                    <div className="flex items-center justify-between text-sm text-gray-500">
+                    <p className="text-sm text-[var(--color-text-secondary)] line-clamp-2 mb-4">{node.summary}</p>
+                    <div className="flex items-center justify-between text-sm text-[var(--color-text-secondary)]">
                       <span>
                         分支：{node.branches?.length || 0} |
                         边界：{node.edgeCases?.length || 0}
                       </span>
-                      <div className="flex gap-2">
+                      <div className="flex items-center gap-2">
+                        <NodeApprovalActions node={node} userRole={userRole} size="sm" />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleOpenVersions(node)}
+                        >
+                          <History className="h-4 w-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleEdit(node)}
+                          disabled={node.status === 'APPROVED'}
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
@@ -220,7 +233,7 @@ export function ModuleDetailPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDelete(node.id)}
-                          className="text-red-500 hover:text-red-700"
+                          className="text-[var(--color-error-icon)] hover:text-[var(--color-error-text)]"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -234,7 +247,6 @@ export function ModuleDetailPage() {
         )}
       </main>
 
-      {/* 节点编辑器 Dialog */}
       <Dialog open={isEditorOpen} onOpenChange={setIsEditorOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -255,6 +267,13 @@ export function ModuleDetailPage() {
           />
         </DialogContent>
       </Dialog>
+      <VersionHistoryDialog
+        nodeId={versionNode?.id || ''}
+        nodeName={versionNode?.name || ''}
+        open={isVersionOpen}
+        onOpenChange={setIsVersionOpen}
+        onRestore={() => queryClient.invalidateQueries({ queryKey: ['logicNodes', moduleId] })}
+      />
     </div>
   )
 }

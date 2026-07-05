@@ -1,30 +1,15 @@
 import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
-import { z } from 'zod'
+import { CreateConnectionSchema, UpdateConnectionSchema } from '@logimap/types'
 import { GraphService } from '../services/graph.service.js'
 import { authMiddleware } from '../middleware/auth.middleware.js'
+import { requireTeamRole, teamResolvers } from '../middleware/rbac.middleware.js'
 
 const graph = new GraphService()
 
-const CreateConnectionSchema = z.object({
-  sourceId: z.string(),
-  targetId: z.string(),
-  type: z.enum(['TRIGGERS', 'DEPENDS_ON', 'BLOCKS', 'EXTENDS']),
-  label: z.string().optional(),
-  description: z.string().optional()
-})
-
-const UpdateConnectionSchema = z.object({
-  label: z.string().optional(),
-  description: z.string().optional(),
-  type: z.enum(['TRIGGERS', 'DEPENDS_ON', 'BLOCKS', 'EXTENDS']).optional()
-})
-
 export const graphRoutes = new Hono()
   .use('*', authMiddleware)
-
-  // 获取图谱数据
-  .get('/', async (c) => {
+  .get('/', requireTeamRole('VIEWER', teamResolvers.fromModuleParam), async (c) => {
     try {
       const moduleId = c.req.param('moduleId')
       if (!moduleId) {
@@ -37,9 +22,7 @@ export const graphRoutes = new Hono()
       return c.json({ error: message, code: 'GET_GRAPH_FAILED' }, 500)
     }
   })
-
-  // 创建连线
-  .post('/connections', zValidator('json', CreateConnectionSchema), async (c) => {
+  .post('/connections', requireTeamRole('MEMBER', teamResolvers.fromModuleParam), zValidator('json', CreateConnectionSchema), async (c) => {
     try {
       const input = c.req.valid('json')
       const result = await graph.createConnection(
@@ -55,9 +38,7 @@ export const graphRoutes = new Hono()
       return c.json({ error: message, code: 'CREATE_FAILED' }, 400)
     }
   })
-
-  // 更新连线
-  .put('/connections/:connId', zValidator('json', UpdateConnectionSchema), async (c) => {
+  .put('/connections/:connId', requireTeamRole('MEMBER', teamResolvers.fromConnectionParam), zValidator('json', UpdateConnectionSchema), async (c) => {
     try {
       const connId = c.req.param('connId')
       const input = c.req.valid('json')
@@ -68,9 +49,7 @@ export const graphRoutes = new Hono()
       return c.json({ error: message, code: 'UPDATE_FAILED' }, 400)
     }
   })
-
-  // 删除连线
-  .delete('/connections/:connId', async (c) => {
+  .delete('/connections/:connId', requireTeamRole('MEMBER', teamResolvers.fromConnectionParam), async (c) => {
     try {
       const connId = c.req.param('connId')
       await graph.deleteConnection(connId)

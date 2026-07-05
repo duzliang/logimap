@@ -1,90 +1,68 @@
 import { memo } from 'react'
-import { Handle, Position } from '@xyflow/react'
+import { Handle, Position, type Node, type NodeProps } from '@xyflow/react'
 import { GitBranch, AlertTriangle } from 'lucide-react'
-import type { LogicNode } from '@/types/logic-node.types'
-import { cn } from '@/lib/utils'
+import type { LogicNodeData } from '@logimap/types'
+import { cn } from '@logimap/ui'
 
-interface LogicNodeData {
-  name: string
-  summary?: string
-  status: LogicNode['status']
-  priority: LogicNode['priority']
-  branches?: LogicNode['branches']
-  edgeCases?: LogicNode['edgeCases']
-  updatedAt?: string | null
-  className?: string
+type LogicNodeType = Node<LogicNodeData, 'logicNode'>
+
+function NodeHandle({ type }: { type: 'source' | 'target' }) {
+  return (
+    <Handle
+      type={type}
+      position={type === 'source' ? Position.Bottom : Position.Top}
+      className="!w-3 !h-3 !bg-[var(--color-text-tertiary)] !border-2 !border-[var(--color-bg-elevated)] hover:!bg-[var(--color-brand-default)] !transition-colors"
+    />
+  )
 }
 
-interface LogicNodeProps {
-  id: string
-  data: LogicNodeData
-  selected?: boolean
-}
-
-// 状态样式配置（按照 UI-SPEC.md Section 3.6）
 const statusStyles = {
   DRAFT: {
-    card: 'bg-white border-neutral-200',
-    badge: 'bg-neutral-100 text-neutral-600',
+    card: 'bg-[var(--color-bg-elevated)] border-[var(--color-border-default)]',
+    badge: 'bg-[var(--color-bg-sunken)] text-[var(--color-text-secondary)]',
     label: '草稿',
-    dot: 'bg-neutral-400',
   },
   REVIEW: {
-    card: 'bg-white border-amber-200',
-    badge: 'bg-amber-50 text-amber-800',
+    card: 'bg-[var(--color-bg-elevated)] border-[var(--color-warning-border)]',
+    badge: 'bg-[var(--color-warning-bg)] text-[var(--color-warning-text)]',
     label: '待审',
-    dot: 'bg-amber-500',
   },
   APPROVED: {
-    card: 'bg-white border-emerald-200',
-    badge: 'bg-emerald-50 text-emerald-800',
+    card: 'bg-[var(--color-bg-elevated)] border-[var(--color-success-border)]',
+    badge: 'bg-[var(--color-success-bg)] text-[var(--color-success-text)]',
     label: '已确认',
-    dot: 'bg-emerald-500',
   },
   DEPRECATED: {
-    card: 'bg-white border-rose-200 opacity-60',
-    badge: 'bg-rose-50 text-rose-800',
+    card: 'bg-[var(--color-bg-elevated)] border-[var(--color-error-border)] opacity-60',
+    badge: 'bg-[var(--color-error-bg)] text-[var(--color-error-text)]',
     label: '已废弃',
-    dot: 'bg-rose-500',
   },
 }
 
-export const LogicNodeComponent = memo(({ data, selected }: LogicNodeProps) => {
-  const nodeData = data as unknown as LogicNodeData
+export const LogicNodeComponent = memo(({ data, selected }: NodeProps<LogicNodeType>) => {
+  const status = data.status || 'DRAFT'
+  const statusStyle = statusStyles[status] || statusStyles.DRAFT
 
-  const status = nodeData?.status || 'DRAFT'
-  const statusStyle = statusStyles[status as keyof typeof statusStyles] || statusStyles.DRAFT
-
-  const branchCount = nodeData?.branches?.length || 0
-  const edgeCaseCount = nodeData?.edgeCases?.length || 0
-  const hasCriticalEdgeCases = nodeData?.edgeCases?.some((e) => e.severity === 'critical')
+  const branchCount = data.branches?.length || 0
+  const edgeCaseCount = data.edgeCases?.length || 0
+  const hasCriticalEdgeCases = data.edgeCases?.some((e) => e.severity === 'critical')
 
   return (
     <div
       className={cn(
-        // 基础样式
-        "w-[220px] bg-white rounded-xl border shadow-node",
+        "w-[220px] bg-[var(--color-bg-elevated)] rounded-xl border shadow-node",
         "cursor-pointer select-none",
         "hover:shadow-node-hover transition-shadow duration-150",
-        // 选中状态
-        selected && "ring-2 ring-violet-600 shadow-node-selected",
-        // 状态样式
-        statusStyle.card,
-        nodeData?.className
+        selected && "ring-2 ring-[var(--color-node-selected-ring)] shadow-node-selected",
+        statusStyle.card
       )}
     >
-      {/* 输入 Handle */}
-      <Handle
-        type="target"
-        position={Position.Top}
-        className="!w-3 !h-3 !bg-neutral-400 !border-2 !border-white hover:!bg-violet-500 !transition-colors"
-      />
+      <NodeHandle type="target" />
 
       <div className="p-3">
-        {/* 标题行 */}
         <div className="flex items-start justify-between gap-2 mb-1.5">
-          <span className="text-sm font-semibold text-neutral-900 leading-tight line-clamp-2 flex-1">
-            {nodeData?.name || '未命名节点'}
+          <span className="text-sm font-semibold text-[var(--color-text-primary)] leading-tight line-clamp-2 flex-1">
+            {data.name || '未命名节点'}
           </span>
           <span
             className={cn(
@@ -96,38 +74,31 @@ export const LogicNodeComponent = memo(({ data, selected }: LogicNodeProps) => {
           </span>
         </div>
 
-        {/* 摘要 */}
-        {nodeData?.summary && (
-          <p className="text-xs text-neutral-500 line-clamp-2 mb-2">
-            {nodeData.summary}
+        {data.summary && (
+          <p className="text-xs text-[var(--color-text-secondary)] line-clamp-2 mb-2">
+            {data.summary}
           </p>
         )}
 
-        {/* 底部信息 */}
-        <div className="flex items-center gap-3 text-xs text-neutral-400">
+        <div className="flex items-center gap-3 text-xs text-[var(--color-text-tertiary)]">
           <span className="flex items-center gap-1">
             <GitBranch className="w-3 h-3" />
             {branchCount} 分支
           </span>
           <span className={cn(
             "flex items-center gap-1",
-            hasCriticalEdgeCases && "text-rose-500 font-medium"
+            hasCriticalEdgeCases && "text-[var(--color-error-icon)] font-medium"
           )}>
             <AlertTriangle className="w-3 h-3" />
             {edgeCaseCount} 边界
             {hasCriticalEdgeCases && (
-              <span className="text-rose-500">!</span>
+              <span className="text-[var(--color-error-icon)]">!</span>
             )}
           </span>
         </div>
       </div>
 
-      {/* 输出 Handle */}
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        className="!w-3 !h-3 !bg-neutral-400 !border-2 !border-white hover:!bg-violet-500 !transition-colors"
-      />
+      <NodeHandle type="source" />
     </div>
   )
 })

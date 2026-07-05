@@ -4,18 +4,17 @@ import { LogicNodesService } from '../services/logic-nodes.service.js'
 import {
   CreateLogicNodeSchema,
   UpdateLogicNodeSchema,
-  UpdatePositionSchema
+  UpdatePositionSchema,
+  NodeApprovalSchema
 } from '../lib/validators.logic-node.js'
 import { authMiddleware } from '../middleware/auth.middleware.js'
-import { prisma } from '../db/prisma.js'
+import { requireTeamRole, teamResolvers } from '../middleware/rbac.middleware.js'
 
 const logicNodes = new LogicNodesService()
 
 export const logicNodesRoutes = new Hono()
   .use('*', authMiddleware)
-
-  // 获取模块下所有节点
-  .get('/', async (c) => {
+  .get('/', requireTeamRole('VIEWER', teamResolvers.fromModuleParam), async (c) => {
     try {
       const moduleId = c.req.param('moduleId')
       if (!moduleId) {
@@ -28,9 +27,7 @@ export const logicNodesRoutes = new Hono()
       return c.json({ error: message, code: 'GET_NODES_FAILED' }, 500)
     }
   })
-
-  // 创建节点
-  .post('/', zValidator('json', CreateLogicNodeSchema), async (c) => {
+  .post('/', requireTeamRole('MEMBER', teamResolvers.fromModuleParam), zValidator('json', CreateLogicNodeSchema), async (c) => {
     try {
       const user = c.get('user')
       const moduleId = c.req.param('moduleId')
@@ -45,9 +42,7 @@ export const logicNodesRoutes = new Hono()
       return c.json({ error: message, code: 'CREATE_FAILED' }, 400)
     }
   })
-
-  // 获取节点详情
-  .get('/:nodeId', async (c) => {
+  .get('/:nodeId', requireTeamRole('VIEWER', teamResolvers.fromNodeParam), async (c) => {
     try {
       const nodeId = c.req.param('nodeId')
       const result = await logicNodes.getById(nodeId)
@@ -57,23 +52,34 @@ export const logicNodesRoutes = new Hono()
       return c.json({ error: message, code: 'GET_NODE_FAILED' }, 404)
     }
   })
-
-  // 更新节点
-  .put('/:nodeId', zValidator('json', UpdateLogicNodeSchema), async (c) => {
+  .put('/:nodeId', requireTeamRole('MEMBER', teamResolvers.fromNodeParam), zValidator('json', UpdateLogicNodeSchema), async (c) => {
     try {
       const user = c.get('user')
+      const role = c.get('role')
       const nodeId = c.req.param('nodeId')
       const input = c.req.valid('json')
-      const result = await logicNodes.update(nodeId, input, user.userId)
+      const result = await logicNodes.update(nodeId, input, user.userId, role)
       return c.json({ data: result, message: '更新成功' })
     } catch (error) {
       const message = error instanceof Error ? error.message : '更新失败'
       return c.json({ error: message, code: 'UPDATE_FAILED' }, 400)
     }
   })
-
-  // 更新节点位置
-  .put('/:nodeId/position', zValidator('json', UpdatePositionSchema), async (c) => {
+  .post('/:nodeId/approval', requireTeamRole('MEMBER', teamResolvers.fromNodeParam), zValidator('json', NodeApprovalSchema), async (c) => {
+    try {
+      const user = c.get('user')
+      const role = c.get('role')
+      const nodeId = c.req.param('nodeId')
+      const { action, comment } = c.req.valid('json')
+      const result = await logicNodes.approve(nodeId, user.userId, action, role, comment)
+      return c.json({ data: result, message: '审批操作成功' })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '审批失败'
+      const code = error instanceof Error && error.name === 'InvalidTransitionError' ? 'INVALID_TRANSITION' : 'APPROVAL_FAILED'
+      return c.json({ error: message, code }, 400)
+    }
+  })
+  .put('/:nodeId/position', requireTeamRole('MEMBER', teamResolvers.fromNodeParam), zValidator('json', UpdatePositionSchema), async (c) => {
     try {
       const nodeId = c.req.param('nodeId')
       const input = c.req.valid('json')
@@ -84,9 +90,7 @@ export const logicNodesRoutes = new Hono()
       return c.json({ error: message, code: 'UPDATE_POSITION_FAILED' }, 400)
     }
   })
-
-  // 获取节点历史版本
-  .get('/:nodeId/versions', async (c) => {
+  .get('/:nodeId/versions', requireTeamRole('VIEWER', teamResolvers.fromNodeParam), async (c) => {
     try {
       const nodeId = c.req.param('nodeId')
       const result = await logicNodes.getVersions(nodeId)
@@ -96,9 +100,28 @@ export const logicNodesRoutes = new Hono()
       return c.json({ error: message, code: 'GET_VERSIONS_FAILED' }, 500)
     }
   })
+  .get('/:nodeId/versions/:version/diff', requireTeamRole('VIEWER', teamResolvers.fromNodeParam), async (c) => {
+    try {
+      const nodeId = c.req.param('nodeId')
+      const version = parseInt(c.req.param('version'))
+      const compareToRaw = c.req.query('compareTo')
 
-  // 恢复到指定版本
-  .post('/:nodeId/restore/:version', async (c) => {
+      if (isNaN(version)) {
+        return c.json({ error: '版本号无效', code: 'INVALID_VERSION' }, 400)
+      }
+
+      const compareTo = compareToRaw && compareToRaw !== 'current'
+        ? parseInt(compareToRaw)
+        : undefined
+
+      const result = await logicNodes.getVersionDiff(nodeId, version, compareTo)
+      return c.json({ data: result })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '对比失败'
+      return c.json({ error: message, code: 'DIFF_FAILED' }, 400)
+    }
+  })
+  .post('/:nodeId/restore/:version', requireTeamRole('MEMBER', teamResolvers.fromNodeParam), async (c) => {
     try {
       const user = c.get('user')
       const nodeId = c.req.param('nodeId')
@@ -108,16 +131,14 @@ export const logicNodesRoutes = new Hono()
         return c.json({ error: '版本号无效', code: 'INVALID_VERSION' }, 400)
       }
 
-      const result = await logicNodes.restoreVersion(nodeId, version)
+      const result = await logicNodes.restoreVersion(nodeId, version, user.userId)
       return c.json({ data: result, message: '恢复成功' })
     } catch (error) {
       const message = error instanceof Error ? error.message : '恢复失败'
       return c.json({ error: message, code: 'RESTORE_FAILED' }, 400)
     }
   })
-
-  // 删除节点
-  .delete('/:nodeId', async (c) => {
+  .delete('/:nodeId', requireTeamRole('ADMIN', teamResolvers.fromNodeParam), async (c) => {
     try {
       const nodeId = c.req.param('nodeId')
       await logicNodes.delete(nodeId)

@@ -1,4 +1,4 @@
-@import './styles/tokens.css';
+@import '@logimap/ui/styles';
 @import './styles/graph.css';
 
 @tailwind base;

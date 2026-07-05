@@ -1,5 +1,6 @@
 import { apiClient } from './client'
-import type { LoginInput, RegisterInput, AuthResponse, User } from '../types/auth.types'
+import type { LoginInput, RegisterInput } from '@logimap/types'
+import type { AuthResponse, User } from '../types/auth.types'
 
 export async function login(data: LoginInput): Promise<AuthResponse> {
   const response = await apiClient.post('/api/v1/auth/login', data)

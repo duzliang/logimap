@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button'
+import { Button } from '@logimap/ui'
 import { Plus, Layout, Maximize, Download, List } from 'lucide-react'
 
 interface GraphToolbarProps {
@@ -18,12 +18,12 @@ export function GraphToolbar({
 }: GraphToolbarProps) {
   return (
     <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between">
-      <div className="flex items-center gap-2 bg-white rounded-lg shadow-sm border p-2">
+      <div className="flex items-center gap-2 bg-[var(--color-bg-elevated)] rounded-lg shadow-sm border border-[var(--color-border-default)] p-2">
         <Button variant="ghost" size="sm" onClick={onCreateNode}>
           <Plus className="w-4 h-4 mr-2" />
           新建节点
         </Button>
-        <div className="w-px h-6 bg-gray-200 mx-2" />
+        <div className="w-px h-6 bg-[var(--color-border-default)] mx-2" />
         <Button variant="ghost" size="sm" onClick={onAutoLayout}>
           <Layout className="w-4 h-4 mr-2" />
           自动布局
@@ -34,11 +34,11 @@ export function GraphToolbar({
         </Button>
       </div>
 
-      <div className="flex items-center gap-2 bg-white rounded-lg shadow-sm border p-2">
+      <div className="flex items-center gap-2 bg-[var(--color-bg-elevated)] rounded-lg shadow-sm border border-[var(--color-border-default)] p-2">
         <Button variant="ghost" size="sm" onClick={onExportImage}>
           <Download className="w-4 h-4" />
         </Button>
-        <div className="w-px h-6 bg-gray-200 mx-2" />
+        <div className="w-px h-6 bg-[var(--color-border-default)] mx-2" />
         <Button variant="ghost" size="sm" onClick={onToggleListView}>
           <List className="w-4 h-4" />
         </Button>

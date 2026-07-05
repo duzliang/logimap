@@ -7,6 +7,13 @@ import type {
   UpdatePositionInput
 } from '../types/logic-node.types'
 
+export interface NodeDiff {
+  field: string
+  oldValue: unknown
+  newValue: unknown
+  kind: 'added' | 'removed' | 'changed' | 'unchanged'
+}
+
 // 获取模块下所有节点
 export async function fetchLogicNodes(moduleId: string): Promise<LogicNode[]> {
   const response = await apiClient.get(`/api/v1/modules/${moduleId}/nodes`)
@@ -65,5 +72,18 @@ export async function restoreLogicNodeVersion(
   version: number
 ): Promise<LogicNode> {
   const response = await apiClient.post(`/api/v1/nodes/${nodeId}/restore/${version}`)
+  return response.data.data
+}
+
+// 对比版本差异
+export async function fetchVersionDiff(
+  nodeId: string,
+  version: number,
+  compareTo?: number
+): Promise<NodeDiff[]> {
+  const params = compareTo !== undefined ? { compareTo } : {}
+  const response = await apiClient.get(`/api/v1/nodes/${nodeId}/versions/${version}/diff`, {
+    params
+  })
   return response.data.data
 }

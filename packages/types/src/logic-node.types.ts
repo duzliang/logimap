@@ -1,21 +1,12 @@
-// Logic Node 核心类型
-export interface Branch {
-  id: string
-  condition: string      // 条件描述，如「如果客户已付款」
-  action: string         // 结果动作，如「触发发票生成」
-  resultStatus?: string  // 结果状态
-  notes?: string
-}
+import type {
+  Branch,
+  EdgeCase,
+  LogicNodeStatus,
+  NodePriority
+} from './logic-node.schemas.js'
+import type { ConnectionType } from './graph.schemas.js'
 
-export interface EdgeCase {
-  id: string
-  scenario: string       // 场景描述，如「配件库存为 0 时」
-  handling: string       // 处理方式
-  severity: 'critical' | 'warning' | 'info'
-}
-
-export type LogicNodeStatus = 'DRAFT' | 'REVIEW' | 'APPROVED' | 'DEPRECATED'
-export type NodePriority = 'HIGH' | 'NORMAL' | 'LOW'
+export type { Branch, EdgeCase, LogicNodeStatus, NodePriority, ConnectionType }
 
 export interface LogicNodeData {
   id: string
@@ -40,6 +31,9 @@ export interface LogicNodeData {
   positionY?: number
   createdAt: string
   updatedAt: string
+
+  // React Flow 需要 data 满足 Record<string, unknown>
+  [key: string]: unknown
 }
 
 // React Flow 图谱专用类型
@@ -56,11 +50,8 @@ export interface GraphEdge {
   target: string
   label?: string
   type: 'default' | 'smoothstep'
-  data: { connectionType: string }
+  data: { connectionType: ConnectionType }
 }
-
-// 连线类型
-export type ConnectionType = 'TRIGGERS' | 'DEPENDS_ON' | 'BLOCKS' | 'EXTENDS'
 
 export interface GraphConnection {
   id: string

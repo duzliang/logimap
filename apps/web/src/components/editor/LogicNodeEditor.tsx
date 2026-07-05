@@ -1,14 +1,10 @@
 import { useState } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
+import { Button, Input, Textarea, Label, Badge, cn } from '@logimap/ui'
 import { Plus, Trash2, X, Sparkles, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { generateNodeContent, suggestEdgeCases } from '@/api/ai.api'
-import type { Branch, EdgeCase } from '@/types/logic-node.types'
+import type { Branch, EdgeCase } from '@logimap/types'
 
 interface LogicNodeForm {
   name: string
@@ -182,9 +178,9 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleConte
   return (
     <form onSubmit={handleSubmit(onSave)} className="space-y-6">
       {/* AI 辅助按钮 */}
-      <div className="flex gap-2 p-3 bg-violet-50 rounded-lg border border-violet-200">
-        <Sparkles className="h-5 w-5 text-violet-600" />
-        <span className="text-sm text-violet-700 font-medium">AI 辅助</span>
+      <div className="flex gap-2 p-3 bg-[var(--color-brand-subtle)] rounded-lg border border-[var(--color-brand-muted)]">
+        <Sparkles className="h-5 w-5 text-[var(--color-brand-default)]" />
+        <span className="text-sm text-[var(--color-brand-hover)] font-medium">AI 辅助</span>
         <div className="flex gap-2 ml-auto">
           <Button
             type="button"
@@ -192,7 +188,7 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleConte
             size="sm"
             onClick={handleAiGenerate}
             disabled={isAiLoading || !nodeName}
-            className="bg-violet-600 text-white hover:bg-violet-700"
+            className="bg-[var(--color-brand-default)] text-[var(--color-text-inverse)] hover:bg-[var(--color-brand-hover)]"
           >
             {isAiLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
             生成内容
@@ -277,7 +273,7 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleConte
           </div>
           <div className="space-y-2">
             {branchFields.length === 0 ? (
-              <p className="text-sm text-neutral-500 text-center py-4">暂无分支条件</p>
+              <p className="text-sm text-[var(--color-text-secondary)] text-center py-4">暂无分支条件</p>
             ) : (
               branchFields.map((field, index) => (
                 <div key={field.id} className="flex gap-2 items-start">
@@ -286,7 +282,7 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleConte
                     {...register(`branches.${index}.condition`)}
                     className="flex-1"
                   />
-                  <span className="text-neutral-400 pt-2">→</span>
+                  <span className="text-[var(--color-text-tertiary)] pt-2">→</span>
                   <Input
                     placeholder="那么..."
                     {...register(`branches.${index}.action`)}
@@ -297,7 +293,7 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleConte
                     variant="ghost"
                     size="sm"
                     onClick={() => removeBranch(index)}
-                    className="text-rose-500 hover:text-rose-700"
+                    className="text-[var(--color-error-icon)] hover:text-[var(--color-error-text)]"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -323,12 +319,12 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleConte
           </div>
           <div className="space-y-2">
             {edgeCaseFields.length === 0 ? (
-              <p className="text-sm text-neutral-500 text-center py-4">暂无边界条件</p>
+              <p className="text-sm text-[var(--color-text-secondary)] text-center py-4">暂无边界条件</p>
             ) : (
               edgeCaseFields.map((field, index) => {
                 const severity = edgeCases?.[index]?.severity || 'warning'
                 return (
-                  <div key={field.id} className="grid gap-2 p-3 border border-neutral-200 rounded-lg">
+                  <div key={field.id} className="grid gap-2 p-3 border border-[var(--color-border-default)] rounded-lg">
                     <div className="flex gap-2">
                       <Input
                         placeholder="场景描述"
@@ -338,10 +334,10 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleConte
                       <select
                         {...register(`edgeCases.${index}.severity`)}
                         className={cn(
-                          'h-10 rounded-lg border px-3 text-sm',
-                          severity === 'critical' ? 'border-rose-500 bg-rose-50' :
-                          severity === 'warning' ? 'border-amber-500 bg-amber-50' :
-                          'border-sky-500 bg-sky-50'
+                          'h-10 rounded-lg border border-[var(--color-border-default)] px-3 text-sm',
+                          severity === 'critical' ? 'border-[var(--color-error-icon)] bg-[var(--color-error-bg)]' :
+                          severity === 'warning' ? 'border-[var(--color-warning-icon)] bg-[var(--color-warning-bg)]' :
+                          'border-[var(--color-info-icon)] bg-[var(--color-info-bg)]'
                         )}
                       >
                         <option value="critical">严重</option>
@@ -353,7 +349,7 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleConte
                         variant="ghost"
                         size="sm"
                         onClick={() => removeEdgeCase(index)}
-                        className="text-rose-500 hover:text-rose-700"
+                        className="text-[var(--color-error-icon)] hover:text-[var(--color-error-text)]"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -387,7 +383,7 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleConte
           {tags.map((tag) => (
             <Badge key={tag} variant="secondary" className="gap-1">
               {tag}
-              <button type="button" onClick={() => removeTag(tag)} className="hover:text-rose-500">
+              <button type="button" onClick={() => removeTag(tag)} className="hover:text-[var(--color-error-icon)]">
                 <X className="h-3 w-3" />
               </button>
             </Badge>
@@ -418,7 +414,7 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleConte
       </div>
 
       {/* 操作按钮 */}
-      <div className="flex justify-end gap-2 pt-4 border-t border-neutral-200">
+      <div className="flex justify-end gap-2 pt-4 border-t border-[var(--color-border-default)]">
         <Button type="button" variant="outline" onClick={onCancel}>
           取消
         </Button>
@@ -430,6 +426,3 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleConte
   )
 }
 
-function cn(...classes: (string | undefined | null | false)[]) {
-  return classes.filter(Boolean).join(' ')
-}

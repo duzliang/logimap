@@ -1,21 +1,14 @@
-// 定义 Branch 和 EdgeCase 类型（本地定义，不依赖外部包）
-export interface Branch {
-  id: string
-  condition: string
-  action: string
-  resultStatus?: string
-  notes?: string
-}
+import type {
+  Branch,
+  EdgeCase,
+  LogicNodeStatus,
+  NodePriority,
+  CreateLogicNodeInput,
+  UpdateLogicNodeInput,
+  UpdatePositionInput
+} from '@logimap/types'
 
-export interface EdgeCase {
-  id: string
-  scenario: string
-  handling: string
-  severity: 'critical' | 'warning' | 'info'
-}
-
-export type LogicNodeStatus = 'DRAFT' | 'REVIEW' | 'APPROVED' | 'DEPRECATED'
-export type NodePriority = 'HIGH' | 'NORMAL' | 'LOW'
+export type { Branch, EdgeCase, LogicNodeStatus, NodePriority, CreateLogicNodeInput, UpdateLogicNodeInput, UpdatePositionInput }
 
 export interface LogicNode {
   id: string
@@ -49,47 +42,12 @@ export interface LogicNode {
 export interface LogicNodeVersion {
   id: string
   version: number
-  snapshot: any
+  snapshot: Record<string, unknown>
   changeNote?: string | null
   createdAt: string
   nodeId: string
-}
-
-export interface CreateLogicNodeInput {
-  name: string
-  summary?: string
-  status?: LogicNodeStatus
-  priority?: NodePriority
-  trigger?: string
-  dependsOn?: string
-  mainFlow?: string
-  branches?: Branch[]
-  edgeCases?: EdgeCase[]
-  codeRef?: string
-  tags?: string[]
-  notes?: string
-  positionX?: number
-  positionY?: number
-}
-
-export interface UpdateLogicNodeInput {
-  name?: string
-  summary?: string
-  status?: LogicNodeStatus
-  priority?: NodePriority
-  trigger?: string
-  dependsOn?: string
-  mainFlow?: string
-  branches?: Branch[]
-  edgeCases?: EdgeCase[]
-  codeRef?: string
-  tags?: string[]
-  notes?: string
-  positionX?: number
-  positionY?: number
-}
-
-export interface UpdatePositionInput {
-  positionX: number
-  positionY: number
+  createdBy?: {
+    id: string
+    name: string
+  } | null
 }

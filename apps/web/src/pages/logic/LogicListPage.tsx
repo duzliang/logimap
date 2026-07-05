@@ -9,30 +9,29 @@ import {
 } from '@tanstack/react-table'
 import { fetchLogicNodes, createLogicNode, updateLogicNode, deleteLogicNode } from '@/api/logicNodes.api'
 import { fetchModule } from '@/api/systems.api'
-import type { LogicNode, CreateLogicNodeInput, UpdateLogicNodeInput } from '@/types/logic-node.types'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog'
+import type { LogicNode } from '@/types/logic-node.types'
+import type { Branch, EdgeCase, CreateLogicNodeInput, UpdateLogicNodeInput } from '@logimap/types'
+import { useAuthStore } from '@/stores/auth.store'
+import { NodeApprovalActions } from '@/components/approval/NodeApprovalActions'
+import { Button, Input, Badge, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@logimap/ui'
 import { LogicNodeEditor } from '@/components/editor/LogicNodeEditor'
 import { toast } from 'sonner'
-import { Pencil, Trash2, FileText, ArrowLeft, Network } from 'lucide-react'
+import { Pencil, Trash2, FileText, ArrowLeft, Network, Plus, History } from 'lucide-react'
+import { VersionHistoryDialog } from '@/components/versions/VersionHistoryDialog'
 
 export function LogicListPage() {
   const { moduleId } = useParams<{ moduleId: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { currentTeamId, teams } = useAuthStore()
+  const currentTeam = teams.find((t) => t.id === currentTeamId)
+  const userRole = currentTeam?.role || 'VIEWER'
   const [search, setSearch] = useState('')
   const [isEditorOpen, setIsEditorOpen] = useState(false)
   const [editingNode, setEditingNode] = useState<LogicNode | null>(null)
+  const [isVersionOpen, setIsVersionOpen] = useState(false)
+  const [versionNode, setVersionNode] = useState<LogicNode | null>(null)
 
-  // 加载模块信息
   const { data: module } = useQuery({
     queryKey: ['module', moduleId],
     queryFn: () => fetchModule(moduleId!),
@@ -41,7 +40,8 @@ export function LogicListPage() {
 
   const { data: nodes = [], isLoading } = useQuery({
     queryKey: ['logicNodes', moduleId],
-    queryFn: () => fetchLogicNodes(moduleId!)
+    queryFn: () => fetchLogicNodes(moduleId!),
+    enabled: !!moduleId
   })
 
   const createMutation = useMutation({
@@ -99,6 +99,11 @@ export function LogicListPage() {
     setIsEditorOpen(true)
   }
 
+  function handleOpenVersions(node: LogicNode) {
+    setVersionNode(node)
+    setIsVersionOpen(true)
+  }
+
   const handleSave = (data: CreateLogicNodeInput | UpdateLogicNodeInput) => {
     if (editingNode) {
       updateMutation.mutate({ id: editingNode.id, data: data as UpdateLogicNodeInput })
@@ -107,7 +112,6 @@ export function LogicListPage() {
     }
   }
 
-  // 转换 LogicNode 为 LogicNodeForm 类型
   const getNodeForm = (node: LogicNode) => ({
     name: node.name,
     summary: node.summary || undefined,
@@ -161,13 +165,13 @@ export function LogicListPage() {
     {
       accessorKey: 'branches',
       header: '分支数',
-      cell: ({ getValue }) => (getValue() as any[])?.length || 0
+      cell: ({ getValue }) => (getValue() as Branch[])?.length || 0
     },
     {
       accessorKey: 'edgeCases',
       header: '边界条件',
       cell: ({ getValue }) => {
-        const edgeCases = getValue() as any[]
+        const edgeCases = getValue() as EdgeCase[]
         const criticalCount = edgeCases?.filter((e) => e.severity === 'critical').length || 0
         return (
           <div className="flex gap-1">
@@ -187,25 +191,38 @@ export function LogicListPage() {
     {
       id: 'actions',
       header: '操作',
-      cell: ({ row }) => (
-        <div className="flex gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleEdit(row.original)}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleDelete(row.original.id)}
-            className="text-red-500 hover:text-red-700"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      )
+      cell: ({ row }) => {
+        const node = row.original
+        const canEdit = node.status !== 'APPROVED'
+        return (
+          <div className="flex items-center gap-2">
+            <NodeApprovalActions node={node} userRole={userRole} size="sm" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleOpenVersions(node)}
+            >
+              <History className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEdit(node)}
+              disabled={!canEdit}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleDelete(node.id)}
+              className="text-[var(--color-error-icon)] hover:text-[var(--color-error-text)]"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        )
+      }
     }
   ]
 
@@ -218,24 +235,24 @@ export function LogicListPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center text-gray-500">加载中...</div>
+        <div className="text-center text-[var(--color-text-secondary)]">加载中...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <header className="bg-white border-b border-neutral-200">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+    <div className="min-h-full bg-[var(--color-bg-base)]">
+      <main className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" onClick={() => navigate(`/systems/${module?.systemId}`)}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               返回
             </Button>
             <div>
-              <h1 className="text-lg font-bold text-neutral-900">{module?.name || '逻辑节点管理'}</h1>
+              <h1 className="text-xl font-bold text-[var(--color-text-primary)]">{module?.name || '逻辑节点管理'}</h1>
               {module?.description && (
-                <p className="text-sm text-neutral-500">{module.description}</p>
+                <p className="text-sm text-[var(--color-text-secondary)]">{module.description}</p>
               )}
             </div>
           </div>
@@ -245,14 +262,13 @@ export function LogicListPage() {
               图谱视图
             </Button>
             <Button onClick={handleCreate}>
+              <Plus className="h-4 w-4 mr-2" />
               创建节点
             </Button>
           </div>
         </div>
-      </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="bg-white rounded-xl border border-neutral-200 shadow-card p-5">
+        <div className="bg-[var(--color-bg-elevated)] rounded-xl border border-[var(--color-border-default)] shadow-card p-5">
           <div className="flex gap-4 mb-4">
             <Input
               placeholder="搜索节点名称..."
@@ -266,11 +282,11 @@ export function LogicListPage() {
             <table className="w-full">
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id} className="border-b border-neutral-200">
+                  <tr key={headerGroup.id} className="border-b border-[var(--color-border-default)]">
                     {headerGroup.headers.map((header) => (
                       <th
                         key={header.id}
-                        className="h-12 px-4 text-left align-middle font-medium text-neutral-500"
+                        className="h-12 px-4 text-left align-middle font-medium text-[var(--color-text-secondary)]"
                       >
                         {flexRender(
                           header.column.columnDef.header,
@@ -283,7 +299,7 @@ export function LogicListPage() {
               </thead>
               <tbody>
                 {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="border-b border-neutral-200 hover:bg-neutral-50">
+                  <tr key={row.id} className="border-b border-[var(--color-border-default)] hover:bg-[var(--color-bg-base)]">
                     {row.getVisibleCells().map((cell) => (
                       <td key={cell.id} className="p-4">
                         {flexRender(
@@ -298,8 +314,8 @@ export function LogicListPage() {
             </table>
 
             {table.getRowModel().rows.length === 0 && (
-              <div className="text-center text-neutral-500 py-12">
-                <FileText className="h-12 w-12 mx-auto mb-4 text-neutral-400" />
+              <div className="text-center text-[var(--color-text-secondary)] py-12">
+                <FileText className="h-12 w-12 mx-auto mb-4 text-[var(--color-text-tertiary)]" />
                 <p>暂无节点数据</p>
               </div>
             )}
@@ -307,7 +323,6 @@ export function LogicListPage() {
         </div>
       </main>
 
-      {/* 节点编辑器 Dialog */}
       <Dialog open={isEditorOpen} onOpenChange={setIsEditorOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -328,6 +343,13 @@ export function LogicListPage() {
           />
         </DialogContent>
       </Dialog>
+      <VersionHistoryDialog
+        nodeId={versionNode?.id || ''}
+        nodeName={versionNode?.name || ''}
+        open={isVersionOpen}
+        onOpenChange={setIsVersionOpen}
+        onRestore={() => queryClient.invalidateQueries({ queryKey: ['logicNodes', moduleId] })}
+      />
     </div>
   )
 }

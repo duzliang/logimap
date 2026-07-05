@@ -1,17 +1,6 @@
 import { useState, useEffect } from 'react'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-
-export type ConnectionType = 'TRIGGERS' | 'DEPENDS_ON' | 'BLOCKS' | 'EXTENDS'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Button, Input, Label } from '@logimap/ui'
+import type { ConnectionType } from '@logimap/types'
 
 interface EdgeEditDialogProps {
   open: boolean
@@ -66,7 +55,7 @@ export function EdgeEditDialog({ open, onOpenChange, edgeData, onSave, onDelete 
               id="type"
               value={type}
               onChange={(e) => setType(e.target.value as ConnectionType)}
-              className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex h-10 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-elevated)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-border-focus)]"
             >
               {connectionTypes.map((ct) => (
                 <option key={ct.value} value={ct.value}>
@@ -86,7 +75,7 @@ export function EdgeEditDialog({ open, onOpenChange, edgeData, onSave, onDelete 
           </div>
         </div>
         <DialogFooter className="flex justify-between sm:justify-between">
-          <Button variant="outline" onClick={onDelete} className="text-red-600 hover:text-red-700 hover:bg-red-50">
+          <Button variant="outline" onClick={onDelete} className="text-[var(--color-error-text)] hover:text-[var(--color-error-text)] hover:bg-[var(--color-error-bg)]">
             删除连线
           </Button>
           <div className="flex gap-2">

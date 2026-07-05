@@ -1,13 +1,7 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Button, Badge } from '@logimap/ui'
 import { Edit, FileText, AlertTriangle } from 'lucide-react'
+import { NodeApprovalActions } from '@/components/approval/NodeApprovalActions'
+import type { TeamRole, LogicNodeStatus, NodePriority } from '@logimap/types'
 
 interface NodeDetailDialogProps {
   open: boolean
@@ -20,33 +14,37 @@ interface NodeDetailDialogProps {
     mainFlow?: string
     branches?: Array<{ condition: string; action: string }>
     edgeCases?: Array<{ scenario: string; handling: string; severity: string }>
-    status: string
-    priority: string
+    status: LogicNodeStatus
+    priority: NodePriority
+    moduleId: string
   } | null
+  userRole: TeamRole
   onEdit: () => void
+  onStatusChange?: () => void
 }
 
-const statusConfig: Record<string, { label: string; color: string }> = {
-  DRAFT: { label: '草稿', color: 'bg-gray-500' },
-  REVIEW: { label: '待评审', color: 'bg-yellow-500' },
-  APPROVED: { label: '已确认', color: 'bg-green-500' },
-  DEPRECATED: { label: '已废弃', color: 'bg-red-500' }
+const statusConfig: Record<LogicNodeStatus, { label: string; color: string }> = {
+  DRAFT: { label: '草稿', color: 'bg-[var(--color-text-secondary)]' },
+  REVIEW: { label: '待评审', color: 'bg-[var(--color-warning-icon)]' },
+  APPROVED: { label: '已确认', color: 'bg-[var(--color-success-icon)]' },
+  DEPRECATED: { label: '已废弃', color: 'bg-[var(--color-error-icon)]' }
 }
 
-const priorityConfig: Record<string, { label: string; color: string }> = {
-  HIGH: { label: '高优先级', color: 'text-red-600' },
-  NORMAL: { label: '普通', color: 'text-blue-600' },
-  LOW: { label: '低优先级', color: 'text-gray-600' }
+const priorityConfig: Record<NodePriority, { label: string; color: string }> = {
+  HIGH: { label: '高优先级', color: 'text-[var(--color-error-text)]' },
+  NORMAL: { label: '普通', color: 'text-[var(--color-text-brand)]' },
+  LOW: { label: '低优先级', color: 'text-[var(--color-text-secondary)]' }
 }
 
-export function NodeDetailDialog({ open, onOpenChange, nodeData, onEdit }: NodeDetailDialogProps) {
+export function NodeDetailDialog({ open, onOpenChange, nodeData, userRole, onEdit, onStatusChange }: NodeDetailDialogProps) {
   if (!nodeData) return null
 
-  const status = statusConfig[nodeData.status] || { label: nodeData.status, color: 'bg-gray-500' }
-  const priority = priorityConfig[nodeData.priority] || { label: '普通', color: 'text-gray-600' }
+  const status = statusConfig[nodeData.status] || { label: nodeData.status, color: 'bg-[var(--color-text-secondary)]' }
+  const priority = priorityConfig[nodeData.priority] || { label: '普通', color: 'text-[var(--color-text-secondary)]' }
   const branchCount = nodeData.branches?.length || 0
   const edgeCaseCount = nodeData.edgeCases?.length || 0
   const criticalEdgeCases = nodeData.edgeCases?.filter((e) => e.severity === 'critical').length || 0
+  const canEdit = nodeData.status !== 'APPROVED'
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -66,40 +64,40 @@ export function NodeDetailDialog({ open, onOpenChange, nodeData, onEdit }: NodeD
           {/* 触发条件 */}
           {nodeData.trigger && (
             <div className="space-y-1">
-              <h4 className="font-medium text-sm text-gray-700">触发条件</h4>
-              <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md">{nodeData.trigger}</p>
+              <h4 className="font-medium text-sm text-[var(--color-text-primary)]">触发条件</h4>
+              <p className="text-sm text-[var(--color-text-secondary)] bg-[var(--color-bg-base)] p-3 rounded-md">{nodeData.trigger}</p>
             </div>
           )}
 
           {/* 前置依赖 */}
           {nodeData.dependsOn && (
             <div className="space-y-1">
-              <h4 className="font-medium text-sm text-gray-700">前置依赖</h4>
-              <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md">{nodeData.dependsOn}</p>
+              <h4 className="font-medium text-sm text-[var(--color-text-primary)]">前置依赖</h4>
+              <p className="text-sm text-[var(--color-text-secondary)] bg-[var(--color-bg-base)] p-3 rounded-md">{nodeData.dependsOn}</p>
             </div>
           )}
 
           {/* 主流程 */}
           {nodeData.mainFlow && (
             <div className="space-y-1">
-              <h4 className="font-medium text-sm text-gray-700">主流程</h4>
-              <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md whitespace-pre-wrap">{nodeData.mainFlow}</p>
+              <h4 className="font-medium text-sm text-[var(--color-text-primary)]">主流程</h4>
+              <p className="text-sm text-[var(--color-text-secondary)] bg-[var(--color-bg-base)] p-3 rounded-md whitespace-pre-wrap">{nodeData.mainFlow}</p>
             </div>
           )}
 
           {/* 分支条件 */}
           {branchCount > 0 && (
             <div className="space-y-2">
-              <h4 className="font-medium text-sm text-gray-700 flex items-center gap-1">
+              <h4 className="font-medium text-sm text-[var(--color-text-primary)] flex items-center gap-1">
                 <FileText className="w-4 h-4" />
                 分支条件 ({branchCount})
               </h4>
               <div className="space-y-2">
                 {nodeData.branches?.map((branch, index) => (
-                  <div key={index} className="flex items-center gap-2 text-sm bg-gray-50 p-2 rounded">
-                    <span className="text-gray-500">如果</span>
+                  <div key={index} className="flex items-center gap-2 text-sm bg-[var(--color-bg-base)] p-2 rounded">
+                    <span className="text-[var(--color-text-secondary)]">如果</span>
                     <span className="font-medium">{branch.condition}</span>
-                    <span className="text-gray-400">→</span>
+                    <span className="text-[var(--color-text-tertiary)]">→</span>
                     <span>{branch.action}</span>
                   </div>
                 ))}
@@ -110,10 +108,10 @@ export function NodeDetailDialog({ open, onOpenChange, nodeData, onEdit }: NodeD
           {/* 边界条件 */}
           {edgeCaseCount > 0 && (
             <div className="space-y-2">
-              <h4 className="font-medium text-sm text-gray-700 flex items-center gap-1">
+              <h4 className="font-medium text-sm text-[var(--color-text-primary)] flex items-center gap-1">
                 <AlertTriangle className="w-4 h-4" />
                 边界条件 ({edgeCaseCount}
-                {criticalEdgeCases > 0 && <span className="text-red-500">, {criticalEdgeCases} 严重</span>})
+                {criticalEdgeCases > 0 && <span className="text-[var(--color-error-icon)]">, {criticalEdgeCases} 严重</span>})
               </h4>
               <div className="space-y-2">
                 {nodeData.edgeCases?.map((edgeCase, index) => (
@@ -121,14 +119,14 @@ export function NodeDetailDialog({ open, onOpenChange, nodeData, onEdit }: NodeD
                     key={index}
                     className={`p-2 rounded text-sm ${
                       edgeCase.severity === 'critical'
-                        ? 'bg-red-50 border border-red-200'
+                        ? 'bg-[var(--color-error-bg)] border border-[var(--color-border-default)] border-[var(--color-error-border)]'
                         : edgeCase.severity === 'warning'
-                        ? 'bg-yellow-50 border border-yellow-200'
-                        : 'bg-blue-50 border border-blue-200'
+                        ? 'bg-[var(--color-warning-bg)] border border-[var(--color-border-default)] border-[var(--color-warning-border)]'
+                        : 'bg-[var(--color-info-bg)] border border-[var(--color-border-default)] border-[var(--color-info-border)]'
                     }`}
                   >
                     <div className="font-medium">{edgeCase.scenario}</div>
-                    <div className="text-gray-600 mt-1">处理：{edgeCase.handling}</div>
+                    <div className="text-[var(--color-text-secondary)] mt-1">处理：{edgeCase.handling}</div>
                   </div>
                 ))}
               </div>
@@ -136,14 +134,22 @@ export function NodeDetailDialog({ open, onOpenChange, nodeData, onEdit }: NodeD
           )}
         </div>
 
-        <div className="flex justify-end gap-2 mt-6 pt-4 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            关闭
-          </Button>
-          <Button onClick={onEdit}>
-            <Edit className="w-4 h-4 mr-2" />
-            编辑
-          </Button>
+        <div className="flex justify-between items-center gap-2 mt-6 pt-4 border-t border-[var(--color-border-default)]">
+          <NodeApprovalActions
+            node={nodeData}
+            userRole={userRole}
+            size="sm"
+            onStatusChange={onStatusChange}
+          />
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              关闭
+            </Button>
+            <Button onClick={onEdit} disabled={!canEdit}>
+              <Edit className="w-4 h-4 mr-2" />
+              编辑
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

@@ -1,4 +1,3 @@
-/* apps/web/src/styles/tokens.css */
 /* LogiMap Design Tokens v1.0 */
 
 :root {
@@ -142,51 +141,8 @@
 }
 
 /* ───────────────────────────────────── */
-/* 暗色模式 Token                        */
+/* 暗色模式 Token（通过 .dark 类切换）   */
 /* ───────────────────────────────────── */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg-base:     #0C0A09;
-    --color-bg-elevated: #1C1917;
-    --color-bg-sunken:   #0C0A09;
-    --color-bg-overlay:  rgba(0, 0, 0, 0.72);
-    --color-bg-dialog:   #1C1917;
-    --color-bg-tooltip:  #F5F5F4;
-
-    --color-text-primary:   #FAFAF9;
-    --color-text-secondary: #A8A29E;
-    --color-text-tertiary:  #57534E;
-    --color-text-disabled:  #44403C;
-    --color-text-brand:     #818CF8;
-
-    --color-border-default: #292524;
-    --color-border-strong:  #44403C;
-    --color-border-focus:   #818CF8;
-
-    --color-brand-default: #6366F1;
-    --color-brand-hover:   #818CF8;
-    --color-brand-subtle:  rgba(99, 102, 241, 0.12);
-    --color-brand-muted:   rgba(99, 102, 241, 0.20);
-
-    --color-node-draft-bg:     #292524;
-    --color-node-draft-border: #44403C;
-    --color-node-draft-text:   #A8A29E;
-
-    --color-node-review-bg:     rgba(245,158,11,.12);
-    --color-node-review-border: rgba(245,158,11,.30);
-    --color-node-review-text:   #FDE68A;
-
-    --color-node-approved-bg:     rgba(16,185,129,.12);
-    --color-node-approved-border: rgba(16,185,129,.30);
-    --color-node-approved-text:   #A7F3D0;
-
-    --color-node-deprecated-bg:     rgba(239,68,68,.10);
-    --color-node-deprecated-border: rgba(239,68,68,.25);
-    --color-node-deprecated-text:   #FECDD3;
-  }
-}
-
-/* 强制暗色模式类 */
 .dark {
   --color-bg-base:     #0C0A09;
   --color-bg-elevated: #1C1917;

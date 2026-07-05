@@ -18,9 +18,12 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  memberships  TeamMember[]
-  createdNodes LogicNode[] @relation("CreatedBy")
-  updatedNodes LogicNode[] @relation("UpdatedBy")
+  memberships     TeamMember[]
+  invitationsSent TeamInvitation[]
+  approvals       ApprovalRecord[]
+  versions        LogicNodeVersion[]
+  createdNodes    LogicNode[] @relation("CreatedBy")
+  updatedNodes    LogicNode[] @relation("UpdatedBy")
 }
 
 model Team {
@@ -31,8 +34,9 @@ model Team {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  members  TeamMember[]
-  systems  System[]
+  members     TeamMember[]
+  invitations TeamInvitation[]
+  systems     System[]
 }
 
 model TeamMember {
@@ -53,6 +57,54 @@ enum TeamRole {
   ADMIN
   MEMBER
   VIEWER
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+}
+
+enum ApprovalAction {
+  SUBMIT
+  APPROVE
+  REJECT
+  DEPRECATE
+  REVOKE
+}
+
+model TeamInvitation {
+  id        String           @id @default(cuid())
+  email     String
+  role      TeamRole         @default(MEMBER)
+  status    InvitationStatus @default(PENDING)
+  token     String           @unique @default(cuid())
+  expiresAt DateTime
+  createdAt DateTime         @default(now())
+
+  teamId      String
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  invitedById String
+  invitedBy   User     @relation(fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([token])
+}
+
+model ApprovalRecord {
+  id        String          @id @default(cuid())
+  fromStatus LogicNodeStatus
+  toStatus  LogicNodeStatus
+  action    ApprovalAction
+  comment   String?
+  createdAt DateTime        @default(now())
+
+  nodeId     String
+  node       LogicNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  reviewerId String
+  reviewer   User      @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
+
+  @@index([nodeId, createdAt])
 }
 
 // ── 核心业务模型 ─────────────────────────────────
@@ -127,6 +179,7 @@ model LogicNode {
   outgoing    Connection[] @relation("SourceNode")
   incoming    Connection[] @relation("TargetNode")
   versions    LogicNodeVersion[]
+  approvalRecords ApprovalRecord[]
 }
 
 enum LogicNodeStatus {
@@ -173,6 +226,8 @@ model LogicNodeVersion {
 
   nodeId      String
   node        LogicNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  createdById String?
+  createdBy   User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
 
   @@unique([nodeId, version])
 }

@@ -5,12 +5,18 @@ import {
   EdgeProps,
   getBezierPath
 } from '@xyflow/react'
+import { ConnectionType } from '@logimap/types'
 
-const connectionTypeConfig: Record<string, { label: string; color: string }> = {
-  TRIGGERS: { label: '触发', color: '#3b82f6' },
-  DEPENDS_ON: { label: '依赖', color: '#8b5cf6' },
-  BLOCKS: { label: '阻断', color: '#ef4444' },
-  EXTENDS: { label: '扩展', color: '#22c55e' }
+interface EdgeData {
+  connectionType: ConnectionType
+  label?: string
+}
+
+const connectionTypeConfig: Record<ConnectionType, { label: string; color: string }> = {
+  TRIGGERS: { label: '触发', color: 'var(--color-info-icon)' },
+  DEPENDS_ON: { label: '依赖', color: 'var(--color-text-brand)' },
+  BLOCKS: { label: '阻断', color: 'var(--color-error-icon)' },
+  EXTENDS: { label: '扩展', color: 'var(--color-success-icon)' }
 }
 
 export const LogicEdge = memo((props: EdgeProps) => {
@@ -25,9 +31,10 @@ export const LogicEdge = memo((props: EdgeProps) => {
     data
   } = props
 
-  const connectionType = (data as any)?.connectionType || 'TRIGGERS'
-  const config = connectionTypeConfig[connectionType] || connectionTypeConfig.TRIGGERS
-  const label = (data as any)?.label || config.label
+  const edgeData = data as EdgeData | undefined
+  const connectionType = edgeData?.connectionType || 'TRIGGERS'
+  const config = connectionTypeConfig[connectionType]
+  const label = edgeData?.label || config.label
 
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
@@ -48,7 +55,7 @@ export const LogicEdge = memo((props: EdgeProps) => {
             position: 'absolute',
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
             pointerEvents: 'all',
-            background: 'white',
+            background: 'var(--color-bg-elevated)',
             border: `1px solid ${config.color}`,
             borderRadius: '4px',
             padding: '2px 6px',

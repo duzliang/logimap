@@ -1,6 +1,5 @@
 import { apiClient } from './client'
-
-export type ConnectionType = 'TRIGGERS' | 'DEPENDS_ON' | 'BLOCKS' | 'EXTENDS'
+import type { ConnectionType } from '@logimap/types'
 
 export interface Connection {
   id: string

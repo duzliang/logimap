@@ -1,54 +1,30 @@
-import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import { RegisterSchema, type RegisterInput } from '@logimap/types'
 import { register as registerApi } from '@/api/auth.api'
-import { useAuthStore } from '@/stores/auth.store'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { toast } from 'sonner'
-
-const registerSchema = z.object({
-  name: z.string().min(1, '请输入用户名').max(50, '用户名不能超过 50 个字符'),
-  email: z.string().email('请输入有效的邮箱地址'),
-  password: z.string().min(6, '密码至少 6 个字符').max(50, '密码不能超过 50 个字符')
-})
-
-type RegisterFormData = z.infer<typeof registerSchema>
+import { useAuthSubmit } from '@/hooks/useAuthSubmit'
+import { Button, Input, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@logimap/ui'
 
 export function RegisterPage() {
-  const navigate = useNavigate()
-  const { setToken, setUser } = useAuthStore()
-  const [isLoading, setIsLoading] = useState(false)
+  const [searchParams] = useSearchParams()
+  const invitationToken = searchParams.get('invitation') || undefined
+  const { isLoading, submit: onSubmit } = useAuthSubmit({
+    onSubmit: (data: RegisterInput) => registerApi({ ...data, invitationToken }),
+    successMessage: '注册成功',
+    errorMessage: '注册失败'
+  })
 
   const {
     register,
     handleSubmit,
     formState: { errors }
-  } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema)
+  } = useForm<RegisterInput>({
+    resolver: zodResolver(RegisterSchema)
   })
 
-  const onSubmit = async (data: RegisterFormData) => {
-    setIsLoading(true)
-    try {
-      const response = await registerApi(data)
-      setToken(response.token)
-      setUser(response.user)
-      toast.success('注册成功')
-      navigate('/dashboard')
-    } catch (error) {
-      const message = error instanceof Error ? error.message : '注册失败'
-      toast.error(message)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+    <div className="flex items-center justify-center min-h-screen bg-[var(--color-bg-base)]">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">LogiMap</CardTitle>
@@ -70,7 +46,7 @@ export function RegisterPage() {
                 disabled={isLoading}
               />
               {errors.name && (
-                <p className="text-sm text-red-500">{errors.name.message}</p>
+                <p className="text-sm text-[var(--color-error-icon)]">{errors.name.message}</p>
               )}
             </div>
             <div className="space-y-2">
@@ -85,7 +61,7 @@ export function RegisterPage() {
                 disabled={isLoading}
               />
               {errors.email && (
-                <p className="text-sm text-red-500">{errors.email.message}</p>
+                <p className="text-sm text-[var(--color-error-icon)]">{errors.email.message}</p>
               )}
             </div>
             <div className="space-y-2">
@@ -100,7 +76,7 @@ export function RegisterPage() {
                 disabled={isLoading}
               />
               {errors.password && (
-                <p className="text-sm text-red-500">{errors.password.message}</p>
+                <p className="text-sm text-[var(--color-error-icon)]">{errors.password.message}</p>
               )}
             </div>
           </CardContent>
@@ -112,9 +88,9 @@ export function RegisterPage() {
             >
               {isLoading ? '注册中...' : '注册'}
             </Button>
-            <p className="text-sm text-center text-gray-500">
+            <p className="text-sm text-center text-[var(--color-text-secondary)]">
               已有账户？{' '}
-              <Link to="/login" className="text-blue-600 hover:underline">
+              <Link to="/login" className="text-[var(--color-text-brand)] hover:underline">
                 立即登录
               </Link>
             </p>

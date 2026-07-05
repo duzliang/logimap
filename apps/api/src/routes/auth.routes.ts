@@ -5,7 +5,6 @@ import { RegisterSchema, LoginSchema, UpdateUserSchema } from '../lib/validators
 import { authMiddleware } from '../middleware/auth.middleware.js'
 import type { UserContext } from '../middleware/auth.middleware.js'
 
-// 扩展 Hono 的 Context 类型
 declare module 'hono' {
   interface ContextVariableMap {
     user: UserContext
@@ -15,7 +14,6 @@ declare module 'hono' {
 const auth = new AuthService()
 
 export const authRoutes = new Hono()
-  // 注册
   .post('/register', zValidator('json', RegisterSchema), async (c) => {
     try {
       const input = c.req.valid('json')
@@ -26,8 +24,6 @@ export const authRoutes = new Hono()
       return c.json({ error: message, code: 'REGISTER_FAILED' }, 400)
     }
   })
-
-  // 登录
   .post('/login', zValidator('json', LoginSchema), async (c) => {
     try {
       const { email, password } = c.req.valid('json')
@@ -38,8 +34,6 @@ export const authRoutes = new Hono()
       return c.json({ error: message, code: 'LOGIN_FAILED' }, 401)
     }
   })
-
-  // 获取当前用户信息 (需要登录)
   .get('/me', authMiddleware, async (c) => {
     try {
       const user = c.get('user')
@@ -50,8 +44,6 @@ export const authRoutes = new Hono()
       return c.json({ error: message, code: 'GET_USER_FAILED' }, 404)
     }
   })
-
-  // 更新用户信息 (需要登录)
   .put('/me', authMiddleware, zValidator('json', UpdateUserSchema), async (c) => {
     try {
       const user = c.get('user')
@@ -63,8 +55,6 @@ export const authRoutes = new Hono()
       return c.json({ error: message, code: 'UPDATE_FAILED' }, 400)
     }
   })
-
-  // 登出 (前端处理，后端仅返回成功)
   .post('/logout', authMiddleware, async (c) => {
     return c.json({ message: '登出成功' })
   })
