@@ -10,6 +10,7 @@ import { graphRoutes } from './routes/graph.routes.js'
 import { aiRoutes } from './routes/ai.routes.js'
 import { teamsRoutes } from './routes/teams.routes.js'
 import { nodeDetailRoutes } from './routes/nodes.routes.js'
+import { notificationsRoutes } from './routes/notifications.routes.js'
 import { authMiddleware } from './middleware/auth.middleware.js'
 import { ModulesService } from './services/modules.service.js'
 import { requireTeamRole, teamResolvers } from './middleware/rbac.middleware.js'
@@ -70,3 +71,4 @@ app.route('/api/v1/modules/:moduleId/graph', graphRoutes)
 app.route('/api/v1/nodes/:nodeId', nodeDetailRoutes)
 app.route('/api/v1/ai', aiRoutes)
 app.route('/api/v1/teams', teamsRoutes)
+app.route('/api/v1/notifications', notificationsRoutes)

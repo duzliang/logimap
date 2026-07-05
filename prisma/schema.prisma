@@ -24,6 +24,8 @@ model User {
   versions        LogicNodeVersion[]
   createdNodes    LogicNode[] @relation("CreatedBy")
   updatedNodes    LogicNode[] @relation("UpdatedBy")
+  notifications   Notification[]
+  actorNotifications Notification[] @relation("ActorNotifications")
 }
 
 model Team {
@@ -37,6 +39,7 @@ model Team {
   members     TeamMember[]
   invitations TeamInvitation[]
   systems     System[]
+  notifications Notification[]
 }
 
 model TeamMember {
@@ -139,6 +142,7 @@ model Module {
   systemId    String
   system      System   @relation(fields: [systemId], references: [id], onDelete: Cascade)
   logicNodes  LogicNode[]
+  notifications Notification[]
 
   @@unique([systemId, slug])
 }
@@ -180,6 +184,7 @@ model LogicNode {
   incoming    Connection[] @relation("TargetNode")
   versions    LogicNodeVersion[]
   approvalRecords ApprovalRecord[]
+  notifications Notification[]
 }
 
 enum LogicNodeStatus {
@@ -217,6 +222,19 @@ enum ConnectionType {
   EXTENDS       // A 扩展 B
 }
 
+enum NotificationType {
+  NODE_STATUS_CHANGED
+  NODE_REVIEW_REQUESTED
+  NODE_REVIEW_APPROVED
+  NODE_REVIEW_REJECTED
+  NODE_DEPRECATED
+  MENTIONED_IN_NODE
+  TEAM_INVITATION_RECEIVED
+  TEAM_INVITATION_ACCEPTED
+  TEAM_ROLE_CHANGED
+  SYSTEM_BROADCAST
+}
+
 model LogicNodeVersion {
   id          String    @id @default(cuid())
   version     Int
@@ -230,4 +248,36 @@ model LogicNodeVersion {
   createdBy   User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
 
   @@unique([nodeId, version])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  title     String
+  body      String
+  payload   Json?            // 扩展字段：nodeName, teamName, actorName 等
+
+  isRead    Boolean          @default(false)
+  readAt    DateTime?
+  emailSent Boolean          @default(false)
+  emailSentAt DateTime?
+
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  actorId   String?
+  actor     User?            @relation("ActorNotifications", fields: [actorId], references: [id], onDelete: SetNull)
+
+  teamId    String?
+  team      Team?            @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  nodeId    String?
+  node      LogicNode?       @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  moduleId  String?
+  module    Module?          @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([createdAt])
 }

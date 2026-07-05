@@ -1,10 +1,17 @@
 import { prisma } from '../db/prisma.js'
 import { generateId } from '../lib/id-generator.js'
 import { hasRole } from '../lib/rbac.js'
+import { NotificationsService } from './notifications.service.js'
+import {
+  buildTeamInvitationNotification,
+  buildInvitationAcceptedNotification,
+  buildRoleChangedNotification
+} from '../lib/notifications.js'
 import type { TeamRole, InviteMemberInput, UpdateMemberRoleInput, UpdateTeamInput, CreateTeamInput } from '@logimap/types'
 import type { Prisma } from '@prisma/client'
 
 const INVITATION_EXPIRES_DAYS = 7
+const notifications = new NotificationsService()
 
 export class TeamsService {
   async getUserTeams(userId: string) {
@@ -162,6 +169,28 @@ export class TeamsService {
         }
       })
 
+      const inviter = await prisma.user.findUnique({
+        where: { id: invitedById },
+        select: { id: true, name: true }
+      })
+
+      const team = await prisma.team.findUnique({
+        where: { id: teamId },
+        select: { id: true, name: true }
+      })
+
+      if (team) {
+        await notifications.createNotification(
+          buildTeamInvitationNotification({
+            userId: existingUser.id,
+            actorId: invitedById,
+            team,
+            role: input.role,
+            actorName: inviter?.name || undefined
+          })
+        )
+      }
+
       return {
         type: 'member' as const,
         email: normalizedEmail,
@@ -231,7 +260,30 @@ export class TeamsService {
 
     return prisma.$transaction((tx) =>
       TeamsService.acceptInvitationTransaction(tx, user, invitation)
-    )
+    ).then(async (result) => {
+      const actor = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, name: true }
+      })
+
+      const team = await prisma.team.findUnique({
+        where: { id: result.teamId },
+        select: { id: true, name: true }
+      })
+
+      if (team && invitation.invitedById !== userId) {
+        await notifications.createNotification(
+          buildInvitationAcceptedNotification({
+            userId: invitation.invitedById,
+            actorId: userId,
+            team,
+            actorName: actor?.name || undefined
+          })
+        )
+      }
+
+      return result
+    })
   }
 
   async updateMemberRole(teamId: string, memberId: string, input: UpdateMemberRoleInput, actorId: string) {
@@ -263,6 +315,28 @@ export class TeamsService {
       where: { id: memberId },
       data: { role: input.role }
     })
+
+    const actor = await prisma.user.findUnique({
+      where: { id: actorId },
+      select: { id: true, name: true }
+    })
+
+    const team = await prisma.team.findUnique({
+      where: { id: teamId },
+      select: { id: true, name: true }
+    })
+
+    if (team && updated.userId !== actorId) {
+      await notifications.createNotification(
+        buildRoleChangedNotification({
+          userId: updated.userId,
+          actorId,
+          team,
+          role: input.role,
+          actorName: actor?.name || undefined
+        })
+      )
+    }
 
     return updated
   }

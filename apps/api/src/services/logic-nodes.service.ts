@@ -4,8 +4,19 @@ import { generateId } from '../lib/id-generator.js'
 import { getNextStatus } from '../lib/approval-state-machine.js'
 import { diffNodes } from '../lib/node-diff.js'
 import { hasRole } from '../lib/rbac.js'
+import { NotificationsService } from './notifications.service.js'
+import {
+  buildNodeStatusNotification,
+  buildReviewApprovedNotification,
+  buildReviewRejectedNotification,
+  buildNodeDeprecatedNotification,
+  buildMentionNotification,
+  extractMentionedNames
+} from '../lib/notifications.js'
 import type { CreateLogicNodeInput, UpdateLogicNodeInput, UpdatePositionInput } from '../lib/validators.logic-node.js'
 import type { Branch, EdgeCase, LogicNodeStatus, NodePriority, ApprovalAction, TeamRole } from '@logimap/types'
+
+const notifications = new NotificationsService()
 
 type PrismaNode = Awaited<ReturnType<typeof prisma.logicNode.findUnique>>
 
@@ -142,13 +153,24 @@ export class LogicNodesService {
         data: updateData,
         include: {
           module: {
-            select: { id: true, name: true }
+            select: { id: true, name: true, system: { select: { teamId: true } } }
           }
         }
       })
 
       return node
     })
+
+    // 在事务外异步创建 @提及 通知，不影响主流程
+    const mentionText = [input.notes, input.mainFlow].filter(Boolean).join(' ')
+    if (mentionText) {
+      const mentionedNames = extractMentionedNames(mentionText)
+      if (mentionedNames.length > 0) {
+        this.createMentionNotifications(userId, node, mentionedNames).catch((err) => {
+          console.error('创建提及通知失败', err)
+        })
+      }
+    }
 
     return toNodeDto(node)!
   }
@@ -201,9 +223,14 @@ export class LogicNodesService {
         include: {
           createdBy: { select: { id: true, name: true, email: true } },
           updatedBy: { select: { id: true, name: true, email: true } },
-          module: { select: { id: true, name: true } }
+          module: { select: { id: true, name: true, system: { select: { teamId: true } } } }
         }
       })
+    })
+
+    // 在事务外异步创建审批通知
+    this.createApprovalNotifications(userId, updatedNode, toStatus, action, comment, node.status).catch((err) => {
+      console.error('创建审批通知失败', err)
     })
 
     return toNodeDto(updatedNode)!
@@ -354,6 +381,95 @@ export class LogicNodesService {
     })
 
     return toNodeDto(node)!
+  }
+
+  private async createMentionNotifications(
+    actorId: string,
+    node: {
+      id: string
+      name: string
+      moduleId: string
+      module: { system: { teamId: string } }
+    },
+    mentionedNames: string[]
+  ) {
+    const uniqueNames = Array.from(new Set(mentionedNames))
+    const mentionedUsers = await prisma.user.findMany({
+      where: { name: { in: uniqueNames } },
+      select: { id: true, name: true }
+    })
+
+    const actor = await prisma.user.findUnique({
+      where: { id: actorId },
+      select: { id: true, name: true }
+    })
+
+    const teamId = node.module.system.teamId
+
+    for (const user of mentionedUsers) {
+      if (user.id === actorId) continue
+      await notifications.createNotification(
+        buildMentionNotification({
+          userId: user.id,
+          actorId,
+          node,
+          teamId,
+          actorName: actor?.name || undefined
+        })
+      )
+    }
+  }
+
+  private async createApprovalNotifications(
+    actorId: string,
+    node: {
+      id: string
+      name: string
+      status: string
+      moduleId: string
+      module: { system: { teamId: string } }
+      createdBy: { id: string; name: string | null; email: string } | null
+      updatedBy: { id: string; name: string | null; email: string } | null
+    },
+    toStatus: string,
+    action: ApprovalAction,
+    comment?: string,
+    fromStatus?: string
+  ) {
+    const actor = await prisma.user.findUnique({
+      where: { id: actorId },
+      select: { id: true, name: true }
+    })
+
+    const teamId = node.module.system.teamId
+    const actorName = actor?.name || undefined
+
+    const recipientIds = new Set<string>()
+    if (node.createdBy && node.createdBy.id !== actorId) recipientIds.add(node.createdBy.id)
+    if (node.updatedBy && node.updatedBy.id !== actorId) recipientIds.add(node.updatedBy.id)
+
+    for (const userId of recipientIds) {
+      let input
+      if (action === 'APPROVE') {
+        input = buildReviewApprovedNotification({ userId, actorId, node, teamId, actorName })
+      } else if (action === 'REJECT') {
+        input = buildReviewRejectedNotification({ userId, actorId, node, teamId, actorName, comment })
+      } else if (action === 'DEPRECATE') {
+        input = buildNodeDeprecatedNotification({ userId, actorId, node, teamId, actorName })
+      } else {
+        input = buildNodeStatusNotification({
+          userId,
+          actorId,
+          node,
+          teamId,
+          fromStatus: fromStatus || node.status,
+          toStatus,
+          actorName
+        })
+      }
+
+      await notifications.createNotification(input)
+    }
   }
 
   private async getNextVersion(nodeId: string, tx?: Prisma.TransactionClient): Promise<number> {

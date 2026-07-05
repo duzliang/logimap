@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/auth.store'
 import { ThemeToggle } from '@logimap/ui'
+import { NotificationBell } from '@/components/notifications/NotificationBell'
 import { LogOut, User, Users, Settings, ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
 import { roleLabels } from '@/lib/team'
@@ -44,6 +45,7 @@ export function Topbar() {
 
       <div className="flex items-center gap-3">
         <ThemeToggle />
+        <NotificationBell />
 
         {teams.length > 0 && (
           <div className="relative">
