@@ -1,23 +1,36 @@
 import * as React from 'react'
 import { cn } from '../lib/utils.js'
 
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: 'default' | 'interactive' | 'selected'
+}
+
 const Card = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      // 基础样式
-      'rounded-xl border border-neutral-200 bg-white',
-      'shadow-card',
-      // 暗色模式
-      'dark:border-neutral-700 dark:bg-neutral-800',
-      className
-    )}
-    {...props}
-  />
-))
+  CardProps
+>(({ className, variant = 'default', ...props }, ref) => {
+  const variantStyles = {
+    default: '',
+    interactive:
+      'cursor-pointer hover:border-neutral-300 hover:shadow-panel transition-all duration-150 dark:hover:border-neutral-600',
+    selected:
+      'border-2 border-violet-600 ring-4 ring-violet-100 dark:border-violet-500 dark:ring-violet-900/30',
+  }
+
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        'rounded-xl border border-neutral-200 bg-white',
+        'shadow-card',
+        'dark:border-neutral-700 dark:bg-neutral-800',
+        variantStyles[variant],
+        className
+      )}
+      {...props}
+    />
+  )
+})
 Card.displayName = 'Card'
 
 const CardHeader = React.forwardRef<
