@@ -217,6 +217,36 @@ const TestCasesSchema = z.object({
   )
 })
 
+const ConsistencyResultSchema = z.object({
+  consistent: z.boolean(),
+  score: z.number().min(0).max(100),
+  reason: z.string(),
+  suggestions: z.array(z.string())
+})
+
+const BatchGenerateResultSchema = z.object({
+  systems: z.array(
+    z.object({
+      name: z.string(),
+      description: z.string().optional(),
+      modules: z.array(
+        z.object({
+          name: z.string(),
+          description: z.string().optional(),
+          nodes: z.array(
+            z.object({
+              name: z.string(),
+              summary: z.string().optional(),
+              trigger: z.string().optional(),
+              mainFlow: z.string().optional()
+            })
+          ).optional()
+        })
+      ).optional()
+    })
+  )
+})
+
 const builtInPrompts: Record<string, BuiltInPrompt> = {
   'generate-node': {
     key: 'generate-node',
@@ -363,25 +393,24 @@ const builtInPrompts: Record<string, BuiltInPrompt> = {
     variant: 'default',
     description: 'AI 辅助影响分析',
     systemPrompt: '你是一个业务逻辑影响分析专家。请基于图谱结构影响结果，识别语义上可能遗漏的受影响节点，并给出风险等级。',
-    userPromptTemplate: `请分析以下节点变更可能带来的额外影响。
+    userPromptTemplate: `请分析以下节点变更可能带来的额外影响。\n
+变更节点：\n
+名称：{{nodeName}}\n
+概述：{{nodeSummary}}\n
+触发条件：{{nodeTrigger}}\n
+前置依赖：{{nodeDependsOn}}\n
+主流程：{{nodeMainFlow}}\n
 
-变更节点：
-名称：{{node.name}}
-概述：{{node.summary}}
-触发条件：{{node.trigger}}
-前置依赖：{{node.dependsOn}}
-主流程：{{node.mainFlow}}
+已识别的结构影响节点（{{direction}}，最多 {{maxDepth}} 层）：\n
+{{affectedNodes}}\n
 
-已识别的结构影响节点（{{direction}}，最多 {{maxDepth}} 层）：
-{{affectedNodes}}
-
-请按以下 JSON 格式返回：
-{
-  "summary": "一句话总结整体影响",
-  "additionalAffectedNodeIds": ["可能遗漏的节点ID"],
-  "reasoning": "为什么这些节点可能也被影响",
-  "riskLevel": "low | medium | high"
-}
+请按以下 JSON 格式返回：\n
+{\n
+  "summary": "一句话总结整体影响",\n
+  "additionalAffectedNodeIds": ["可能遗漏的节点ID"],\n
+  "reasoning": "为什么这些节点可能也被影响",\n
+  "riskLevel": "low | medium | high"\n
+}\n
 
 只返回 JSON，不要其他内容。additionalAffectedNodeIds 必须是上面 affectedNodes 中存在的 ID。`,
     model: 'claude-sonnet-4-20250514',
@@ -393,6 +422,78 @@ const builtInPrompts: Record<string, BuiltInPrompt> = {
       reasoning: z.string(),
       riskLevel: z.enum(['low', 'medium', 'high'])
     }),
+    isDefault: true
+  },
+  'batch-generate': {
+    key: 'batch-generate',
+    version: 1,
+    variant: 'default',
+    description: '批量生成系统/模块/节点建议',
+    systemPrompt: '你是一个业务架构师。请根据需求描述，建议合理的系统、模块和逻辑节点树。只返回 JSON，不要其他内容。',
+    userPromptTemplate: `请根据以下需求，建议一个系统/模块/逻辑节点的层级结构。\n
+
+需求描述：\n
+{{requirements}}\n
+
+额外上下文：\n
+{{context}}\n
+
+请按以下 JSON 格式返回建议（仅建议，不要真实创建）：\n
+{\n
+  "systems": [\n
+    {\n
+      "name": "系统名称",\n
+      "description": "系统描述",\n
+      "modules": [\n
+        {\n
+          "name": "模块名称",\n
+          "description": "模块描述",\n
+          "nodes": [\n
+            { "name": "节点名称", "summary": "一句话概述", "trigger": "触发条件", "mainFlow": "主流程" }\n
+          ]\n
+        }\n
+      ]\n
+    }\n
+  ]\n
+}\n
+
+只返回 JSON，不要其他内容。`,
+    model: 'claude-sonnet-4-20250514',
+    temperature: 0.3,
+    maxTokens: 4000,
+    responseSchema: BatchGenerateResultSchema,
+    isDefault: true
+  },
+  'check-consistency': {
+    key: 'check-consistency',
+    version: 1,
+    variant: 'default',
+    description: '检查代码与逻辑描述一致性',
+    systemPrompt: '你是一个代码与业务逻辑一致性审查专家。请根据逻辑节点描述和其关联的代码引用，判断二者是否语义一致。只返回 JSON，不要其他内容。',
+    userPromptTemplate: `请判断以下逻辑节点描述与其代码引用是否语义一致。\n
+
+节点名称：{{nodeName}}\n
+节点概述：{{nodeSummary}}\n
+触发条件：{{nodeTrigger}}\n
+前置依赖：{{nodeDependsOn}}\n
+主流程：{{nodeMainFlow}}\n
+代码引用：{{codeRef}}\n
+解析后的文件路径：{{filePath}}\n
+解析后的函数/类名：{{symbol}}\n
+
+请按以下 JSON 格式返回：\n
+{\n
+  "consistent": true or false,\n
+  "score": 0-100 的一致性分数,\n
+  "reason": "判断理由",\n
+  "suggestions": ["改进建议1"]\n
+}\n
+
+只返回 JSON，不要其他内容。`,
+    model: 'claude-sonnet-4-20250514',
+    temperature: 0.2,
+    maxTokens: 1500,
+    responseSchema: ConsistencyResultSchema,
     isDefault: true
   }
 }

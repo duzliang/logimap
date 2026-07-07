@@ -8,12 +8,14 @@ import { fetchSystems, createSystem, deleteSystem } from '@/api/systems.api'
 import { useAuthStore } from '@/stores/auth.store'
 import { Button, Input, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@logimap/ui'
 import { toast } from 'sonner'
-import { Layers, Plus, Pencil, Trash2, ExternalLink } from 'lucide-react'
+import { Layers, Plus, Pencil, Trash2, ExternalLink, Sparkles } from 'lucide-react'
+import { BatchGenerateDialog } from '@/components/ai/BatchGenerateDialog'
 
 export function SystemsPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isBatchOpen, setIsBatchOpen] = useState(false)
   const currentTeamId = useAuthStore((state) => state.currentTeamId)
 
   const { data: systems = [], isLoading } = useQuery({
@@ -65,10 +67,16 @@ export function SystemsPage() {
             <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">系统管理</h1>
             <p className="text-sm text-[var(--color-text-secondary)]">创建和管理业务系统与模块</p>
           </div>
-          <Button onClick={() => setIsDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            创建系统
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setIsBatchOpen(true)} disabled={!currentTeamId}>
+              <Sparkles className="h-4 w-4 mr-2" />
+              AI 批量建议
+            </Button>
+            <Button onClick={() => setIsDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              创建系统
+            </Button>
+          </div>
         </div>
 
         {isLoading ? (
@@ -212,6 +220,11 @@ export function SystemsPage() {
           </form>
         </DialogContent>
       </Dialog>
+      <BatchGenerateDialog
+        open={isBatchOpen}
+        onOpenChange={setIsBatchOpen}
+        teamId={currentTeamId || ''}
+      />
     </div>
   )
 }

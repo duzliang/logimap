@@ -3,8 +3,8 @@ import { useForm, useFieldArray } from 'react-hook-form'
 import { Button, Input, Textarea, Label, Badge, cn } from '@logimap/ui'
 import { Plus, Trash2, X, Sparkles, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { generateNodeContent, suggestEdgeCases } from '@/api/ai.api'
-import type { Branch, EdgeCase } from '@logimap/types'
+import { generateNodeContent, suggestEdgeCases, analyzeNode, generateTestCases, checkCodeConsistency } from '@/api/ai.api'
+import type { Branch, EdgeCase, NodeAnalysis, GeneratedTestCases } from '@logimap/types'
 
 interface LogicNodeForm {
   name: string
@@ -21,6 +21,7 @@ interface LogicNodeForm {
 
 interface LogicNodeEditorProps {
   node?: Partial<LogicNodeForm>
+  nodeId?: string
   onSave: (data: LogicNodeForm) => void
   onCancel: () => void
   isLoading?: boolean
@@ -28,9 +29,11 @@ interface LogicNodeEditorProps {
   moduleContext?: string
 }
 
-export function LogicNodeEditor({ node, onSave, onCancel, isLoading, teamId, moduleContext }: LogicNodeEditorProps) {
+export function LogicNodeEditor({ node, nodeId, onSave, onCancel, isLoading, teamId, moduleContext }: LogicNodeEditorProps) {
   const [tagInput, setTagInput] = useState('')
   const [isAiLoading, setIsAiLoading] = useState(false)
+  const [analysisResult, setAnalysisResult] = useState<NodeAnalysis | null>(null)
+  const [testCasesResult, setTestCasesResult] = useState<GeneratedTestCases | null>(null)
 
   const { register, handleSubmit, control, setValue, watch, getValues } = useForm<LogicNodeForm>({
     defaultValues: {
@@ -186,13 +189,101 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, teamId, mod
     }
   }
 
+  // AI 分析完整性
+  const handleAiAnalyze = async () => {
+    if (!teamId) {
+      toast.error('未选择团队')
+      return
+    }
+    if (!nodeName) {
+      toast.error('请先输入节点名称')
+      return
+    }
+
+    setIsAiLoading(true)
+    try {
+      const result = await analyzeNode(teamId, {
+        nodeName,
+        trigger: getValues('trigger'),
+        dependsOn: getValues('dependsOn'),
+        mainFlow: getValues('mainFlow'),
+        branches: getValues('branches'),
+        edgeCases: getValues('edgeCases')
+      })
+      setAnalysisResult(result)
+      toast.success(`完整性评分：${result.completeness}`)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'AI 分析失败'
+      toast.error(message)
+    } finally {
+      setIsAiLoading(false)
+    }
+  }
+
+  // AI 生成测试用例
+  const handleAiTests = async () => {
+    if (!teamId) {
+      toast.error('未选择团队')
+      return
+    }
+    if (!nodeName) {
+      toast.error('请先输入节点名称')
+      return
+    }
+
+    setIsAiLoading(true)
+    try {
+      const result = await generateTestCases(teamId, {
+        nodeName,
+        trigger: getValues('trigger'),
+        dependsOn: getValues('dependsOn'),
+        mainFlow: getValues('mainFlow'),
+        branches: getValues('branches'),
+        edgeCases: getValues('edgeCases')
+      })
+      setTestCasesResult(result)
+      toast.success('测试用例已生成')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '测试用例生成失败'
+      toast.error(message)
+    } finally {
+      setIsAiLoading(false)
+    }
+  }
+
+  // AI 代码一致性检查
+  const handleAiConsistency = async () => {
+    if (!teamId) {
+      toast.error('未选择团队')
+      return
+    }
+    if (!nodeId) {
+      toast.error('请先保存节点后再检查一致性')
+      return
+    }
+
+    setIsAiLoading(true)
+    try {
+      const result = await checkCodeConsistency({ teamId, nodeId })
+      const status = result.consistent ? '一致' : '不一致'
+      toast.success(`代码一致性：${status}（${result.score} 分）`, {
+        description: result.reason
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '一致性检查失败'
+      toast.error(message)
+    } finally {
+      setIsAiLoading(false)
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit(onSave)} className="space-y-6">
       {/* AI 辅助按钮 */}
-      <div className="flex gap-2 p-3 bg-[var(--color-brand-subtle)] rounded-lg border border-[var(--color-brand-muted)]">
+      <div className="flex flex-wrap gap-2 p-3 bg-[var(--color-brand-subtle)] rounded-lg border border-[var(--color-brand-muted)]">
         <Sparkles className="h-5 w-5 text-[var(--color-brand-default)]" />
         <span className="text-sm text-[var(--color-brand-hover)] font-medium">AI 辅助</span>
-        <div className="flex gap-2 ml-auto">
+        <div className="flex flex-wrap gap-2 ml-auto">
           <Button
             type="button"
             variant="outline"
@@ -213,8 +304,124 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, teamId, mod
           >
             边界建议
           </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleAiAnalyze}
+            disabled={isAiLoading || !nodeName}
+          >
+            分析完整性
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleAiTests}
+            disabled={isAiLoading || !nodeName}
+          >
+            生成测试
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleAiConsistency}
+            disabled={isAiLoading || !nodeId}
+          >
+            代码一致性
+          </Button>
         </div>
       </div>
+
+      {/* AI 分析结果 */}
+      {analysisResult && (
+        <div className="p-4 border border-[var(--color-border-default)] rounded-lg bg-[var(--color-bg-elevated)] space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="font-semibold">完整性分析</h4>
+            <span className="text-sm font-medium text-[var(--color-brand-hover)]">{analysisResult.completeness}/100</span>
+          </div>
+          {analysisResult.suggestions.length > 0 && (
+            <div>
+              <p className="text-sm font-medium mb-1">改进建议</p>
+              <ul className="text-sm text-[var(--color-text-secondary)] list-disc list-inside space-y-1">
+                {analysisResult.suggestions.map((s, i) => <li key={i}>{s}</li>)}
+              </ul>
+            </div>
+          )}
+          {analysisResult.missingEdgeCases.length > 0 && (
+            <div>
+              <p className="text-sm font-medium mb-1">可能遗漏的边界</p>
+              <ul className="text-sm text-[var(--color-text-secondary)] list-disc list-inside space-y-1">
+                {analysisResult.missingEdgeCases.map((s, i) => <li key={i}>{s}</li>)}
+              </ul>
+            </div>
+          )}
+          {analysisResult.recommendedBranches.length > 0 && (
+            <div>
+              <p className="text-sm font-medium mb-1">建议分支</p>
+              <ul className="text-sm text-[var(--color-text-secondary)] list-disc list-inside space-y-1">
+                {analysisResult.recommendedBranches.map((s, i) => <li key={i}>{s}</li>)}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* AI 测试用例结果 */}
+      {testCasesResult && (
+        <div className="p-4 border border-[var(--color-border-default)] rounded-lg bg-[var(--color-bg-elevated)] space-y-4">
+          <h4 className="font-semibold">测试用例建议</h4>
+          {testCasesResult.normalCases.length > 0 && (
+            <div>
+              <p className="text-sm font-medium mb-2">正常流程</p>
+              <div className="space-y-2">
+                {testCasesResult.normalCases.map((tc, i) => (
+                  <div key={i} className="text-sm border-l-2 border-[var(--color-brand-default)] pl-3">
+                    <p className="font-medium">{tc.name}</p>
+                    <ol className="list-decimal list-inside text-[var(--color-text-secondary)]">
+                      {tc.steps.map((step, idx) => <li key={idx}>{step}</li>)}
+                    </ol>
+                    <p className="text-[var(--color-text-tertiary)]">预期：{tc.expected}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {testCasesResult.edgeCases.length > 0 && (
+            <div>
+              <p className="text-sm font-medium mb-2">边界条件</p>
+              <div className="space-y-2">
+                {testCasesResult.edgeCases.map((tc, i) => (
+                  <div key={i} className="text-sm border-l-2 border-[var(--color-warning-icon)] pl-3">
+                    <p className="font-medium">{tc.name}</p>
+                    <ol className="list-decimal list-inside text-[var(--color-text-secondary)]">
+                      {tc.steps.map((step, idx) => <li key={idx}>{step}</li>)}
+                    </ol>
+                    <p className="text-[var(--color-text-tertiary)]">预期：{tc.expected}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {testCasesResult.branchCases.length > 0 && (
+            <div>
+              <p className="text-sm font-medium mb-2">分支覆盖</p>
+              <div className="space-y-2">
+                {testCasesResult.branchCases.map((tc, i) => (
+                  <div key={i} className="text-sm border-l-2 border-[var(--color-info-icon)] pl-3">
+                    <p className="font-medium">{tc.name} <span className="text-[var(--color-text-tertiary)]">（{tc.condition}）</span></p>
+                    <ol className="list-decimal list-inside text-[var(--color-text-secondary)]">
+                      {tc.steps.map((step, idx) => <li key={idx}>{step}</li>)}
+                    </ol>
+                    <p className="text-[var(--color-text-tertiary)]">预期：{tc.expected}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 基本信息 */}
       <div className="space-y-4">

@@ -10,6 +10,7 @@ import { toast } from 'sonner'
 import { Users, Plus, Trash2, User } from 'lucide-react'
 import { roleLabels, roleBadgeVariant, teamRoles } from '@/lib/team'
 import { hasRole } from '@/lib/rbac'
+import { AgentContextExport } from '@/components/ai/AgentContextExport'
 
 export function TeamSettingsPage() {
   const queryClient = useQueryClient()
@@ -212,6 +213,7 @@ export function TeamSettingsPage() {
             )}
           </CardContent>
         </Card>
+        <AgentContextExport teamId={currentTeamId} />
       </div>
 
       <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>

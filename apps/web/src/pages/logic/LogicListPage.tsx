@@ -337,6 +337,7 @@ export function LogicListPage() {
           </DialogHeader>
           <LogicNodeEditor
             node={editingNode ? getNodeForm(editingNode) : undefined}
+            nodeId={editingNode?.id}
             onSave={handleSave}
             onCancel={() => setIsEditorOpen(false)}
             isLoading={createMutation.isPending || updateMutation.isPending}

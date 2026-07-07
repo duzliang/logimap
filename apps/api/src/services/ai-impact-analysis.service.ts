@@ -98,13 +98,11 @@ export class AiImpactAnalysisService {
 只返回 JSON，不要其他内容。additionalAffectedNodeIds 必须是上面 affectedNodes 中存在的 ID。`
 
     const userContent = this.promptService.renderTemplate(userPromptTemplate, {
-      node: {
-        name: startNode.name,
-        summary: startNode.summary || '无',
-        trigger: startNode.trigger || '无',
-        dependsOn: startNode.dependsOn || '无',
-        mainFlow: startNode.mainFlow || '无'
-      },
+      nodeName: startNode.name,
+      nodeSummary: startNode.summary || '无',
+      nodeTrigger: startNode.trigger || '无',
+      nodeDependsOn: startNode.dependsOn || '无',
+      nodeMainFlow: startNode.mainFlow || '无',
       direction: input.direction,
       maxDepth: String(input.maxDepth),
       affectedNodes: JSON.stringify(context.affectedNodes, null, 2)

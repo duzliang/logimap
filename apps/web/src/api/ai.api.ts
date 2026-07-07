@@ -1,5 +1,13 @@
 import { apiClient } from './client'
-import type { NaturalLanguageQueryInput, AiAnalyzeImpactInput } from '@logimap/types'
+import type {
+  NaturalLanguageQueryInput,
+  AiAnalyzeImpactInput,
+  BatchGenerateInput,
+  BatchGenerateResult,
+  AgentContextExportInput,
+  CheckConsistencyInput,
+  ConsistencyResult
+} from '@logimap/types'
 
 export interface GeneratedNodeContent {
   trigger: string
@@ -127,5 +135,20 @@ export async function nlQuery(input: NaturalLanguageQueryInput): Promise<NlQuery
 
 export async function aiAnalyzeImpact(input: AiAnalyzeImpactInput): Promise<AiImpactAnalysisResponse> {
   const response = await apiClient.post('/api/v1/ai/analyze-impact', input)
+  return response.data.data
+}
+
+export async function batchGenerate(input: BatchGenerateInput): Promise<BatchGenerateResult> {
+  const response = await apiClient.post('/api/v1/ai/batch-generate', input)
+  return response.data.data
+}
+
+export async function generateAgentContext(input: AgentContextExportInput): Promise<string> {
+  const response = await apiClient.post('/api/v1/ai/agent-context', input)
+  return response.data.data
+}
+
+export async function checkCodeConsistency(input: CheckConsistencyInput): Promise<ConsistencyResult> {
+  const response = await apiClient.post('/api/v1/ai/check-consistency', input)
   return response.data.data
 }
