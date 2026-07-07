@@ -9,6 +9,7 @@ import { LogicListPage } from '@/pages/logic/LogicListPage'
 import { LogicGraphPage } from '@/components/graph/LogicGraph'
 import { TeamSettingsPage } from '@/pages/team/TeamSettingsPage'
 import { NotificationsPage } from '@/pages/notifications/NotificationsPage'
+import { SearchResultsPage } from '@/pages/search/SearchResultsPage'
 import { AppShell } from '@/components/layout/AppShell'
 import { useAuthStore } from '@/stores/auth.store'
 
@@ -90,6 +91,10 @@ export const router = createBrowserRouter([
           {
             path: '/notifications',
             element: <NotificationsPage />
+          },
+          {
+            path: '/search',
+            element: <SearchResultsPage />
           }
         ]
       }
