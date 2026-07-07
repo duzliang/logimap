@@ -340,6 +340,8 @@ export function LogicListPage() {
             onSave={handleSave}
             onCancel={() => setIsEditorOpen(false)}
             isLoading={createMutation.isPending || updateMutation.isPending}
+            teamId={currentTeamId || undefined}
+            moduleContext={module?.name}
           />
         </DialogContent>
       </Dialog>

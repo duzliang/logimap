@@ -267,6 +267,26 @@ model LogicNodeVersion {
   @@unique([nodeId, version])
 }
 
+model AiPromptVersion {
+  id                 String   @id @default(cuid())
+  key                String   // 例如 generate-node, nl-query
+  version            Int
+  variant            String   @default("default") // A/B 实验标识
+  description        String?
+  systemPrompt       String?  @db.Text
+  userPromptTemplate String   @db.Text
+  model              String   @default("claude-sonnet-4-20250514")
+  temperature        Float    @default(0.2)
+  maxTokens          Int      @default(2000)
+  responseSchema     Json?    // Zod schema 的 JSON 表示
+  isDefault          Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  teamId             String?
+
+  @@unique([key, version, variant, teamId])
+  @@index([key, isDefault, teamId])
+}
+
 model ImpactAnalysisReport {
   id             String   @id @default(cuid())
   nodeId         String

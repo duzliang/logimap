@@ -24,10 +24,11 @@ interface LogicNodeEditorProps {
   onSave: (data: LogicNodeForm) => void
   onCancel: () => void
   isLoading?: boolean
+  teamId?: string
   moduleContext?: string
 }
 
-export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleContext }: LogicNodeEditorProps) {
+export function LogicNodeEditor({ node, onSave, onCancel, isLoading, teamId, moduleContext }: LogicNodeEditorProps) {
   const [tagInput, setTagInput] = useState('')
   const [isAiLoading, setIsAiLoading] = useState(false)
 
@@ -93,9 +94,14 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleConte
       return
     }
 
+    if (!teamId) {
+      toast.error('未选择团队')
+      return
+    }
+
     setIsAiLoading(true)
     try {
-      const result = await generateNodeContent({
+      const result = await generateNodeContent(teamId, {
         nodeName,
         moduleContext,
         existingContent: {
@@ -143,6 +149,11 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleConte
       return
     }
 
+    if (!teamId) {
+      toast.error('未选择团队')
+      return
+    }
+
     setIsAiLoading(true)
     try {
       const existingEdgeCases = getValues('edgeCases').map(e => ({
@@ -151,7 +162,7 @@ export function LogicNodeEditor({ node, onSave, onCancel, isLoading, moduleConte
         severity: e.severity as 'critical' | 'warning' | 'info'
       }))
 
-      const result = await suggestEdgeCases({
+      const result = await suggestEdgeCases(teamId, {
         nodeName,
         mainFlow,
         existingEdgeCases

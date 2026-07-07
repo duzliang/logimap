@@ -1,16 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { AiPromptService } from './ai-prompt.service.js'
+import type { GenerateNodeInput, AnalyzeNodeInput, SuggestEdgeCasesInput } from '@logimap/types'
 
 const anthropic = new Anthropic()
-
-interface GenerateNodeContentInput {
-  nodeName: string
-  moduleContext?: string
-  existingContent?: {
-    trigger?: string
-    dependsOn?: string
-    mainFlow?: string
-  }
-}
 
 interface GeneratedNodeContent {
   trigger: string
@@ -20,64 +12,34 @@ interface GeneratedNodeContent {
   edgeCases: Array<{ scenario: string; handling: string; severity: 'critical' | 'warning' | 'info' }>
 }
 
-interface AnalyzeNodeInput {
-  nodeName: string
-  trigger?: string
-  dependsOn?: string
-  mainFlow?: string
-  branches?: Array<{ condition: string; action: string }>
-  edgeCases?: Array<{ scenario: string; handling: string; severity: string }>
-}
-
 interface NodeAnalysis {
-  completeness: number // 0-100
+  completeness: number
   suggestions: string[]
   missingEdgeCases: string[]
   recommendedBranches: string[]
 }
 
 export class AIService {
-  /**
-   * 生成逻辑节点内容建议
-   */
-  async generateNodeContent(input: GenerateNodeContentInput): Promise<GeneratedNodeContent> {
-    const contextPrompt = input.moduleContext
-      ? `模块上下文：${input.moduleContext}`
-      : ''
+  private promptService = new AiPromptService()
 
-    const existingPrompt = input.existingContent
-      ? `已有内容：
-触发条件：${input.existingContent.trigger || '无'}
-前置依赖：${input.existingContent.dependsOn || '无'}
-主流程：${input.existingContent.mainFlow || '无'}`
-      : ''
+  private async callAI(key: string, variables: Record<string, unknown>, teamId?: string | null) {
+    const prompt = await this.promptService.getPrompt(key, teamId)
+
+    const userContent = this.promptService.renderTemplate(prompt.userPromptTemplate, variables)
+
+    const messages: Anthropic.MessageParam[] = []
+
+    if (prompt.systemPrompt) {
+      messages.push({ role: 'assistant', content: prompt.systemPrompt })
+    }
+
+    messages.push({ role: 'user', content: userContent })
 
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 2000,
-      messages: [{
-        role: 'user',
-        content: `你是一个业务逻辑分析专家。请为以下业务逻辑节点生成内容建议。
-
-节点名称：${input.nodeName}
-${contextPrompt}
-${existingPrompt}
-
-请按以下 JSON 格式返回结果：
-{
-  "trigger": "触发条件的描述",
-  "dependsOn": "前置依赖的描述",
-  "mainFlow": "主流程步骤（使用编号列表）",
-  "branches": [
-    { "condition": "分支条件", "action": "分支动作" }
-  ],
-  "edgeCases": [
-    { "scenario": "边界场景", "handling": "处理方式", "severity": "critical/warning/info" }
-  ]
-}
-
-只返回 JSON，不要其他内容。`
-      }]
+      model: prompt.model,
+      max_tokens: prompt.maxTokens,
+      temperature: prompt.temperature,
+      messages
     })
 
     const textBlock = message.content.find((block): block is { type: 'text'; text: string } =>
@@ -88,161 +50,70 @@ ${existingPrompt}
       throw new Error('AI 响应格式错误')
     }
 
-    // 提取 JSON
-    let jsonStr = textBlock.text.trim()
-    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/)
-    if (jsonMatch) {
-      jsonStr = jsonMatch[0]
-    }
-
-    return JSON.parse(jsonStr) as GeneratedNodeContent
+    return this.promptService.parseJsonResponse(textBlock.text, prompt.responseSchema)
   }
 
-  /**
-   * 分析逻辑节点完整性
-   */
-  async analyzeNode(input: AnalyzeNodeInput): Promise<NodeAnalysis> {
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1500,
-      messages: [{
-        role: 'user',
-        content: `你是一个业务逻辑分析专家。请分析以下逻辑节点的完整性和质量。
-
-节点名称：${input.nodeName}
-触发条件：${input.trigger || '未填写'}
-前置依赖：${input.dependsOn || '未填写'}
-主流程：${input.mainFlow || '未填写'}
-分支条件：${JSON.stringify(input.branches || [])}
-边界条件：${JSON.stringify(input.edgeCases || [])}
-
-请按以下 JSON 格式返回分析结果：
-{
-  "completeness": 85,
-  "suggestions": ["改进建议1", "改进建议2"],
-  "missingEdgeCases": ["可能遗漏的边界场景1", "可能遗漏的边界场景2"],
-  "recommendedBranches": ["建议添加的分支条件1"]
-}
-
-只返回 JSON，不要其他内容。`
-      }]
-    })
-
-    const textBlock = message.content.find((block): block is { type: 'text'; text: string } =>
-      block.type === 'text'
-    )
-
-    if (!textBlock) {
-      throw new Error('AI 响应格式错误')
-    }
-
-    let jsonStr = textBlock.text.trim()
-    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/)
-    if (jsonMatch) {
-      jsonStr = jsonMatch[0]
-    }
-
-    return JSON.parse(jsonStr) as NodeAnalysis
+  async generateNodeContent(input: GenerateNodeInput, teamId?: string | null): Promise<GeneratedNodeContent> {
+    return this.callAI(
+      'generate-node',
+      {
+        nodeName: input.nodeName,
+        moduleContext: input.moduleContext || '无',
+        existingContent: input.existingContent
+          ? JSON.stringify({
+              trigger: input.existingContent.trigger || '无',
+              dependsOn: input.existingContent.dependsOn || '无',
+              mainFlow: input.existingContent.mainFlow || '无'
+            })
+          : '无'
+      },
+      teamId
+    ) as Promise<GeneratedNodeContent>
   }
 
-  /**
-   * 生成边界条件建议
-   */
-  async suggestEdgeCases(
-    nodeName: string,
-    mainFlow: string,
-    existingEdgeCases: Array<{ scenario: string; handling: string }> = []
-  ): Promise<Array<{ scenario: string; handling: string; severity: 'critical' | 'warning' | 'info' }>> {
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1500,
-      messages: [{
-        role: 'user',
-        content: `你是一个业务逻辑分析专家。请为以下业务逻辑生成可能遗漏的边界条件。
-
-节点名称：${nodeName}
-主流程：${mainFlow}
-已有边界条件：${JSON.stringify(existingEdgeCases)}
-
-请生成可能遗漏的边界条件，按以下 JSON 格式返回：
-[
-  { "scenario": "边界场景描述", "handling": "建议的处理方式", "severity": "critical/warning/info" }
-]
-
-只返回 JSON 数组，不要其他内容。最多返回 5 个建议。`
-      }]
-    })
-
-    const textBlock = message.content.find((block): block is { type: 'text'; text: string } =>
-      block.type === 'text'
-    )
-
-    if (!textBlock) {
-      throw new Error('AI 响应格式错误')
-    }
-
-    let jsonStr = textBlock.text.trim()
-    const jsonMatch = jsonStr.match(/\[[\s\S]*\]/)
-    if (jsonMatch) {
-      jsonStr = jsonMatch[0]
-    }
-
-    return JSON.parse(jsonStr)
+  async analyzeNode(input: AnalyzeNodeInput, teamId?: string | null): Promise<NodeAnalysis> {
+    return this.callAI(
+      'analyze-node',
+      {
+        nodeName: input.nodeName,
+        trigger: input.trigger || '未填写',
+        dependsOn: input.dependsOn || '未填写',
+        mainFlow: input.mainFlow || '未填写',
+        branches: JSON.stringify(input.branches || []),
+        edgeCases: JSON.stringify(input.edgeCases || [])
+      },
+      teamId
+    ) as Promise<NodeAnalysis>
   }
 
-  /**
-   * 生成测试用例
-   */
-  async generateTestCases(input: AnalyzeNodeInput): Promise<{
+  async suggestEdgeCases(input: SuggestEdgeCasesInput, teamId?: string | null): Promise<GeneratedNodeContent['edgeCases']> {
+    return this.callAI(
+      'suggest-edge-cases',
+      {
+        nodeName: input.nodeName,
+        mainFlow: input.mainFlow,
+        existingEdgeCases: JSON.stringify(input.existingEdgeCases || [])
+      },
+      teamId
+    ) as Promise<GeneratedNodeContent['edgeCases']>
+  }
+
+  async generateTestCases(input: AnalyzeNodeInput, teamId?: string | null): Promise<{
     normalCases: Array<{ name: string; steps: string[]; expected: string }>
     edgeCases: Array<{ name: string; steps: string[]; expected: string }>
     branchCases: Array<{ name: string; condition: string; steps: string[]; expected: string }>
   }> {
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 2500,
-      messages: [{
-        role: 'user',
-        content: `你是一个测试用例设计专家。请为以下业务逻辑生成测试用例。
-
-节点名称：${input.nodeName}
-触发条件：${input.trigger || '未填写'}
-前置依赖：${input.dependsOn || '未填写'}
-主流程：${input.mainFlow || '未填写'}
-分支条件：${JSON.stringify(input.branches || [])}
-边界条件：${JSON.stringify(input.edgeCases || [])}
-
-请按以下 JSON 格式返回测试用例：
-{
-  "normalCases": [
-    { "name": "正常流程测试", "steps": ["步骤1", "步骤2"], "expected": "预期结果" }
-  ],
-  "edgeCases": [
-    { "name": "边界条件测试", "steps": ["步骤1", "步骤2"], "expected": "预期结果" }
-  ],
-  "branchCases": [
-    { "name": "分支测试", "condition": "分支条件", "steps": ["步骤1"], "expected": "预期结果" }
-  ]
-}
-
-只返回 JSON，不要其他内容。每类最多 3 个测试用例。`
-      }]
-    })
-
-    const textBlock = message.content.find((block): block is { type: 'text'; text: string } =>
-      block.type === 'text'
-    )
-
-    if (!textBlock) {
-      throw new Error('AI 响应格式错误')
-    }
-
-    let jsonStr = textBlock.text.trim()
-    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/)
-    if (jsonMatch) {
-      jsonStr = jsonMatch[0]
-    }
-
-    return JSON.parse(jsonStr)
+    return this.callAI(
+      'generate-tests',
+      {
+        nodeName: input.nodeName,
+        trigger: input.trigger || '未填写',
+        dependsOn: input.dependsOn || '未填写',
+        mainFlow: input.mainFlow || '未填写',
+        branches: JSON.stringify(input.branches || []),
+        edgeCases: JSON.stringify(input.edgeCases || [])
+      },
+      teamId
+    ) as ReturnType<typeof this.generateTestCases>
   }
 }

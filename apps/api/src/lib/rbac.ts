@@ -219,5 +219,11 @@ export const teamResolvers = {
     })
 
     return module ? { teamId: module.system.teamId } : null
+  },
+
+  fromBodyTeamId: async (c: Context) => {
+    const body = (await c.req.json<{ teamId?: string }>().catch(() => ({ teamId: undefined }))) ?? { teamId: undefined }
+    const teamId = body.teamId
+    return teamId ? { teamId } : null
   }
 }
