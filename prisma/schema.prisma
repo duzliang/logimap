@@ -127,6 +127,9 @@ model System {
   modules     Module[]
 
   @@unique([teamId, slug])
+  @@index([teamId])
+  @@index([name(ops: raw("gin_trgm_ops"))], type: Gin, name: "idx_system_name_trgm")
+  @@index([description(ops: raw("gin_trgm_ops"))], type: Gin, name: "idx_system_description_trgm")
 }
 
 model Module {
@@ -145,6 +148,9 @@ model Module {
   notifications Notification[]
 
   @@unique([systemId, slug])
+  @@index([systemId])
+  @@index([name(ops: raw("gin_trgm_ops"))], type: Gin, name: "idx_module_name_trgm")
+  @@index([description(ops: raw("gin_trgm_ops"))], type: Gin, name: "idx_module_description_trgm")
 }
 
 model LogicNode {
@@ -185,6 +191,15 @@ model LogicNode {
   versions    LogicNodeVersion[]
   approvalRecords ApprovalRecord[]
   notifications Notification[]
+
+  @@index([moduleId])
+  @@index([status])
+  @@index([priority])
+  @@index([createdById])
+  @@index([tags], type: Gin)
+  @@index([name(ops: raw("gin_trgm_ops"))], type: Gin, name: "idx_logic_node_name_trgm")
+  @@index([summary(ops: raw("gin_trgm_ops"))], type: Gin, name: "idx_logic_node_summary_trgm")
+  @@index([codeRef(ops: raw("gin_trgm_ops"))], type: Gin, name: "idx_logic_node_code_ref_trgm")
 }
 
 enum LogicNodeStatus {
