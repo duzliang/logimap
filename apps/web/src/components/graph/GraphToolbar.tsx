@@ -1,5 +1,5 @@
 import { Button } from '@logimap/ui'
-import { Plus, Layout, Maximize, Download, List } from 'lucide-react'
+import { Plus, Layout, Maximize, Download, List, Radar, FlaskConical } from 'lucide-react'
 
 interface GraphToolbarProps {
   onCreateNode?: () => void
@@ -7,6 +7,9 @@ interface GraphToolbarProps {
   onFitView?: () => void
   onExportImage?: () => void
   onToggleListView?: () => void
+  onImpactAnalysis?: () => void
+  onWhatIfMode?: () => void
+  isWhatIfMode?: boolean
 }
 
 export function GraphToolbar({
@@ -14,7 +17,10 @@ export function GraphToolbar({
   onAutoLayout,
   onFitView,
   onExportImage,
-  onToggleListView
+  onToggleListView,
+  onImpactAnalysis,
+  onWhatIfMode,
+  isWhatIfMode
 }: GraphToolbarProps) {
   return (
     <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between">
@@ -35,10 +41,22 @@ export function GraphToolbar({
       </div>
 
       <div className="flex items-center gap-2 bg-[var(--color-bg-elevated)] rounded-lg shadow-sm border border-[var(--color-border-default)] p-2">
+        <Button variant="ghost" size="sm" onClick={onImpactAnalysis}>
+          <Radar className="w-4 h-4 mr-2" />
+          影响分析
+        </Button>
+        <Button
+          variant={isWhatIfMode ? 'default' : 'ghost'}
+          size="sm"
+          onClick={onWhatIfMode}
+        >
+          <FlaskConical className="w-4 h-4 mr-2" />
+          假设分析
+        </Button>
+        <div className="w-px h-6 bg-[var(--color-border-default)] mx-2" />
         <Button variant="ghost" size="sm" onClick={onExportImage}>
           <Download className="w-4 h-4" />
         </Button>
-        <div className="w-px h-6 bg-[var(--color-border-default)] mx-2" />
         <Button variant="ghost" size="sm" onClick={onToggleListView}>
           <List className="w-4 h-4" />
         </Button>

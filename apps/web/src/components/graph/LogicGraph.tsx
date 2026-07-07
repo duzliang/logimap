@@ -29,10 +29,12 @@ import { LogicEdge } from './LogicEdge'
 import { GraphToolbar } from './GraphToolbar'
 import { EdgeEditDialog } from './EdgeEditDialog'
 import { NodeDetailDialog } from './NodeDetailDialog'
+import { ImpactAnalysisDialog } from '@/components/impact/ImpactAnalysisDialog'
 import { toast } from 'sonner'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@logimap/ui'
 import { useAuthStore } from '@/stores/auth.store'
+import type { ImpactScope } from '@logimap/types'
 
 const nodeTypes: NodeTypes = {
   logicNode: LogicNodeComponent
@@ -120,6 +122,9 @@ function LogicGraphInner() {
   const [selectedNode, setSelectedNode] = useState<NodeDetailData | null>(null)
   const [isEdgeDialogOpen, setIsEdgeDialogOpen] = useState(false)
   const [isNodeDialogOpen, setIsNodeDialogOpen] = useState(false)
+  const [isImpactDialogOpen, setIsImpactDialogOpen] = useState(false)
+  const [whatIfScope, setWhatIfScope] = useState<ImpactScope | null>(null)
+  const [isWhatIfMode, setIsWhatIfMode] = useState(false)
 
   // 加载模块信息
   const { data: module } = useQuery({
@@ -212,8 +217,16 @@ function LogicGraphInner() {
   // 转换图谱数据为 React Flow 格式
   useEffect(() => {
     if (graphData) {
-      const highlightSet = new Set(matchedNodeIds)
-      const hasHighlight = highlightSet.size > 0
+      const searchHighlightSet = new Set(matchedNodeIds)
+      const impactNodeIds = new Set(whatIfScope ? [
+        ...whatIfScope.direct.map((n) => n.id),
+        ...whatIfScope.indirect.map((n) => n.id),
+        ...whatIfScope.thirdLevel.map((n) => n.id)
+      ] : [])
+      const hasSearchHighlight = searchHighlightSet.size > 0
+      const hasImpactHighlight = impactNodeIds.size > 0
+      const highlightSet = hasImpactHighlight ? impactNodeIds : searchHighlightSet
+      const hasHighlight = hasSearchHighlight || hasImpactHighlight
 
       const flowNodes: Node[] = graphData.nodes.map((node) => ({
         id: node.id,
@@ -222,7 +235,8 @@ function LogicGraphInner() {
         data: {
           ...node,
           highlighted: hasHighlight && highlightSet.has(node.id),
-          dimmed: hasHighlight && !highlightSet.has(node.id)
+          dimmed: hasHighlight && !highlightSet.has(node.id),
+          whatIf: isWhatIfMode
         } as unknown as Record<string, unknown>
       }))
 
@@ -246,7 +260,7 @@ function LogicGraphInner() {
       setNodes(flowNodes)
       setEdges(flowEdges)
     }
-  }, [graphData, matchedNodeIds])
+  }, [graphData, matchedNodeIds, whatIfScope, isWhatIfMode])
 
   // 处理节点拖拽结束
   const onNodeDragStop = useCallback(
@@ -371,6 +385,24 @@ function LogicGraphInner() {
     fitView({ padding: 0.2 })
   }
 
+  const handleImpactAnalysis = () => {
+    if (selectedNode) {
+      setIsNodeDialogOpen(false)
+      setIsImpactDialogOpen(true)
+    }
+  }
+
+  const handleWhatIfMode = () => {
+    setIsWhatIfMode((prev) => {
+      if (prev) {
+        setWhatIfScope(null)
+      }
+      return !prev
+    })
+  }
+
+  const moduleNodes = graphData?.nodes.map((n) => ({ id: n.id, name: n.name })) ?? []
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-3.5rem)] bg-[var(--color-bg-base)] text-[var(--color-text-primary)]">
@@ -389,6 +421,16 @@ function LogicGraphInner() {
         onFitView={handleFitView}
         onExportImage={handleExportImage}
         onToggleListView={handleToggleListView}
+        onImpactAnalysis={() => {
+          if (selectedNode) {
+            setIsNodeDialogOpen(false)
+            setIsImpactDialogOpen(true)
+          } else {
+            toast.info('请先选择一个节点')
+          }
+        }}
+        onWhatIfMode={handleWhatIfMode}
+        isWhatIfMode={isWhatIfMode}
       />
 
       {/* 返回按钮 */}
@@ -453,6 +495,22 @@ function LogicGraphInner() {
         }}
         onStatusChange={() => {
           queryClient.invalidateQueries({ queryKey: ['graph', moduleId] })
+        }}
+        onImpactAnalysis={handleImpactAnalysis}
+      />
+
+      <ImpactAnalysisDialog
+        open={isImpactDialogOpen}
+        onOpenChange={setIsImpactDialogOpen}
+        nodeId={selectedNode?.id ?? ''}
+        moduleId={moduleId ?? ''}
+        nodeName={selectedNode?.name ?? ''}
+        moduleNodes={moduleNodes}
+        onScopeChange={(scope) => {
+          setWhatIfScope(scope)
+          if (scope) {
+            setIsWhatIfMode(true)
+          }
         }}
       />
     </div>

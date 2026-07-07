@@ -157,5 +157,67 @@ export const teamResolvers = {
   fromTeamParam: async (c: Context) => {
     const teamId = c.req.param('teamId')
     return teamId ? { teamId } : null
+  },
+
+  fromNodeBody: async (c: Context) => {
+    const body = (await c.req.json<{ nodeId?: string }>().catch(() => ({ nodeId: undefined }))) ?? { nodeId: undefined }
+    const nodeId = body.nodeId
+    if (!nodeId) return null
+
+    const node = await prisma.logicNode.findUnique({
+      where: { id: nodeId },
+      select: {
+        module: {
+          select: {
+            system: {
+              select: { teamId: true }
+            }
+          }
+        }
+      }
+    })
+
+    return node ? { teamId: node.module.system.teamId } : null
+  },
+
+  fromModuleQuery: async (c: Context) => {
+    const moduleId = c.req.query('moduleId')
+    if (!moduleId) return null
+
+    const module = await prisma.module.findUnique({
+      where: { id: moduleId },
+      select: {
+        system: {
+          select: { teamId: true }
+        }
+      }
+    })
+
+    return module ? { teamId: module.system.teamId } : null
+  },
+
+  fromReportParam: async (c: Context) => {
+    const reportId = c.req.param('reportId')
+    if (!reportId) return null
+
+    const report = await prisma.impactAnalysisReport.findUnique({
+      where: { id: reportId },
+      select: {
+        moduleId: true
+      }
+    })
+
+    if (!report) return null
+
+    const module = await prisma.module.findUnique({
+      where: { id: report.moduleId },
+      select: {
+        system: {
+          select: { teamId: true }
+        }
+      }
+    })
+
+    return module ? { teamId: module.system.teamId } : null
   }
 }

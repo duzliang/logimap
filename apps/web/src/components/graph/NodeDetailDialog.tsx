@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Button, Badge } from '@logimap/ui'
-import { Edit, FileText, AlertTriangle } from 'lucide-react'
+import { Edit, FileText, AlertTriangle, Radar } from 'lucide-react'
 import { NodeApprovalActions } from '@/components/approval/NodeApprovalActions'
 import type { TeamRole, LogicNodeStatus, NodePriority } from '@logimap/types'
 
@@ -21,6 +21,7 @@ interface NodeDetailDialogProps {
   userRole: TeamRole
   onEdit: () => void
   onStatusChange?: () => void
+  onImpactAnalysis?: () => void
 }
 
 const statusConfig: Record<LogicNodeStatus, { label: string; color: string }> = {
@@ -36,7 +37,7 @@ const priorityConfig: Record<NodePriority, { label: string; color: string }> = {
   LOW: { label: '低优先级', color: 'text-[var(--color-text-secondary)]' }
 }
 
-export function NodeDetailDialog({ open, onOpenChange, nodeData, userRole, onEdit, onStatusChange }: NodeDetailDialogProps) {
+export function NodeDetailDialog({ open, onOpenChange, nodeData, userRole, onEdit, onStatusChange, onImpactAnalysis }: NodeDetailDialogProps) {
   if (!nodeData) return null
 
   const status = statusConfig[nodeData.status] || { label: nodeData.status, color: 'bg-[var(--color-text-secondary)]' }
@@ -145,6 +146,12 @@ export function NodeDetailDialog({ open, onOpenChange, nodeData, userRole, onEdi
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               关闭
             </Button>
+            {onImpactAnalysis && (
+              <Button variant="outline" onClick={onImpactAnalysis}>
+                <Radar className="w-4 h-4 mr-2" />
+                影响范围
+              </Button>
+            )}
             <Button onClick={onEdit} disabled={!canEdit}>
               <Edit className="w-4 h-4 mr-2" />
               编辑

@@ -228,6 +228,8 @@ model Connection {
   target      LogicNode      @relation("TargetNode", fields: [targetId], references: [id], onDelete: Cascade)
 
   @@unique([sourceId, targetId])
+  @@index([sourceId])
+  @@index([targetId])
 }
 
 enum ConnectionType {
@@ -263,6 +265,22 @@ model LogicNodeVersion {
   createdBy   User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
 
   @@unique([nodeId, version])
+}
+
+model ImpactAnalysisReport {
+  id             String   @id @default(cuid())
+  nodeId         String
+  moduleId       String
+  title          String
+  direction      String   // downstream | upstream | both
+  maxDepth       Int      @default(3)
+  scope          Json     // { direct: [...], indirect: [...], thirdLevel: [...], paths: [...] }
+  reportMarkdown String   @db.Text
+  createdById    String?
+  createdAt      DateTime @default(now())
+
+  @@index([nodeId, createdAt(sort: Desc)])
+  @@index([moduleId, createdAt(sort: Desc)])
 }
 
 model Notification {
