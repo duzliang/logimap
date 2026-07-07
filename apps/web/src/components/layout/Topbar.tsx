@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/auth.store'
 import { ThemeToggle } from '@logimap/ui'
 import { NotificationBell } from '@/components/notifications/NotificationBell'
+import { GlobalSearchInput } from '@/components/search/GlobalSearchInput'
 import { LogOut, User, Users, Settings, ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
 import { roleLabels } from '@/lib/team'
@@ -42,6 +43,8 @@ export function Topbar() {
           <span className="font-semibold text-lg">LogiMap</span>
         </a>
       </div>
+
+      <GlobalSearchInput />
 
       <div className="flex items-center gap-3">
         <ThemeToggle />
