@@ -16,12 +16,13 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { toPng } from 'html-to-image'
 import dagre from '@dagrejs/dagre'
 import { fetchGraphData, updateNodePosition, createConnection, type GraphConnection } from '@/api/graph.api'
 import { fetchModule } from '@/api/systems.api'
 import { updateConnection, deleteConnection } from '@/api/connection.api'
+import { search } from '@/api/search.api'
 import type { Branch, EdgeCase, ConnectionType, LogicNodeStatus, NodePriority } from '@logimap/types'
 import { LogicNodeComponent } from './LogicNode'
 import { LogicEdge } from './LogicEdge'
@@ -98,12 +99,20 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => 
 function LogicGraphInner() {
   const { moduleId } = useParams<{ moduleId: string }>()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const queryClient = useQueryClient()
   const { fitView } = useReactFlow()
   const flowRef = useRef<HTMLDivElement>(null)
   const { currentTeamId, teams } = useAuthStore()
   const currentTeam = teams.find((t) => t.id === currentTeamId)
   const userRole = currentTeam?.role || 'VIEWER'
+
+  const q = searchParams.get('q') ?? ''
+  const statuses = searchParams.get('statuses') ?? ''
+  const priorities = searchParams.get('priorities') ?? ''
+  const tags = searchParams.get('tags') ?? ''
+  const assigneeId = searchParams.get('assigneeId') ?? ''
+  const highlightNodeIds = searchParams.get('highlightNodeIds') ?? ''
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
@@ -123,6 +132,31 @@ function LogicGraphInner() {
   const { data: graphData, isLoading } = useQuery({
     queryKey: ['graph', moduleId],
     queryFn: () => fetchGraphData(moduleId!),
+    enabled: !!moduleId
+  })
+
+  // 根据 URL 搜索参数高亮匹配节点
+  const { data: matchedNodeIds = [] } = useQuery({
+    queryKey: ['graph-search', moduleId, q, statuses, priorities, tags, assigneeId, highlightNodeIds],
+    queryFn: async () => {
+      if (highlightNodeIds) {
+        return highlightNodeIds.split(',').filter(Boolean)
+      }
+      if (!q && !statuses && !priorities && !tags && !assigneeId) {
+        return []
+      }
+      const response = await search({
+        type: 'node',
+        moduleId: moduleId!,
+        q,
+        statuses: statuses.split(',').filter(Boolean),
+        priorities: priorities.split(',').filter(Boolean),
+        tags: tags.split(',').filter(Boolean),
+        assigneeId,
+        limit: 1000
+      })
+      return response.nodes.items.map((node) => node.id)
+    },
     enabled: !!moduleId
   })
 
@@ -178,28 +212,41 @@ function LogicGraphInner() {
   // 转换图谱数据为 React Flow 格式
   useEffect(() => {
     if (graphData) {
+      const highlightSet = new Set(matchedNodeIds)
+      const hasHighlight = highlightSet.size > 0
+
       const flowNodes: Node[] = graphData.nodes.map((node) => ({
         id: node.id,
         type: 'logicNode',
         position: { x: node.positionX || 0, y: node.positionY || 0 },
-        data: node as unknown as Record<string, unknown>
+        data: {
+          ...node,
+          highlighted: hasHighlight && highlightSet.has(node.id),
+          dimmed: hasHighlight && !highlightSet.has(node.id)
+        } as unknown as Record<string, unknown>
       }))
 
-      const flowEdges: Edge[] = graphData.connections.map((conn) => ({
-        id: conn.id,
-        source: conn.sourceId,
-        target: conn.targetId,
-        type: 'default',
-        data: {
-          connectionType: conn.type,
-          label: conn.label || undefined
-        } as Record<string, unknown>
-      }))
+      const flowEdges: Edge[] = graphData.connections.map((conn) => {
+        const sourceHighlighted = highlightSet.has(conn.sourceId)
+        const targetHighlighted = highlightSet.has(conn.targetId)
+        return {
+          id: conn.id,
+          source: conn.sourceId,
+          target: conn.targetId,
+          type: 'default',
+          data: {
+            connectionType: conn.type,
+            label: conn.label || undefined,
+            highlighted: hasHighlight && (sourceHighlighted || targetHighlighted),
+            dimmed: hasHighlight && !sourceHighlighted && !targetHighlighted
+          } as Record<string, unknown>
+        }
+      })
 
       setNodes(flowNodes)
       setEdges(flowEdges)
     }
-  }, [graphData])
+  }, [graphData, matchedNodeIds])
 
   // 处理节点拖拽结束
   const onNodeDragStop = useCallback(

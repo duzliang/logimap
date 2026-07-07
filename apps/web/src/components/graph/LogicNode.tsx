@@ -42,6 +42,8 @@ const statusStyles = {
 export const LogicNodeComponent = memo(({ data, selected }: NodeProps<LogicNodeType>) => {
   const status = data.status || 'DRAFT'
   const statusStyle = statusStyles[status] || statusStyles.DRAFT
+  const highlighted = data.highlighted === true
+  const dimmed = data.dimmed === true
 
   const branchCount = data.branches?.length || 0
   const edgeCaseCount = data.edgeCases?.length || 0
@@ -52,8 +54,10 @@ export const LogicNodeComponent = memo(({ data, selected }: NodeProps<LogicNodeT
       className={cn(
         "w-[220px] bg-[var(--color-bg-elevated)] rounded-xl border shadow-node",
         "cursor-pointer select-none",
-        "hover:shadow-node-hover transition-shadow duration-150",
+        "hover:shadow-node-hover transition-all duration-150",
         selected && "ring-2 ring-[var(--color-node-selected-ring)] shadow-node-selected",
+        highlighted && "ring-2 ring-[var(--color-brand-default)] shadow-node-selected",
+        dimmed && "opacity-30",
         statusStyle.card
       )}
     >

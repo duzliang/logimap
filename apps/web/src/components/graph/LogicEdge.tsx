@@ -35,6 +35,9 @@ export const LogicEdge = memo((props: EdgeProps) => {
   const connectionType = edgeData?.connectionType || 'TRIGGERS'
   const config = connectionTypeConfig[connectionType]
   const label = edgeData?.label || config.label
+  const highlighted = (data as { highlighted?: boolean } | undefined)?.highlighted === true
+  const dimmed = (data as { dimmed?: boolean } | undefined)?.dimmed === true
+  const opacity = highlighted ? 1 : dimmed ? 0.2 : 1
 
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
@@ -48,7 +51,7 @@ export const LogicEdge = memo((props: EdgeProps) => {
 
   return (
     <>
-      <BaseEdge path={edgePath} markerEnd={markerEnd} style={{ strokeWidth: 2, stroke: config.color }} />
+      <BaseEdge path={edgePath} markerEnd={markerEnd} style={{ strokeWidth: 2, stroke: config.color, opacity }} />
       <EdgeLabelRenderer>
         <div
           style={{
@@ -62,7 +65,8 @@ export const LogicEdge = memo((props: EdgeProps) => {
             fontSize: '11px',
             color: config.color,
             fontWeight: 500,
-            whiteSpace: 'nowrap'
+            whiteSpace: 'nowrap',
+            opacity
           }}
           className="nodrag nopan"
         >

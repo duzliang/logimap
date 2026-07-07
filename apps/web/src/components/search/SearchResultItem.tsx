@@ -1,10 +1,11 @@
 import { Card, CardContent, Badge } from '@logimap/ui'
-import { Folder, Boxes, FileText } from 'lucide-react'
+import { Folder, Boxes, FileText, GitBranch } from 'lucide-react'
 import type { SearchResultItem as SearchResultItemType } from '@logimap/types'
 
 interface SearchResultItemProps {
   item: SearchResultItemType
   onClick?: () => void
+  onHighlightInGraph?: () => void
 }
 
 const typeIcons = {
@@ -39,7 +40,7 @@ const statusVariants = {
   DEPRECATED: 'deprecated'
 } as const
 
-export function SearchResultItem({ item, onClick }: SearchResultItemProps) {
+export function SearchResultItem({ item, onClick, onHighlightInGraph }: SearchResultItemProps) {
   const Icon = typeIcons[item.type]
 
   return (
@@ -75,6 +76,19 @@ export function SearchResultItem({ item, onClick }: SearchResultItemProps) {
                 {item.tags?.map((tag) => (
                   <Badge key={tag} variant="outline">{tag}</Badge>
                 ))}
+                {onHighlightInGraph && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onHighlightInGraph()
+                    }}
+                    className="inline-flex items-center gap-1 text-xs text-[var(--color-brand-default)] hover:underline ml-auto"
+                  >
+                    <GitBranch className="h-3 w-3" />
+                    在图谱中高亮
+                  </button>
+                )}
               </div>
             )}
           </div>

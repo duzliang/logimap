@@ -210,6 +210,11 @@ export function SearchResultsPage() {
                       key={`${item.type}-${item.id}`}
                       item={item}
                       onClick={() => navigate(item.href)}
+                      onHighlightInGraph={
+                        item.type === 'node' && item.moduleId
+                          ? () => navigate(`/modules/${item.moduleId}/graph?highlightNodeIds=${item.id}`)
+                          : undefined
+                      }
                     />
                   ))}
                 </div>
