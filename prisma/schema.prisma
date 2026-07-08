@@ -119,6 +119,8 @@ model System {
   description String?
   icon        String?  @default("layers")
   color       String?  @default("#1A56A8")
+  repoUrl     String?                          // 代码仓库地址，如 https://github.com/org/repo
+  repoBranch  String?                          // 默认分支，空时回退 main
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
