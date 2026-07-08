@@ -30,7 +30,8 @@
 | Phase 2 P2 | codeRef 解析增强（T3-7）：共享解析器、可跳转代码链接、System 仓库配置 | ✅ 已提交 |
 | Phase 2 P2 | OpenAPI 文档（T3-17）：/api/docs Swagger UI + /api/openapi.json | ✅ 已提交 |
 | Phase 2 P2 | Git 仓库导入（T3-8）：目录树分析 → 系统/模块建议 → 一键导入 | ✅ 已提交 |
-| **下一步** | **Phase 2 P2：API Token 管理（T3-18）→ MCP 服务（T3-19）→ 图谱导出增强（T3-20）** | 🔄 待开始 |
+| Phase 2 P2 | API Token 管理（T3-18）：令牌创建/撤销、Bearer 认证集成 | ✅ 已提交 |
+| **下一步** | **Phase 2 P2：MCP 服务接口（T3-19）→ 图谱导出增强（T3-20）** | 🔄 待开始 |
 
 > 下次会话直接从此任务开始，无需重新确认。
 
@@ -141,4 +142,4 @@ pnpm dev
 
 ---
 
-*最后更新：2026-07-08（Phase 2 P2：T3-7 codeRef、T3-17 OpenAPI、T3-8 Git 导入已交付）*
+*最后更新：2026-07-08（Phase 2 P2：T3-7 codeRef、T3-17 OpenAPI、T3-8 Git 导入、T3-18 API Token 已交付）*
