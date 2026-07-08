@@ -17,7 +17,15 @@ import {
 import '@xyflow/react/dist/style.css'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { toPng } from 'html-to-image'
+import { toPng, toSvg } from 'html-to-image'
+import {
+  buildGraphMarkdown,
+  slugForFile,
+  downloadDataUrl,
+  downloadText,
+  exportImageAsPdf
+} from '@/lib/graph-export'
+import type { GraphExportFormat } from './GraphExportMenu'
 import dagre from '@dagrejs/dagre'
 import { fetchGraphData, updateNodePosition, createConnection, type GraphConnection } from '@/api/graph.api'
 import { fetchModule } from '@/api/systems.api'
@@ -356,26 +364,44 @@ function LogicGraphInner() {
     toast.success('自动布局完成')
   }, [nodes, edges, setNodes, setEdges, updatePositionMutation, fitView])
 
-  // 导出图片
-  const handleExportImage = useCallback(async () => {
-    if (!flowRef.current) return
+  // 导出（PNG / SVG / PDF / Markdown）
+  const handleExport = useCallback(
+    async (format: GraphExportFormat) => {
+      const base = slugForFile(module?.name || 'graph')
+      try {
+        if (format === 'markdown') {
+          if (!graphData) return
+          downloadText(buildGraphMarkdown(graphData, module?.name || '逻辑图谱'), `${base}.md`, 'text/markdown;charset=utf-8')
+          toast.success('Markdown 导出成功')
+          return
+        }
 
-    try {
-      const dataUrl = await toPng(flowRef.current, {
-        backgroundColor: 'var(--color-bg-base)',
-        quality: 1.0
-      })
+        if (!flowRef.current) return
 
-      const link = document.createElement('a')
-      link.download = `logimap-${module?.name || 'graph'}-${new Date().toISOString().split('T')[0]}.png`
-      link.href = dataUrl
-      link.click()
+        if (format === 'svg') {
+          const dataUrl = await toSvg(flowRef.current, { backgroundColor: 'var(--color-bg-base)' })
+          downloadDataUrl(dataUrl, `${base}.svg`)
+          toast.success('SVG 导出成功')
+          return
+        }
 
-      toast.success('图片导出成功')
-    } catch (error) {
-      toast.error('导出图片失败')
-    }
-  }, [module?.name])
+        // png / pdf 都基于 PNG 渲染
+        const pngUrl = await toPng(flowRef.current, { backgroundColor: 'var(--color-bg-base)', quality: 1.0 })
+        if (format === 'pdf') {
+          const ok = exportImageAsPdf(pngUrl, base)
+          if (ok) toast.success('已打开打印窗口，请选择「另存为 PDF」')
+          else toast.error('无法打开打印窗口，请检查浏览器弹窗拦截')
+          return
+        }
+
+        downloadDataUrl(pngUrl, `${base}.png`)
+        toast.success('图片导出成功')
+      } catch (error) {
+        toast.error('导出失败')
+      }
+    },
+    [module?.name, graphData]
+  )
 
   const handleToggleListView = () => {
     navigate(`/modules/${moduleId}/nodes`)
@@ -419,7 +445,7 @@ function LogicGraphInner() {
         onCreateNode={handleCreateNode}
         onAutoLayout={handleAutoLayout}
         onFitView={handleFitView}
-        onExportImage={handleExportImage}
+        onExport={handleExport}
         onToggleListView={handleToggleListView}
         onImpactAnalysis={() => {
           if (selectedNode) {
