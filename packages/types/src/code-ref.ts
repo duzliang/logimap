@@ -1,0 +1,148 @@
+/**
+ * codeRef 解析层（T3-7）
+ *
+ * codeRef 是逻辑节点上的自由文本代码关联，支持三种形态：
+ *  - url：完整 http(s) 链接（通常是 GitHub/GitLab 永久链接），原样跳转
+ *  - relative：仓库内相对路径（可带符号或行号），结合 System 的 repoUrl/branch 构造永久链接
+ *  - bare：无法定位到文件的裸字符串（如仅函数名），不可跳转
+ *
+ * 支持的相对形态示例：
+ *  - src/services/settlement.ts#calculateSettlement   （文件 + 符号）
+ *  - src/services/settlement.ts:120-140               （文件 + 行号区间）
+ *  - src/services/settlement.ts#L120-L140             （文件 + 行号锚点）
+ *  - src/services/settlement.ts#L120                  （文件 + 单行）
+ */
+
+export type GitProvider = 'github' | 'gitlab' | 'unknown'
+
+export type CodeRefKind = 'url' | 'relative' | 'bare'
+
+export interface ParsedCodeRef {
+  kind: CodeRefKind
+  /** 相对文件路径（url 形态下为反解出的路径，可能为空） */
+  filePath: string
+  /** 关联的函数/类名（如有） */
+  symbol: string
+  /** 起始行号（如有） */
+  lineStart?: number
+  /** 结束行号（如有） */
+  lineEnd?: number
+  /** url 形态下的原始链接 */
+  rawUrl?: string
+}
+
+export interface RepoConfig {
+  repoUrl?: string | null
+  repoBranch?: string | null
+}
+
+/** 从仓库地址判断代码托管平台 */
+export function detectGitProvider(repoUrl?: string | null): GitProvider {
+  if (!repoUrl) return 'unknown'
+  const lower = repoUrl.toLowerCase()
+  if (lower.includes('github.com')) return 'github'
+  if (lower.includes('gitlab')) return 'gitlab'
+  return 'unknown'
+}
+
+/** 解析尾部的行号锚点，返回行号与去掉锚点后的剩余字符串 */
+function extractLines(input: string): { rest: string; lineStart?: number; lineEnd?: number } {
+  // #L120-L140 / #L120 / #L120-140
+  const hashMatch = input.match(/#L(\d+)(?:-L?(\d+))?$/)
+  if (hashMatch) {
+    return {
+      rest: input.slice(0, hashMatch.index),
+      lineStart: Number(hashMatch[1]),
+      lineEnd: hashMatch[2] ? Number(hashMatch[2]) : undefined,
+    }
+  }
+  // :120-140 / :120
+  const colonMatch = input.match(/:(\d+)(?:-(\d+))?$/)
+  if (colonMatch) {
+    return {
+      rest: input.slice(0, colonMatch.index),
+      lineStart: Number(colonMatch[1]),
+      lineEnd: colonMatch[2] ? Number(colonMatch[2]) : undefined,
+    }
+  }
+  return { rest: input }
+}
+
+/** 反解 GitHub/GitLab blob 永久链接，尽力提取文件路径与行号 */
+function parseBlobUrl(url: string): { filePath: string; lineStart?: number; lineEnd?: number } {
+  let filePath = ''
+  // GitHub: /blob/<branch>/<path>   GitLab: /-/blob/<branch>/<path>
+  const blobMatch = url.match(/\/(?:-\/)?blob\/[^/]+\/([^#?]+)/)
+  if (blobMatch) {
+    try {
+      filePath = decodeURIComponent(blobMatch[1])
+    } catch {
+      filePath = blobMatch[1]
+    }
+  }
+  const { lineStart, lineEnd } = extractLines(url)
+  return { filePath, lineStart, lineEnd }
+}
+
+/** 解析 codeRef 字符串 */
+export function parseCodeRef(codeRef: string): ParsedCodeRef {
+  const raw = (codeRef ?? '').trim()
+
+  if (/^https?:\/\//i.test(raw)) {
+    const { filePath, lineStart, lineEnd } = parseBlobUrl(raw)
+    return { kind: 'url', filePath, symbol: '', lineStart, lineEnd, rawUrl: raw }
+  }
+
+  const { rest, lineStart, lineEnd } = extractLines(raw)
+
+  // 剩余部分按 '#' 拆分出符号（行号已在上一步剥离）
+  const hashIndex = rest.indexOf('#')
+  const filePath = (hashIndex >= 0 ? rest.slice(0, hashIndex) : rest).trim()
+  const symbol = hashIndex >= 0 ? rest.slice(hashIndex + 1).trim() : ''
+
+  // 既没有路径分隔符也没有扩展名 → 视为裸符号，不可定位文件
+  const looksLikePath = filePath.includes('/') || /\.[a-z0-9]+$/i.test(filePath)
+  const kind: CodeRefKind = looksLikePath ? 'relative' : 'bare'
+
+  return { kind, filePath: filePath || raw, symbol, lineStart, lineEnd }
+}
+
+function lineAnchor(provider: GitProvider, lineStart?: number, lineEnd?: number): string {
+  if (!lineStart) return ''
+  if (!lineEnd || lineEnd === lineStart) return `#L${lineStart}`
+  // GitHub 用 #L10-L20，GitLab 用 #L10-20
+  return provider === 'gitlab' ? `#L${lineStart}-${lineEnd}` : `#L${lineStart}-L${lineEnd}`
+}
+
+function normalizeRepoUrl(repoUrl: string): string {
+  return repoUrl.trim().replace(/\/+$/, '').replace(/\.git$/i, '').replace(/\/+$/, '')
+}
+
+/**
+ * 根据解析结果与仓库配置构造可跳转的永久链接。
+ * 无法构造时返回 null（裸符号、未知平台、缺少 repoUrl 等）。
+ */
+export function buildCodeRefUrl(parsed: ParsedCodeRef, repo: RepoConfig): string | null {
+  if (parsed.kind === 'url') return parsed.rawUrl ?? null
+  if (parsed.kind !== 'relative') return null
+  if (!repo.repoUrl) return null
+
+  const provider = detectGitProvider(repo.repoUrl)
+  if (provider === 'unknown') return null
+
+  const base = normalizeRepoUrl(repo.repoUrl)
+  const branch = (repo.repoBranch || '').trim() || 'main'
+  const path = parsed.filePath.replace(/^\.?\//, '')
+  const anchor = lineAnchor(provider, parsed.lineStart, parsed.lineEnd)
+
+  if (provider === 'gitlab') {
+    return `${base}/-/blob/${branch}/${path}${anchor}`
+  }
+  return `${base}/blob/${branch}/${path}${anchor}`
+}
+
+/** 便捷方法：直接从 codeRef + 仓库配置得到链接 */
+export function resolveCodeRefUrl(codeRef: string, repo: RepoConfig): string | null {
+  if (!codeRef?.trim()) return null
+  return buildCodeRefUrl(parseCodeRef(codeRef), repo)
+}
