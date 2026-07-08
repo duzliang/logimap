@@ -9,8 +9,9 @@ import type { System } from '@/types/system.types'
 import { useAuthStore } from '@/stores/auth.store'
 import { Button, Input, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@logimap/ui'
 import { toast } from 'sonner'
-import { Layers, Plus, Pencil, Trash2, ExternalLink, Sparkles } from 'lucide-react'
+import { Layers, Plus, Pencil, Trash2, ExternalLink, Sparkles, GitBranch } from 'lucide-react'
 import { BatchGenerateDialog } from '@/components/ai/BatchGenerateDialog'
+import { GitImportDialog } from '@/components/git/GitImportDialog'
 
 export function SystemsPage() {
   const navigate = useNavigate()
@@ -18,6 +19,7 @@ export function SystemsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingSystem, setEditingSystem] = useState<System | null>(null)
   const [isBatchOpen, setIsBatchOpen] = useState(false)
+  const [isImportOpen, setIsImportOpen] = useState(false)
   const currentTeamId = useAuthStore((state) => state.currentTeamId)
 
   const { data: systems = [], isLoading } = useQuery({
@@ -112,6 +114,10 @@ export function SystemsPage() {
             <p className="text-sm text-[var(--color-text-secondary)]">创建和管理业务系统与模块</p>
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setIsImportOpen(true)} disabled={!currentTeamId}>
+              <GitBranch className="h-4 w-4 mr-2" />
+              从 Git 导入
+            </Button>
             <Button variant="outline" onClick={() => setIsBatchOpen(true)} disabled={!currentTeamId}>
               <Sparkles className="h-4 w-4 mr-2" />
               AI 批量建议
@@ -302,6 +308,11 @@ export function SystemsPage() {
       <BatchGenerateDialog
         open={isBatchOpen}
         onOpenChange={setIsBatchOpen}
+        teamId={currentTeamId || ''}
+      />
+      <GitImportDialog
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
         teamId={currentTeamId || ''}
       />
     </div>

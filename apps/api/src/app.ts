@@ -13,6 +13,7 @@ import { nodeDetailRoutes } from './routes/nodes.routes.js'
 import { notificationsRoutes } from './routes/notifications.routes.js'
 import { searchRoutes } from './routes/search.routes.js'
 import { impactRoutes } from './routes/impact.routes.js'
+import { gitImportRoutes } from './routes/git-import.routes.js'
 import { authMiddleware } from './middleware/auth.middleware.js'
 import { ModulesService } from './services/modules.service.js'
 import { requireTeamRole, teamResolvers } from './middleware/rbac.middleware.js'
@@ -80,3 +81,4 @@ app.route('/api/v1/teams', teamsRoutes)
 app.route('/api/v1/notifications', notificationsRoutes)
 app.route('/api/v1/search', searchRoutes)
 app.route('/api/v1/impact', impactRoutes)
+app.route('/api/v1/git-import', gitImportRoutes)
