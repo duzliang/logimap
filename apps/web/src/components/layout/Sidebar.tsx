@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Boxes, Search, Bell, Users } from 'lucide-react'
+import { LayoutDashboard, Boxes, Search, Bell, Users, KeyRound } from 'lucide-react'
 import { cn } from '@logimap/ui'
 
 interface NavItem {
@@ -16,7 +16,10 @@ const navItems: NavItem[] = [
   { to: '/notifications', label: '通知', icon: Bell },
 ]
 
-const teamItem: NavItem = { to: '/team/settings', label: '团队设置', icon: Users }
+const settingsItems: NavItem[] = [
+  { to: '/team/settings', label: '团队设置', icon: Users },
+  { to: '/settings/tokens', label: 'API 令牌', icon: KeyRound }
+]
 
 function SidebarNavLink({ item }: { item: NavItem }) {
   const location = useLocation()
@@ -50,7 +53,9 @@ export function Sidebar() {
 
         <div className="my-3 border-t border-[var(--color-border-default)]" />
 
-        <SidebarNavLink item={teamItem} />
+        {settingsItems.map((item) => (
+          <SidebarNavLink key={item.to} item={item} />
+        ))}
       </nav>
     </aside>
   )

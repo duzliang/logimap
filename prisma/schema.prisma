@@ -26,6 +26,22 @@ model User {
   updatedNodes    LogicNode[] @relation("UpdatedBy")
   notifications   Notification[]
   actorNotifications Notification[] @relation("ActorNotifications")
+  apiTokens       ApiToken[]
+}
+
+model ApiToken {
+  id         String    @id @default(cuid())
+  name       String                          // 令牌用途描述
+  tokenHash  String    @unique               // 令牌明文的 sha256，仅存哈希
+  prefix     String                          // 展示用前缀，如 lmk_ab12cd34
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
 }
 
 model Team {

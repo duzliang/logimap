@@ -10,6 +10,7 @@ import { LogicGraphPage } from '@/components/graph/LogicGraph'
 import { TeamSettingsPage } from '@/pages/team/TeamSettingsPage'
 import { NotificationsPage } from '@/pages/notifications/NotificationsPage'
 import { SearchResultsPage } from '@/pages/search/SearchResultsPage'
+import { ApiTokensPage } from '@/pages/settings/ApiTokensPage'
 import { AppShell } from '@/components/layout/AppShell'
 import { useAuthStore } from '@/stores/auth.store'
 
@@ -87,6 +88,10 @@ export const router = createBrowserRouter([
           {
             path: '/team/settings',
             element: <TeamSettingsPage />
+          },
+          {
+            path: '/settings/tokens',
+            element: <ApiTokensPage />
           },
           {
             path: '/notifications',
