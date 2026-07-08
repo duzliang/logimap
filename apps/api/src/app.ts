@@ -16,6 +16,7 @@ import { impactRoutes } from './routes/impact.routes.js'
 import { authMiddleware } from './middleware/auth.middleware.js'
 import { ModulesService } from './services/modules.service.js'
 import { requireTeamRole, teamResolvers } from './middleware/rbac.middleware.js'
+import { mountOpenApi } from './openapi.js'
 
 const modulesService = new ModulesService()
 
@@ -61,6 +62,9 @@ app.get('/api/v1', (c) => {
 
 // Public routes
 app.route('/api/v1/auth', authRoutes)
+
+// OpenAPI 文档（免鉴权，需在 authMiddleware 之前挂载）
+mountOpenApi(app)
 
 // Protected routes
 app.use('/api/v1/*', authMiddleware)
