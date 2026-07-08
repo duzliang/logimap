@@ -1,3 +1,8 @@
 packages:
   - 'apps/*'
   - 'packages/*'
+
+# hono-openapi 依赖链会引入 zod v4，导致 web 的 @hookform/resolvers 类型解析到 v4，
+# 与项目使用的 zod v3 冲突。固定 zod 版本，移除多余的 v4。
+overrides:
+  zod: 3.25.76
