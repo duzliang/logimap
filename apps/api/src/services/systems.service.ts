@@ -2,6 +2,18 @@ import { prisma } from '../db/prisma.js'
 import { generateId } from '../lib/id-generator.js'
 import type { CreateSystemInput, UpdateSystemInput } from '../lib/validators.system.js'
 
+/** 将 repo 相关的空字符串归一化为 null，避免在 DB 中存空串 */
+function normalizeRepoFields<T extends { repoUrl?: string; repoBranch?: string }>(
+  input: T
+): Omit<T, 'repoUrl' | 'repoBranch'> & { repoUrl?: string | null; repoBranch?: string | null } {
+  const next: Omit<T, 'repoUrl' | 'repoBranch'> & { repoUrl?: string | null; repoBranch?: string | null } = {
+    ...input,
+  }
+  if ('repoUrl' in input) next.repoUrl = input.repoUrl?.trim() || null
+  if ('repoBranch' in input) next.repoBranch = input.repoBranch?.trim() || null
+  return next
+}
+
 export class SystemsService {
   async getAll(teamId: string) {
     const systems = await prisma.system.findMany({
@@ -56,7 +68,7 @@ export class SystemsService {
       data: {
         id: generateId(),
         teamId,
-        ...input
+        ...normalizeRepoFields(input)
       }
     })
 
@@ -85,7 +97,7 @@ export class SystemsService {
 
     return prisma.system.update({
       where: { id: systemId },
-      data: input
+      data: normalizeRepoFields(input)
     })
   }
 

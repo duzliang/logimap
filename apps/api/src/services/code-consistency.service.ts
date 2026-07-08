@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { z } from 'zod'
 import { prisma } from '../db/prisma.js'
 import { AiPromptService } from './ai-prompt.service.js'
+import { parseCodeRef, buildCodeRefUrl } from '@logimap/types'
 import type { CheckConsistencyInput, ConsistencyResult } from '@logimap/types'
 
 const ResultSchema = z.object({
@@ -24,7 +25,12 @@ export class CodeConsistencyService {
         trigger: true,
         dependsOn: true,
         mainFlow: true,
-        codeRef: true
+        codeRef: true,
+        module: {
+          select: {
+            system: { select: { repoUrl: true, repoBranch: true } }
+          }
+        }
       }
     })
 
@@ -37,6 +43,13 @@ export class CodeConsistencyService {
     }
 
     const parsed = parseCodeRef(node.codeRef)
+    const repo = node.module.system
+    const resolvedUrl = buildCodeRefUrl(parsed, repo)
+    const lineRange = parsed.lineStart
+      ? parsed.lineEnd && parsed.lineEnd !== parsed.lineStart
+        ? `${parsed.lineStart}-${parsed.lineEnd}`
+        : String(parsed.lineStart)
+      : ''
 
     const prompt = await this.promptService.getPrompt('check-consistency', input.teamId).catch(() => null)
 
@@ -56,6 +69,8 @@ export class CodeConsistencyService {
 代码引用：{{codeRef}}
 解析后的文件路径：{{filePath}}
 解析后的函数/类名：{{symbol}}
+解析后的行号范围：{{lineRange}}
+代码永久链接：{{resolvedUrl}}
 
 请按以下 JSON 格式返回：
 {
@@ -75,7 +90,9 @@ export class CodeConsistencyService {
       nodeMainFlow: node.mainFlow || '无',
       codeRef: node.codeRef,
       filePath: parsed.filePath,
-      symbol: parsed.symbol
+      symbol: parsed.symbol || '无',
+      lineRange: lineRange || '无',
+      resolvedUrl: resolvedUrl || '无'
     })
 
     const message = await this.anthropic.messages.create({
@@ -94,13 +111,5 @@ export class CodeConsistencyService {
     }
 
     return this.promptService.parseJsonResponse(textBlock.text, prompt?.responseSchema ?? ResultSchema) as ConsistencyResult
-  }
-}
-
-function parseCodeRef(codeRef: string) {
-  const [filePath, symbol] = codeRef.split('#')
-  return {
-    filePath: filePath?.trim() || codeRef,
-    symbol: symbol?.trim() || ''
   }
 }
