@@ -27,8 +27,10 @@
 | 全局搜索与筛选（T2-15 ~ T2-18） | 搜索索引、API、筛选器 UI、结果页、图谱高亮 | ✅ 已提交 |
 | UI 规范落地（T2-19 ~ T2-22） | Modal/Sheet 遮罩、组件样式统一、AppShell 布局、暗色模式 | ✅ 已提交 |
 | Phase 2 P1（v0.3.0 核心） | AI 能力升级 / 影响分析（T3-1 ~ T3-6 / T3-10 ~ T3-12） | ✅ 已提交 |
-| Phase 2 P2（部分） | codeRef 解析增强（T3-7）、OpenAPI 文档 `/api/docs`（T3-17） | ✅ 已提交 |
-| **下一步** | **Phase 2 P2 余项：Git 仓库导入（T3-8）→ 代码反向关联设计（T3-9）→ 通知完善** | 🔄 待开始 |
+| Phase 2 P2 | codeRef 解析增强（T3-7）：共享解析器、可跳转代码链接、System 仓库配置 | ✅ 已提交 |
+| Phase 2 P2 | OpenAPI 文档（T3-17）：/api/docs Swagger UI + /api/openapi.json | ✅ 已提交 |
+| Phase 2 P2 | Git 仓库导入（T3-8）：目录树分析 → 系统/模块建议 → 一键导入 | ✅ 已提交 |
+| **下一步** | **Phase 2 P2：API Token 管理（T3-18）→ MCP 服务（T3-19）→ 图谱导出增强（T3-20）** | 🔄 待开始 |
 
 > 下次会话直接从此任务开始，无需重新确认。
 
@@ -135,8 +137,8 @@ pnpm dev
 - [ ] 安装并配置 eslint + lint-staged + pre-commit hook
 - [x] 补齐 DEVELOPMENT_PLAN.md 中已交付任务的勾选状态
 - [ ] 评估是否引入 Redis 或 materialized view 用于通知未读计数（当前靠索引）
-- [ ] Phase 2 后续任务优先级：Git 仓库导入（T3-8） → 代码反向关联设计（T3-9） → MCP（T3-19，依赖已交付的 T3-17） → 图谱导出增强（T3-20）
+- [ ] Phase 2 后续任务优先级：代码关联深化（T3-7 ~ T3-9） → OpenAPI（T3-17） → MCP（T3-19） → 图谱导出增强（T3-20）
 
 ---
 
-*最后更新：2026-07-08（Phase 2 P2 部分：codeRef 解析增强 T3-7 / OpenAPI 文档 T3-17 已交付）*
+*最后更新：2026-07-08（Phase 2 P2：T3-7 codeRef、T3-17 OpenAPI、T3-8 Git 导入已交付）*
