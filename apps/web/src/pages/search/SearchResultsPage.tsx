@@ -9,6 +9,7 @@ import { fetchSystems, fetchModules } from '@/api/systems.api'
 import { fetchMembers } from '@/api/teams.api'
 import { SearchFilters, type SearchFilterState } from '@/components/search/SearchFilters'
 import { SearchResultItem } from '@/components/search/SearchResultItem'
+import { NaturalLanguageQuery } from '@/components/search/NaturalLanguageQuery'
 import type { SearchResultItem as SearchResultItemType } from '@logimap/types'
 
 const PAGE_SIZE = 20
@@ -172,7 +173,7 @@ export function SearchResultsPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <aside className="lg:col-span-1">
+          <aside className="lg:col-span-1 space-y-4">
             <div className="bg-[var(--color-bg-elevated)] rounded-xl border border-[var(--color-border-default)] p-4">
               <h2 className="font-medium mb-4">筛选器</h2>
               <SearchFilters
@@ -183,6 +184,15 @@ export function SearchResultsPage() {
                 onChange={handleFilterChange}
               />
             </div>
+
+            {currentTeamId && (
+              <NaturalLanguageQuery
+                teamId={currentTeamId}
+                onNodeClick={(nodeId, moduleId) =>
+                  navigate(`/modules/${moduleId}/graph?highlightNodeIds=${nodeId}`)
+                }
+              />
+            )}
           </aside>
 
           <div className="lg:col-span-3 space-y-6">
