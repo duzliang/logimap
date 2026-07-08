@@ -4,7 +4,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { CreateSystemSchema, type CreateSystemInput } from '@logimap/types'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { fetchSystems, createSystem, deleteSystem } from '@/api/systems.api'
+import { fetchSystems, createSystem, updateSystem, deleteSystem } from '@/api/systems.api'
+import type { System } from '@/types/system.types'
 import { useAuthStore } from '@/stores/auth.store'
 import { Button, Input, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@logimap/ui'
 import { toast } from 'sonner'
@@ -15,6 +16,7 @@ export function SystemsPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [editingSystem, setEditingSystem] = useState<System | null>(null)
   const [isBatchOpen, setIsBatchOpen] = useState(false)
   const currentTeamId = useAuthStore((state) => state.currentTeamId)
 
@@ -40,6 +42,19 @@ export function SystemsPage() {
     }
   })
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: CreateSystemInput }) => updateSystem(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['systems'] })
+      toast.success('保存成功')
+      setEditingSystem(null)
+      reset()
+    },
+    onError: (error) => {
+      toast.error(error.message || '保存失败')
+    }
+  })
+
   const deleteMutation = useMutation({
     mutationFn: deleteSystem,
     onSuccess: () => {
@@ -56,7 +71,36 @@ export function SystemsPage() {
   })
 
   const onSubmit = (data: CreateSystemInput) => {
-    createMutation.mutate(data)
+    if (editingSystem) {
+      updateMutation.mutate({ id: editingSystem.id, data })
+    } else {
+      createMutation.mutate(data)
+    }
+  }
+
+  const openEditDialog = (system: System) => {
+    setEditingSystem(system)
+    reset({
+      name: system.name,
+      slug: system.slug,
+      description: system.description ?? '',
+      repoUrl: system.repoUrl ?? '',
+      repoBranch: system.repoBranch ?? ''
+    })
+  }
+
+  const isFormOpen = isDialogOpen || editingSystem !== null
+
+  const openCreateDialog = () => {
+    setEditingSystem(null)
+    reset({ name: '', slug: '', description: '', repoUrl: '', repoBranch: '' })
+    setIsDialogOpen(true)
+  }
+
+  const closeForm = () => {
+    setIsDialogOpen(false)
+    setEditingSystem(null)
+    reset({ name: '', slug: '', description: '', repoUrl: '', repoBranch: '' })
   }
 
   return (
@@ -72,7 +116,7 @@ export function SystemsPage() {
               <Sparkles className="h-4 w-4 mr-2" />
               AI 批量建议
             </Button>
-            <Button onClick={() => setIsDialogOpen(true)}>
+            <Button onClick={openCreateDialog}>
               <Plus className="h-4 w-4 mr-2" />
               创建系统
             </Button>
@@ -88,7 +132,7 @@ export function SystemsPage() {
             <Layers className="h-16 w-16 mx-auto text-[var(--color-text-tertiary)] mb-4" />
             <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">暂无系统</h3>
             <p className="text-[var(--color-text-secondary)] mb-4">创建第一个系统来开始管理您的业务逻辑</p>
-            <Button onClick={() => setIsDialogOpen(true)}>
+            <Button onClick={openCreateDialog}>
               <Plus className="h-4 w-4 mr-2" />
               创建系统
             </Button>
@@ -133,9 +177,7 @@ export function SystemsPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => {
-                        toast.info('编辑功能待实现')
-                      }}
+                      onClick={() => openEditDialog(system)}
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -159,13 +201,15 @@ export function SystemsPage() {
         )}
       </main>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isFormOpen} onOpenChange={(open) => (open ? setIsDialogOpen(true) : closeForm())}>
         <DialogContent>
           <form onSubmit={handleSubmit(onSubmit)}>
             <DialogHeader>
-              <DialogTitle>创建新系统</DialogTitle>
+              <DialogTitle>{editingSystem ? '编辑系统' : '创建新系统'}</DialogTitle>
               <DialogDescription>
-                创建一个新的业务系统，用于组织和管理相关模块
+                {editingSystem
+                  ? '修改系统信息与关联的代码仓库'
+                  : '创建一个新的业务系统，用于组织和管理相关模块'}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -208,13 +252,48 @@ export function SystemsPage() {
                   <p className="text-sm text-[var(--color-error-icon)]">{errors.description.message}</p>
                 )}
               </div>
+              <div className="grid gap-2">
+                <label className="text-sm font-medium" htmlFor="repoUrl">
+                  代码仓库地址
+                </label>
+                <Input
+                  id="repoUrl"
+                  placeholder="例如：https://github.com/org/repo"
+                  {...register('repoUrl')}
+                />
+                <p className="text-xs text-[var(--color-text-tertiary)]">
+                  配置后，节点的相对代码关联可一键跳转到 GitHub/GitLab
+                </p>
+                {errors.repoUrl && (
+                  <p className="text-sm text-[var(--color-error-icon)]">{errors.repoUrl.message}</p>
+                )}
+              </div>
+              <div className="grid gap-2">
+                <label className="text-sm font-medium" htmlFor="repoBranch">
+                  默认分支
+                </label>
+                <Input
+                  id="repoBranch"
+                  placeholder="默认 main"
+                  {...register('repoBranch')}
+                />
+                {errors.repoBranch && (
+                  <p className="text-sm text-[var(--color-error-icon)]">{errors.repoBranch.message}</p>
+                )}
+              </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+              <Button type="button" variant="outline" onClick={closeForm}>
                 取消
               </Button>
-              <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending ? '创建中...' : '创建'}
+              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                {editingSystem
+                  ? updateMutation.isPending
+                    ? '保存中...'
+                    : '保存'
+                  : createMutation.isPending
+                    ? '创建中...'
+                    : '创建'}
               </Button>
             </DialogFooter>
           </form>

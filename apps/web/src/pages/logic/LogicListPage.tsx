@@ -8,7 +8,7 @@ import {
   type ColumnDef
 } from '@tanstack/react-table'
 import { fetchLogicNodes, createLogicNode, updateLogicNode, deleteLogicNode } from '@/api/logicNodes.api'
-import { fetchModule } from '@/api/systems.api'
+import { fetchModule, fetchSystem } from '@/api/systems.api'
 import type { LogicNode } from '@/types/logic-node.types'
 import type { Branch, EdgeCase, CreateLogicNodeInput, UpdateLogicNodeInput } from '@logimap/types'
 import { useAuthStore } from '@/stores/auth.store'
@@ -36,6 +36,12 @@ export function LogicListPage() {
     queryKey: ['module', moduleId],
     queryFn: () => fetchModule(moduleId!),
     enabled: !!moduleId
+  })
+
+  const { data: system } = useQuery({
+    queryKey: ['system', module?.systemId],
+    queryFn: () => fetchSystem(module!.systemId),
+    enabled: !!module?.systemId
   })
 
   const { data: nodes = [], isLoading } = useQuery({
@@ -343,6 +349,7 @@ export function LogicListPage() {
             isLoading={createMutation.isPending || updateMutation.isPending}
             teamId={currentTeamId || undefined}
             moduleContext={module?.name}
+            repo={system ? { repoUrl: system.repoUrl, repoBranch: system.repoBranch } : undefined}
           />
         </DialogContent>
       </Dialog>

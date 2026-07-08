@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { fetchModule } from '@/api/systems.api'
+import { fetchModule, fetchSystem } from '@/api/systems.api'
 import { fetchLogicNodes, createLogicNode, updateLogicNode, deleteLogicNode } from '@/api/logicNodes.api'
 import type { LogicNode } from '@/types/logic-node.types'
 import type { CreateLogicNodeInput, UpdateLogicNodeInput } from '@logimap/types'
@@ -29,6 +29,12 @@ export function ModuleDetailPage() {
     queryKey: ['module', moduleId],
     queryFn: () => fetchModule(moduleId!),
     enabled: !!moduleId
+  })
+
+  const { data: system } = useQuery({
+    queryKey: ['system', module?.systemId],
+    queryFn: () => fetchSystem(module!.systemId),
+    enabled: !!module?.systemId
   })
 
   const { data: nodes = [], isLoading: loadingNodes } = useQuery({
@@ -267,6 +273,7 @@ export function ModuleDetailPage() {
             isLoading={createMutation.isPending || updateMutation.isPending}
             teamId={currentTeamId || undefined}
             moduleContext={module?.name}
+            repo={system ? { repoUrl: system.repoUrl, repoBranch: system.repoBranch } : undefined}
           />
         </DialogContent>
       </Dialog>

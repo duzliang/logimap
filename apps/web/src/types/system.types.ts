@@ -5,6 +5,8 @@ export interface System {
   description?: string | null
   icon?: string | null
   color?: string | null
+  repoUrl?: string | null
+  repoBranch?: string | null
   createdAt: string
   updatedAt: string
   teamId: string
@@ -30,6 +32,8 @@ export interface CreateSystemInput {
   description?: string
   icon?: string
   color?: string
+  repoUrl?: string
+  repoBranch?: string
 }
 
 export interface UpdateSystemInput {
@@ -38,6 +42,8 @@ export interface UpdateSystemInput {
   description?: string
   icon?: string
   color?: string
+  repoUrl?: string
+  repoBranch?: string
 }
 
 export interface CreateModuleInput {

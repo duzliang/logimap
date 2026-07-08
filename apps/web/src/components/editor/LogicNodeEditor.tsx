@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { Button, Input, Textarea, Label, Badge, cn } from '@logimap/ui'
-import { Plus, Trash2, X, Sparkles, Loader2 } from 'lucide-react'
+import { Plus, Trash2, X, Sparkles, Loader2, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import { generateNodeContent, suggestEdgeCases, analyzeNode, generateTestCases, checkCodeConsistency } from '@/api/ai.api'
+import { resolveCodeRefUrl } from '@logimap/types'
 import type { Branch, EdgeCase, NodeAnalysis, GeneratedTestCases } from '@logimap/types'
 
 interface LogicNodeForm {
@@ -27,9 +28,10 @@ interface LogicNodeEditorProps {
   isLoading?: boolean
   teamId?: string
   moduleContext?: string
+  repo?: { repoUrl?: string | null; repoBranch?: string | null }
 }
 
-export function LogicNodeEditor({ node, nodeId, onSave, onCancel, isLoading, teamId, moduleContext }: LogicNodeEditorProps) {
+export function LogicNodeEditor({ node, nodeId, onSave, onCancel, isLoading, teamId, moduleContext, repo }: LogicNodeEditorProps) {
   const [tagInput, setTagInput] = useState('')
   const [isAiLoading, setIsAiLoading] = useState(false)
   const [analysisResult, setAnalysisResult] = useState<NodeAnalysis | null>(null)
@@ -53,6 +55,8 @@ export function LogicNodeEditor({ node, nodeId, onSave, onCancel, isLoading, tea
   const tags = watch('tags')
   const nodeName = watch('name')
   const edgeCases = watch('edgeCases')
+  const codeRef = watch('codeRef')
+  const codeRefUrl = codeRef ? resolveCodeRefUrl(codeRef, repo || {}) : null
 
   const {
     fields: branchFields,
@@ -591,6 +595,21 @@ export function LogicNodeEditor({ node, nodeId, onSave, onCancel, isLoading, tea
             placeholder="例如：src/services/settlement.ts#calculateSettlement"
             {...register('codeRef')}
           />
+          {codeRefUrl ? (
+            <a
+              href={codeRefUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-[var(--color-brand-default)] hover:underline"
+            >
+              <ExternalLink className="h-3 w-3" />
+              打开代码
+            </a>
+          ) : codeRef ? (
+            <p className="text-xs text-[var(--color-text-tertiary)]">
+              {repo?.repoUrl ? '无法解析为可跳转链接（请检查路径格式）' : '在系统设置中配置代码仓库地址后可一键跳转'}
+            </p>
+          ) : null}
         </div>
       </div>
 
