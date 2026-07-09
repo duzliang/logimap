@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/auth.store'
 import { ThemeToggle } from '@logimap/ui'
+import { LanguageToggle, useI18n } from '@/i18n'
 import { NotificationBell } from '@/components/notifications/NotificationBell'
 import { GlobalSearchInput } from '@/components/search/GlobalSearchInput'
 import { LogOut, User, Users, Settings, ChevronDown } from 'lucide-react'
@@ -13,6 +14,7 @@ export function Topbar() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { user, logout, teams, currentTeamId, setCurrentTeamId } = useAuthStore()
+  const { t } = useI18n()
   const [teamMenuOpen, setTeamMenuOpen] = useState(false)
 
   const currentTeam = teams.find((t) => t.id === currentTeamId)
@@ -20,7 +22,7 @@ export function Topbar() {
   const handleLogout = () => {
     logout()
     navigate('/login')
-    toast.success('已退出登录')
+    toast.success(t('topbar.logoutSuccess'))
   }
 
   const handleSwitchTeam = (teamId: string) => {
@@ -28,7 +30,7 @@ export function Topbar() {
     setTeamMenuOpen(false)
     queryClient.clear()
     navigate('/dashboard')
-    toast.success('已切换团队')
+    toast.success(t('topbar.switchTeamSuccess'))
   }
 
   return (
@@ -47,6 +49,7 @@ export function Topbar() {
       <GlobalSearchInput />
 
       <div className="flex items-center gap-3">
+        <LanguageToggle />
         <ThemeToggle />
         <NotificationBell />
 
@@ -58,13 +61,13 @@ export function Topbar() {
               className="flex items-center gap-2 h-9 px-3 rounded-md border border-[var(--color-border-default)] bg-[var(--color-bg-base)] text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-sunken)] transition-colors"
             >
               <Users className="h-4 w-4 text-[var(--color-text-secondary)]" />
-              <span className="hidden sm:inline max-w-[120px] truncate">{currentTeam?.name || '选择团队'}</span>
+              <span className="hidden sm:inline max-w-[120px] truncate">{currentTeam?.name || t('topbar.selectTeam')}</span>
               <ChevronDown className={`h-4 w-4 text-[var(--color-text-secondary)] transition-transform ${teamMenuOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {teamMenuOpen && (
               <div className="absolute right-0 top-full mt-2 w-56 rounded-md border border-[var(--color-border-default)] bg-[var(--color-bg-elevated)] shadow-dialog z-50">
-                <div className="px-3 py-2 text-xs font-medium text-[var(--color-text-secondary)]">切换团队</div>
+                <div className="px-3 py-2 text-xs font-medium text-[var(--color-text-secondary)]">{t('topbar.switchTeam')}</div>
                 <div className="max-h-64 overflow-auto">
                   {teams.map((team) => (
                     <button
@@ -88,7 +91,7 @@ export function Topbar() {
                     className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-sunken)] transition-colors"
                   >
                     <Settings className="h-4 w-4" />
-                    团队设置
+                    {t('topbar.teamSettings')}
                   </button>
                 </div>
               </div>
@@ -108,8 +111,8 @@ export function Topbar() {
               type="button"
               onClick={handleLogout}
               className="p-2 rounded-md text-[var(--color-text-secondary)] hover:text-[var(--color-error-icon)] hover:bg-[var(--color-error-bg)] transition-colors"
-              aria-label="退出登录"
-              title="退出登录"
+              aria-label={t('topbar.logout')}
+              title={t('topbar.logout')}
             >
               <LogOut className="h-4 w-4" />
             </button>

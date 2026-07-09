@@ -6,9 +6,11 @@ import { fetchTeams } from '@/api/teams.api'
 import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@logimap/ui'
 import { Layers, ArrowRight } from 'lucide-react'
+import { useI18n } from '@/i18n'
 
 export function DashboardPage() {
   const navigate = useNavigate()
+  const { t } = useI18n()
   const { user, isAuthenticated, token, setUser, logout, setLoading, currentTeamId, setTeams, setCurrentTeamId } = useAuthStore()
   const [isChecking, setIsChecking] = useState(true)
 
@@ -30,7 +32,7 @@ export function DashboardPage() {
         setUser(userData)
       } catch (error) {
         console.error('Failed to fetch user:', error)
-        toast.warning('无法验证登录状态，请检查网络连接')
+        toast.warning(t('dashboard.authWarning'))
       } finally {
         setIsChecking(false)
         setLoading(false)
@@ -64,7 +66,7 @@ export function DashboardPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <h1 className="text-2xl font-bold">LogiMap</h1>
-          <p className="text-[var(--color-text-secondary)] mt-2">加载中...</p>
+          <p className="text-[var(--color-text-secondary)] mt-2">{t('common.loading')}</p>
         </div>
       </div>
     )
@@ -78,8 +80,8 @@ export function DashboardPage() {
     <div className="min-h-full bg-[var(--color-bg-base)]">
       <main className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold mb-2">欢迎使用 LogiMap</h2>
-          <p className="text-[var(--color-text-secondary)]">业务逻辑管理系统 - Phase 1 治理中</p>
+          <h2 className="text-3xl font-bold mb-2">{t('dashboard.welcome')}</h2>
+          <p className="text-[var(--color-text-secondary)]">{t('dashboard.subtitle')}</p>
         </div>
 
         <div className="max-w-md mx-auto">
@@ -90,14 +92,14 @@ export function DashboardPage() {
                   <Layers className="h-6 w-6 text-[var(--color-text-inverse)]" />
                 </div>
                 <div>
-                  <CardTitle>系统管理</CardTitle>
-                  <CardDescription>管理业务系统和模块</CardDescription>
+                  <CardTitle>{t('dashboard.systemsCardTitle')}</CardTitle>
+                  <CardDescription>{t('dashboard.systemsCardDesc')}</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between text-sm text-[var(--color-text-secondary)]">
-                <span>创建和管理您的业务系统</span>
+                <span>{t('dashboard.systemsCardHint')}</span>
                 <ArrowRight className="h-4 w-4" />
               </div>
             </CardContent>

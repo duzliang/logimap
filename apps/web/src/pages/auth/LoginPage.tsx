@@ -4,13 +4,15 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { LoginSchema, type LoginInput } from '@logimap/types'
 import { login } from '@/api/auth.api'
 import { useAuthSubmit } from '@/hooks/useAuthSubmit'
+import { useI18n } from '@/i18n'
 import { Button, Input, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@logimap/ui'
 
 export function LoginPage() {
+  const { t } = useI18n()
   const { isLoading, submit: onSubmit } = useAuthSubmit({
     onSubmit: login,
-    successMessage: '登录成功',
-    errorMessage: '登录失败，请检查账号密码'
+    successMessage: t('auth.loginSuccess'),
+    errorMessage: t('auth.loginError')
   })
 
   const {
@@ -27,14 +29,14 @@ export function LoginPage() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">LogiMap</CardTitle>
           <CardDescription className="text-center">
-            登录您的账户
+            {t('auth.loginTitle')}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium" htmlFor="email">
-                邮箱
+                {t('auth.email')}
               </label>
               <Input
                 id="email"
@@ -49,7 +51,7 @@ export function LoginPage() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium" htmlFor="password">
-                密码
+                {t('auth.password')}
               </label>
               <Input
                 id="password"
@@ -69,12 +71,12 @@ export function LoginPage() {
               className="w-full"
               disabled={isLoading}
             >
-              {isLoading ? '登录中...' : '登录'}
+              {isLoading ? t('auth.loggingIn') : t('auth.login')}
             </Button>
             <p className="text-sm text-center text-[var(--color-text-secondary)]">
-              还没有账户？{' '}
+              {t('auth.noAccount')}{' '}
               <Link to="/register" className="text-[var(--color-text-brand)] hover:underline">
-                立即注册
+                {t('auth.goRegister')}
               </Link>
             </p>
           </CardFooter>

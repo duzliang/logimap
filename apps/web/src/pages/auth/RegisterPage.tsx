@@ -4,15 +4,17 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { RegisterSchema, type RegisterInput } from '@logimap/types'
 import { register as registerApi } from '@/api/auth.api'
 import { useAuthSubmit } from '@/hooks/useAuthSubmit'
+import { useI18n } from '@/i18n'
 import { Button, Input, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@logimap/ui'
 
 export function RegisterPage() {
+  const { t } = useI18n()
   const [searchParams] = useSearchParams()
   const invitationToken = searchParams.get('invitation') || undefined
   const { isLoading, submit: onSubmit } = useAuthSubmit({
     onSubmit: (data: RegisterInput) => registerApi({ ...data, invitationToken }),
-    successMessage: '注册成功',
-    errorMessage: '注册失败'
+    successMessage: t('auth.registerSuccess'),
+    errorMessage: t('auth.registerError')
   })
 
   const {
@@ -29,19 +31,19 @@ export function RegisterPage() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">LogiMap</CardTitle>
           <CardDescription className="text-center">
-            创建您的账户
+            {t('auth.registerTitle')}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium" htmlFor="name">
-                用户名
+                {t('auth.username')}
               </label>
               <Input
                 id="name"
                 type="text"
-                placeholder="您的用户名"
+                placeholder={t('auth.usernamePlaceholder')}
                 {...register('name')}
                 disabled={isLoading}
               />
@@ -51,7 +53,7 @@ export function RegisterPage() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium" htmlFor="email">
-                邮箱
+                {t('auth.email')}
               </label>
               <Input
                 id="email"
@@ -66,7 +68,7 @@ export function RegisterPage() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium" htmlFor="password">
-                密码
+                {t('auth.password')}
               </label>
               <Input
                 id="password"
@@ -86,12 +88,12 @@ export function RegisterPage() {
               className="w-full"
               disabled={isLoading}
             >
-              {isLoading ? '注册中...' : '注册'}
+              {isLoading ? t('auth.registering') : t('auth.register')}
             </Button>
             <p className="text-sm text-center text-[var(--color-text-secondary)]">
-              已有账户？{' '}
+              {t('auth.hasAccount')}{' '}
               <Link to="/login" className="text-[var(--color-text-brand)] hover:underline">
-                立即登录
+                {t('auth.goLogin')}
               </Link>
             </p>
           </CardFooter>

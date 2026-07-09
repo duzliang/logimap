@@ -1,30 +1,32 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { LayoutDashboard, Boxes, Search, Bell, Users, KeyRound, Link2, UserCog } from 'lucide-react'
 import { cn } from '@logimap/ui'
+import { useI18n, type TranslationKey } from '@/i18n'
 
 interface NavItem {
   to: string
-  label: string
+  labelKey: TranslationKey
   icon: React.ElementType
   end?: boolean
 }
 
 const navItems: NavItem[] = [
-  { to: '/dashboard', label: '仪表盘', icon: LayoutDashboard, end: true },
-  { to: '/systems', label: '系统', icon: Boxes },
-  { to: '/search', label: '搜索', icon: Search },
-  { to: '/code-links', label: '代码反向关联', icon: Link2 },
-  { to: '/notifications', label: '通知', icon: Bell },
+  { to: '/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard, end: true },
+  { to: '/systems', labelKey: 'nav.systems', icon: Boxes },
+  { to: '/search', labelKey: 'nav.search', icon: Search },
+  { to: '/code-links', labelKey: 'nav.codeLinks', icon: Link2 },
+  { to: '/notifications', labelKey: 'nav.notifications', icon: Bell },
 ]
 
 const settingsItems: NavItem[] = [
-  { to: '/team/settings', label: '团队设置', icon: Users },
-  { to: '/settings/account', label: '账户设置', icon: UserCog },
-  { to: '/settings/tokens', label: 'API 令牌', icon: KeyRound }
+  { to: '/team/settings', labelKey: 'nav.teamSettings', icon: Users },
+  { to: '/settings/account', labelKey: 'nav.accountSettings', icon: UserCog },
+  { to: '/settings/tokens', labelKey: 'nav.apiTokens', icon: KeyRound }
 ]
 
 function SidebarNavLink({ item }: { item: NavItem }) {
   const location = useLocation()
+  const { t } = useI18n()
   const isActive = item.end
     ? location.pathname === item.to
     : location.pathname.startsWith(item.to)
@@ -40,7 +42,7 @@ function SidebarNavLink({ item }: { item: NavItem }) {
       )}
     >
       <item.icon className="h-4 w-4" />
-      <span>{item.label}</span>
+      <span>{t(item.labelKey)}</span>
     </NavLink>
   )
 }
