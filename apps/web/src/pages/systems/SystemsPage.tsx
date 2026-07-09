@@ -12,9 +12,11 @@ import { toast } from 'sonner'
 import { Layers, Plus, Pencil, Trash2, ExternalLink, Sparkles, GitBranch } from 'lucide-react'
 import { BatchGenerateDialog } from '@/components/ai/BatchGenerateDialog'
 import { GitImportDialog } from '@/components/git/GitImportDialog'
+import { useTranslation } from '@/i18n'
 
 export function SystemsPage() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingSystem, setEditingSystem] = useState<System | null>(null)
@@ -30,17 +32,17 @@ export function SystemsPage() {
 
   const createMutation = useMutation({
     mutationFn: (data: CreateSystemInput) => {
-      if (!currentTeamId) throw new Error('未选择团队')
+      if (!currentTeamId) throw new Error(t('systems.noTeam'))
       return createSystem(data, currentTeamId)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['systems'] })
-      toast.success('创建成功')
+      toast.success(t('systems.createSuccess'))
       setIsDialogOpen(false)
       reset()
     },
     onError: (error) => {
-      toast.error(error.message || '创建失败')
+      toast.error(error.message || t('systems.createFailed'))
     }
   })
 
@@ -48,12 +50,12 @@ export function SystemsPage() {
     mutationFn: ({ id, data }: { id: string; data: CreateSystemInput }) => updateSystem(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['systems'] })
-      toast.success('保存成功')
+      toast.success(t('systems.saveSuccess'))
       setEditingSystem(null)
       reset()
     },
     onError: (error) => {
-      toast.error(error.message || '保存失败')
+      toast.error(error.message || t('systems.saveFailed'))
     }
   })
 
@@ -61,10 +63,10 @@ export function SystemsPage() {
     mutationFn: deleteSystem,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['systems'] })
-      toast.success('删除成功')
+      toast.success(t('systems.deleteSuccess'))
     },
     onError: (error) => {
-      toast.error(error.message || '删除失败')
+      toast.error(error.message || t('systems.deleteFailed'))
     }
   })
 
@@ -110,37 +112,37 @@ export function SystemsPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">系统管理</h1>
-            <p className="text-sm text-[var(--color-text-secondary)]">创建和管理业务系统与模块</p>
+            <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">{t('systems.title')}</h1>
+            <p className="text-sm text-[var(--color-text-secondary)]">{t('systems.subtitle')}</p>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => setIsImportOpen(true)} disabled={!currentTeamId}>
               <GitBranch className="h-4 w-4 mr-2" />
-              从 Git 导入
+              {t('systems.importFromGit')}
             </Button>
             <Button variant="outline" onClick={() => setIsBatchOpen(true)} disabled={!currentTeamId}>
               <Sparkles className="h-4 w-4 mr-2" />
-              AI 批量建议
+              {t('systems.aiBatch')}
             </Button>
             <Button onClick={openCreateDialog}>
               <Plus className="h-4 w-4 mr-2" />
-              创建系统
+              {t('systems.createSystem')}
             </Button>
           </div>
         </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="text-center text-[var(--color-text-secondary)]">加载中...</div>
+            <div className="text-center text-[var(--color-text-secondary)]">{t('common.loading')}</div>
           </div>
         ) : systems.length === 0 ? (
           <div className="text-center py-12 bg-[var(--color-bg-elevated)] rounded-lg border border-[var(--color-border-default)]">
             <Layers className="h-16 w-16 mx-auto text-[var(--color-text-tertiary)] mb-4" />
-            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">暂无系统</h3>
-            <p className="text-[var(--color-text-secondary)] mb-4">创建第一个系统来开始管理您的业务逻辑</p>
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">{t('systems.emptyTitle')}</h3>
+            <p className="text-[var(--color-text-secondary)] mb-4">{t('systems.emptyDesc')}</p>
             <Button onClick={openCreateDialog}>
               <Plus className="h-4 w-4 mr-2" />
-              创建系统
+              {t('systems.createSystem')}
             </Button>
           </div>
         ) : (
@@ -159,7 +161,7 @@ export function SystemsPage() {
                       <div>
                         <CardTitle className="text-lg">{system.name}</CardTitle>
                         <CardDescription className="text-xs">
-                          {system.modulesCount || 0} 个模块
+                          {t('systems.modulesCount', { count: system.modulesCount || 0 })}
                         </CardDescription>
                       </div>
                     </div>
@@ -177,7 +179,7 @@ export function SystemsPage() {
                     onClick={() => navigate(`/systems/${system.id}`)}
                   >
                     <ExternalLink className="h-4 w-4 mr-2" />
-                    进入系统
+                    {t('systems.enterSystem')}
                   </Button>
                   <div className="flex gap-2">
                     <Button
@@ -191,7 +193,7 @@ export function SystemsPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        if (confirm(`确定要删除系统"${system.name}"吗？`)) {
+                        if (confirm(t('systems.deleteConfirm', { name: system.name }))) {
                           deleteMutation.mutate(system.id)
                         }
                       }}
@@ -211,21 +213,19 @@ export function SystemsPage() {
         <DialogContent>
           <form onSubmit={handleSubmit(onSubmit)}>
             <DialogHeader>
-              <DialogTitle>{editingSystem ? '编辑系统' : '创建新系统'}</DialogTitle>
+              <DialogTitle>{editingSystem ? t('systems.editTitle') : t('systems.createTitle')}</DialogTitle>
               <DialogDescription>
-                {editingSystem
-                  ? '修改系统信息与关联的代码仓库'
-                  : '创建一个新的业务系统，用于组织和管理相关模块'}
+                {editingSystem ? t('systems.editDesc') : t('systems.createDesc')}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <label className="text-sm font-medium" htmlFor="name">
-                  系统名称
+                  {t('systems.name')}
                 </label>
                 <Input
                   id="name"
-                  placeholder="例如：4S 店运营管理系统"
+                  placeholder={t('systems.namePlaceholder')}
                   {...register('name')}
                 />
                 {errors.name && (
@@ -234,11 +234,11 @@ export function SystemsPage() {
               </div>
               <div className="grid gap-2">
                 <label className="text-sm font-medium" htmlFor="slug">
-                  系统标识
+                  {t('systems.slug')}
                 </label>
                 <Input
                   id="slug"
-                  placeholder="例如：4s-store-management"
+                  placeholder={t('systems.slugPlaceholder')}
                   {...register('slug')}
                 />
                 {errors.slug && (
@@ -247,11 +247,11 @@ export function SystemsPage() {
               </div>
               <div className="grid gap-2">
                 <label className="text-sm font-medium" htmlFor="description">
-                  系统描述
+                  {t('systems.description')}
                 </label>
                 <Input
                   id="description"
-                  placeholder="可选"
+                  placeholder={t('systems.descriptionPlaceholder')}
                   {...register('description')}
                 />
                 {errors.description && (
@@ -260,15 +260,15 @@ export function SystemsPage() {
               </div>
               <div className="grid gap-2">
                 <label className="text-sm font-medium" htmlFor="repoUrl">
-                  代码仓库地址
+                  {t('systems.repoUrl')}
                 </label>
                 <Input
                   id="repoUrl"
-                  placeholder="例如：https://github.com/org/repo"
+                  placeholder={t('systems.repoUrlPlaceholder')}
                   {...register('repoUrl')}
                 />
                 <p className="text-xs text-[var(--color-text-tertiary)]">
-                  配置后，节点的相对代码关联可一键跳转到 GitHub/GitLab
+                  {t('systems.repoUrlHint')}
                 </p>
                 {errors.repoUrl && (
                   <p className="text-sm text-[var(--color-error-icon)]">{errors.repoUrl.message}</p>
@@ -276,11 +276,11 @@ export function SystemsPage() {
               </div>
               <div className="grid gap-2">
                 <label className="text-sm font-medium" htmlFor="repoBranch">
-                  默认分支
+                  {t('systems.repoBranch')}
                 </label>
                 <Input
                   id="repoBranch"
-                  placeholder="默认 main"
+                  placeholder={t('systems.repoBranchPlaceholder')}
                   {...register('repoBranch')}
                 />
                 {errors.repoBranch && (
@@ -290,16 +290,16 @@ export function SystemsPage() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeForm}>
-                取消
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
                 {editingSystem
                   ? updateMutation.isPending
-                    ? '保存中...'
-                    : '保存'
+                    ? t('systems.saving')
+                    : t('common.save')
                   : createMutation.isPending
-                    ? '创建中...'
-                    : '创建'}
+                    ? t('systems.creating')
+                    : t('systems.createSystem')}
               </Button>
             </DialogFooter>
           </form>

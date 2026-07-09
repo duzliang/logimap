@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { CheckCheck, Trash2, Bell } from 'lucide-react'
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@logimap/ui'
 import { NotificationItem } from '../../components/notifications/NotificationItem.js'
+import { useTranslation } from '@/i18n'
 import {
   fetchNotifications,
   fetchUnreadCount,
@@ -14,6 +15,7 @@ import {
 
 export function NotificationsPage() {
   const queryClient = useQueryClient()
+  const { t } = useTranslation()
   const [includeRead, setIncludeRead] = useState(true)
 
   const { data: notifications = [], isLoading } = useQuery({
@@ -44,7 +46,7 @@ export function NotificationsPage() {
     mutationFn: () => markNotificationsAsRead({ all: true }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
-      toast.success('全部标记为已读')
+      toast.success(t('notifications.allMarkedRead'))
     }
   })
 
@@ -64,9 +66,9 @@ export function NotificationsPage() {
               <Bell className="h-5 w-5 text-violet-600 dark:text-violet-300" />
             </div>
             <div>
-              <CardTitle>通知中心</CardTitle>
+              <CardTitle>{t('notifications.title')}</CardTitle>
               <p className="text-sm text-[var(--color-text-tertiary)]">
-                未读通知 {unreadCountData?.count || 0} 条
+                {t('notifications.unreadCount', { count: unreadCountData?.count || 0 })}
               </p>
             </div>
           </div>
@@ -77,7 +79,7 @@ export function NotificationsPage() {
               size="sm"
               onClick={() => setIncludeRead(!includeRead)}
             >
-              {includeRead ? '仅显示未读' : '显示全部'}
+              {includeRead ? t('notifications.showUnreadOnly') : t('notifications.showAll')}
             </Button>
             <Button
               variant="outline"
@@ -86,14 +88,14 @@ export function NotificationsPage() {
               disabled={(unreadCountData?.count || 0) === 0}
             >
               <CheckCheck className="mr-1 h-4 w-4" />
-              全部已读
+              {t('notifications.markAllRead')}
             </Button>
             <Button
               variant="outline"
               size="sm"
               className="text-[var(--color-error-icon)] hover:text-[var(--color-error-text)]"
               onClick={() => {
-                if (confirm('确定要清空所有通知吗？')) {
+                if (confirm(t('notifications.clearConfirm'))) {
                   Promise.all(notifications.map((n) => deleteNotification(n.id))).then(() => {
                     queryClient.invalidateQueries({ queryKey: ['notifications'] })
                   })
@@ -102,16 +104,16 @@ export function NotificationsPage() {
               disabled={notifications.length === 0}
             >
               <Trash2 className="mr-1 h-4 w-4" />
-              清空
+              {t('notifications.clear')}
             </Button>
           </div>
         </CardHeader>
 
         <CardContent>
           {isLoading ? (
-            <div className="py-12 text-center text-[var(--color-text-tertiary)]">加载中...</div>
+            <div className="py-12 text-center text-[var(--color-text-tertiary)]">{t('common.loading')}</div>
           ) : notifications.length === 0 ? (
-            <div className="py-12 text-center text-[var(--color-text-tertiary)]">暂无通知</div>
+            <div className="py-12 text-center text-[var(--color-text-tertiary)]">{t('notifications.empty')}</div>
           ) : (
             <div className="space-y-2">
               {notifications.map((notification) => (
