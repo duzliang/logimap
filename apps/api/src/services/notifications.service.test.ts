@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { prisma } from '../db/prisma.js'
 import { NotificationsService } from './notifications.service.js'
+import { EmailService, MemoryTransport } from './email.service.js'
 
 const service = new NotificationsService()
 
@@ -134,5 +135,71 @@ describe('NotificationsService', () => {
     await service.deleteNotification(user.id, notification.id)
     const list = await service.getNotificationsForUser(user.id)
     expect(list).toHaveLength(0)
+  })
+
+  describe('邮件通知集成 (T3-16)', () => {
+    afterEach(() => {
+      delete process.env.ENABLE_EMAIL_NOTIFICATIONS
+    })
+
+    it('开启邮件且用户订阅时发送邮件并标记 emailSent', async () => {
+      process.env.ENABLE_EMAIL_NOTIFICATIONS = 'true'
+      const user = await createUser('notification-test-email-1@example.com')
+      const transport = new MemoryTransport()
+      const svc = new NotificationsService(new EmailService(transport))
+
+      const notification = await svc.createNotification({
+        type: 'SYSTEM_BROADCAST',
+        userId: user.id,
+        title: '邮件通知',
+        body: '应发送邮件'
+      })
+
+      expect(transport.sent).toHaveLength(1)
+      expect(transport.sent[0]).toMatchObject({ to: user.email, subject: '邮件通知' })
+      const stored = await prisma.notification.findUnique({ where: { id: notification.id } })
+      expect(stored?.emailSent).toBe(true)
+      expect(stored?.emailSentAt).not.toBeNull()
+    })
+
+    it('用户关闭邮件偏好时不发送', async () => {
+      process.env.ENABLE_EMAIL_NOTIFICATIONS = 'true'
+      const user = await prisma.user.create({
+        data: {
+          email: 'notification-test-email-2@example.com',
+          name: 'opt-out',
+          passwordHash: 'hash',
+          emailNotifications: false
+        }
+      })
+      const transport = new MemoryTransport()
+      const svc = new NotificationsService(new EmailService(transport))
+
+      const notification = await svc.createNotification({
+        type: 'SYSTEM_BROADCAST',
+        userId: user.id,
+        title: '不应发送',
+        body: 'x'
+      })
+
+      expect(transport.sent).toHaveLength(0)
+      const stored = await prisma.notification.findUnique({ where: { id: notification.id } })
+      expect(stored?.emailSent).toBe(false)
+    })
+
+    it('总开关关闭时不发送（默认）', async () => {
+      const user = await createUser('notification-test-email-3@example.com')
+      const transport = new MemoryTransport()
+      const svc = new NotificationsService(new EmailService(transport))
+
+      await svc.createNotification({
+        type: 'SYSTEM_BROADCAST',
+        userId: user.id,
+        title: '关闭',
+        body: 'x'
+      })
+
+      expect(transport.sent).toHaveLength(0)
+    })
   })
 })

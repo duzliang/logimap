@@ -1,5 +1,6 @@
 import { prisma } from '../db/prisma.js'
 import { generateId } from '../lib/id-generator.js'
+import { EmailService } from './email.service.js'
 import type { CreateNotificationInput, NotificationType, NotificationPayload } from '@logimap/types'
 import type { Prisma } from '@prisma/client'
 
@@ -10,6 +11,13 @@ export interface NotificationListOptions {
 }
 
 export class NotificationsService {
+  private email: EmailService
+
+  /** 传入 EmailService 可用于测试注入 transport */
+  constructor(email?: EmailService) {
+    this.email = email ?? new EmailService()
+  }
+
   async createNotification(input: CreateNotificationInput) {
     const notification = await prisma.notification.create({
       data: {
@@ -31,7 +39,37 @@ export class NotificationsService {
       }
     })
 
+    await this.maybeSendEmail(notification.id, input.userId, input.title, input.body)
+
     return this.formatNotification(notification)
+  }
+
+  /**
+   * 按总开关 + 用户偏好尝试发送邮件通知，成功则标记 emailSent。
+   * 邮件失败不影响站内通知创建。
+   */
+  private async maybeSendEmail(notificationId: string, userId: string, title: string, body: string) {
+    if (!this.email.isEnabled()) return
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true, name: true, emailNotifications: true }
+      })
+      if (!user) return
+
+      const sent = await this.email.sendNotificationEmail(
+        { title, body },
+        { email: user.email, name: user.name, emailNotifications: user.emailNotifications }
+      )
+      if (sent) {
+        await prisma.notification.update({
+          where: { id: notificationId },
+          data: { emailSent: true, emailSentAt: new Date() }
+        })
+      }
+    } catch (error) {
+      console.error('[EMAIL] 发送通知邮件失败:', error instanceof Error ? error.message : error)
+    }
   }
 
   async getNotificationsForUser(userId: string, options: NotificationListOptions = {}) {
