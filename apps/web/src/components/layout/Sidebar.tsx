@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Boxes, Search, Bell, Users, KeyRound, Link2 } from 'lucide-react'
+import { LayoutDashboard, Boxes, Search, Bell, Users, KeyRound, Link2, UserCog } from 'lucide-react'
 import { cn } from '@logimap/ui'
 
 interface NavItem {
@@ -19,6 +19,7 @@ const navItems: NavItem[] = [
 
 const settingsItems: NavItem[] = [
   { to: '/team/settings', label: '团队设置', icon: Users },
+  { to: '/settings/account', label: '账户设置', icon: UserCog },
   { to: '/settings/tokens', label: 'API 令牌', icon: KeyRound }
 ]
 

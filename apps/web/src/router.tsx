@@ -11,6 +11,7 @@ import { TeamSettingsPage } from '@/pages/team/TeamSettingsPage'
 import { NotificationsPage } from '@/pages/notifications/NotificationsPage'
 import { SearchResultsPage } from '@/pages/search/SearchResultsPage'
 import { ApiTokensPage } from '@/pages/settings/ApiTokensPage'
+import { AccountSettingsPage } from '@/pages/settings/AccountSettingsPage'
 import { CodeLinksPage } from '@/pages/code-links/CodeLinksPage'
 import { AppShell } from '@/components/layout/AppShell'
 import { useAuthStore } from '@/stores/auth.store'
@@ -93,6 +94,10 @@ export const router = createBrowserRouter([
           {
             path: '/settings/tokens',
             element: <ApiTokensPage />
+          },
+          {
+            path: '/settings/account',
+            element: <AccountSettingsPage />
           },
           {
             path: '/notifications',

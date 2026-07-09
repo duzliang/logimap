@@ -17,6 +17,15 @@ export async function fetchMe(): Promise<User> {
   return response.data.data
 }
 
+export async function updateMe(data: {
+  name?: string
+  avatarUrl?: string | null
+  emailNotifications?: boolean
+}): Promise<User> {
+  const response = await apiClient.put('/api/v1/auth/me', data)
+  return response.data.data
+}
+
 export async function logout(): Promise<void> {
   await apiClient.post('/api/v1/auth/logout')
 }

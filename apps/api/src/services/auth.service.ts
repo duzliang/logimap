@@ -161,6 +161,7 @@ export class AuthService {
         email: true,
         name: true,
         avatarUrl: true,
+        emailNotifications: true,
         createdAt: true
       }
     })
@@ -174,11 +175,15 @@ export class AuthService {
       email: user.email,
       name: user.name,
       avatarUrl: user.avatarUrl,
+      emailNotifications: user.emailNotifications,
       createdAt: user.createdAt.toISOString()
     }
   }
 
-  async updateUser(userId: string, data: { name?: string; avatarUrl?: string | null }) {
+  async updateUser(
+    userId: string,
+    data: { name?: string; avatarUrl?: string | null; emailNotifications?: boolean }
+  ) {
     const user = await prisma.user.update({
       where: { id: userId },
       data
@@ -189,6 +194,7 @@ export class AuthService {
       email: user.email,
       name: user.name,
       avatarUrl: user.avatarUrl,
+      emailNotifications: user.emailNotifications,
       createdAt: user.createdAt.toISOString()
     }
   }
