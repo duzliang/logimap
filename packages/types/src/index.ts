@@ -1,6 +1,7 @@
 export * from './logic-node.types.js'
 export * from './api.types.js'
 export * from './code-ref.js'
+export * from './code-link.schemas.js'
 export * from './auth.schemas.js'
 export * from './system.schemas.js'
 export * from './team.schemas.js'

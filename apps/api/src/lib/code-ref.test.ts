@@ -4,6 +4,9 @@ import {
   buildCodeRefUrl,
   resolveCodeRefUrl,
   detectGitProvider,
+  normalizeCodePath,
+  isSameCodeFile,
+  matchesCodePath,
 } from '@logimap/types'
 
 describe('detectGitProvider', () => {
@@ -110,5 +113,53 @@ describe('resolveCodeRefUrl', () => {
     expect(
       resolveCodeRefUrl('src/a.ts#L3', { repoUrl: 'https://github.com/o/r', repoBranch: 'main' })
     ).toBe('https://github.com/o/r/blob/main/src/a.ts#L3')
+  })
+})
+
+describe('normalizeCodePath', () => {
+  it('去掉前导 ./ 与 /、反斜杠转正斜杠、小写', () => {
+    expect(normalizeCodePath('./src/A.ts')).toBe('src/a.ts')
+    expect(normalizeCodePath('/src/a.ts')).toBe('src/a.ts')
+    expect(normalizeCodePath('src\\a.ts')).toBe('src/a.ts')
+    expect(normalizeCodePath('src/a.ts?ref=x#L3')).toBe('src/a.ts')
+  })
+})
+
+describe('isSameCodeFile', () => {
+  it('完全相等或尾部段匹配', () => {
+    expect(isSameCodeFile('src/a.ts', 'src/a.ts')).toBe(true)
+    expect(isSameCodeFile('services/settlement.ts', '/repo/src/services/settlement.ts')).toBe(true)
+    expect(isSameCodeFile('src/services/settlement.ts', 'settlement.ts')).toBe(true)
+  })
+  it('不同文件不匹配', () => {
+    expect(isSameCodeFile('src/a.ts', 'src/b.ts')).toBe(false)
+    expect(isSameCodeFile('foo/a.ts', 'bar/a.ts')).toBe(false) // 等长必须全等
+    expect(isSameCodeFile('src/x/a.ts', 'src/y/a.ts')).toBe(false) // 段数相同但不全等
+    expect(isSameCodeFile('', 'a.ts')).toBe(false)
+    // 纯文件名（1 段）能匹配任意以其结尾的路径
+    expect(isSameCodeFile('a.ts', 'foo/a.ts')).toBe(true)
+  })
+})
+
+describe('matchesCodePath', () => {
+  it('文件命中，无行号约束', () => {
+    const r = matchesCodePath('src/services/settlement.ts#calc', { filePath: 'services/settlement.ts' })
+    expect(r.matched).toBe(true)
+    expect(r.lineMatched).toBe(false)
+    expect(r.parsed.symbol).toBe('calc')
+  })
+  it('裸符号永不匹配', () => {
+    expect(matchesCodePath('calculateSettlement', { filePath: 'settlement.ts' }).matched).toBe(false)
+  })
+  it('行号落在区间内命中，越界不命中', () => {
+    const ref = 'src/a.ts#L100-L120'
+    expect(matchesCodePath(ref, { filePath: 'src/a.ts', line: 110 }).matched).toBe(true)
+    expect(matchesCodePath(ref, { filePath: 'src/a.ts', line: 110 }).lineMatched).toBe(true)
+    expect(matchesCodePath(ref, { filePath: 'src/a.ts', line: 200 }).matched).toBe(false)
+  })
+  it('节点无行号时按整文件覆盖，行号不参与过滤', () => {
+    const r = matchesCodePath('src/a.ts', { filePath: 'src/a.ts', line: 999 })
+    expect(r.matched).toBe(true)
+    expect(r.lineMatched).toBe(false)
   })
 })

@@ -146,3 +146,78 @@ export function resolveCodeRefUrl(codeRef: string, repo: RepoConfig): string | n
   if (!codeRef?.trim()) return null
   return buildCodeRefUrl(parseCodeRef(codeRef), repo)
 }
+
+/** 归一化文件路径：去掉前导 ./ 与 /，反斜杠转正斜杠，去掉查询参数 */
+export function normalizeCodePath(path: string): string {
+  return (path ?? '')
+    .trim()
+    .replace(/\\/g, '/')
+    .replace(/[?#].*$/, '')
+    .replace(/^\.?\/+/, '')
+    .replace(/\/+$/, '')
+    .toLowerCase()
+}
+
+/**
+ * 判断两个文件路径是否指向同一文件（反向关联匹配用）。
+ * 采用「路径尾部段匹配」：任一方是另一方的尾部子路径即视为命中，
+ * 以容忍 codeRef 存的是仓库相对路径、而查询方给的是更长的绝对路径（反之亦然）。
+ */
+export function isSameCodeFile(a: string, b: string): boolean {
+  const na = normalizeCodePath(a)
+  const nb = normalizeCodePath(b)
+  if (!na || !nb) return false
+  if (na === nb) return true
+  const sa = na.split('/')
+  const sb = nb.split('/')
+  const shorter = sa.length <= sb.length ? sa : sb
+  const longer = sa.length <= sb.length ? sb : sa
+  // shorter 必须是 longer 的尾部连续段
+  const tail = longer.slice(longer.length - shorter.length)
+  return tail.every((seg, i) => seg === shorter[i])
+}
+
+export interface CodePathMatchQuery {
+  /** 目标文件路径（相对或绝对均可） */
+  filePath: string
+  /** 可选行号，用于按行号区间进一步过滤 */
+  line?: number
+}
+
+export interface CodePathMatchResult {
+  matched: boolean
+  /** 命中的解析结果（便于调用方展示行号/符号） */
+  parsed: ParsedCodeRef
+  /** 是否命中到了行号级别（query 带行号且落在节点区间内） */
+  lineMatched: boolean
+}
+
+/**
+ * 反向关联核心匹配器（T3-9）：给定节点的 codeRef 与目标代码位置，
+ * 判断该节点是否引用了目标文件（可选按行号收敛）。
+ *
+ * - 裸符号（无法定位文件）永不匹配。
+ * - 文件路径按 isSameCodeFile 尾部段匹配。
+ * - 若 query 带行号且节点声明了行号区间，则要求行号落在区间内；
+ *   节点未声明行号区间时视为覆盖整文件，行号不参与过滤。
+ */
+export function matchesCodePath(codeRef: string, query: CodePathMatchQuery): CodePathMatchResult {
+  const parsed = parseCodeRef(codeRef ?? '')
+  const empty: CodePathMatchResult = { matched: false, parsed, lineMatched: false }
+
+  if (parsed.kind === 'bare') return empty
+  if (!parsed.filePath) return empty
+  if (!isSameCodeFile(parsed.filePath, query.filePath)) return empty
+
+  // 文件已命中，处理行号收敛
+  if (query.line == null || parsed.lineStart == null) {
+    return { matched: true, parsed, lineMatched: false }
+  }
+
+  const start = parsed.lineStart
+  const end = parsed.lineEnd ?? parsed.lineStart
+  const withinRange = query.line >= start && query.line <= end
+  return withinRange
+    ? { matched: true, parsed, lineMatched: true }
+    : empty
+}
