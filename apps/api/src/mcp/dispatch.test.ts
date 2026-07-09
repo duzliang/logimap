@@ -21,7 +21,7 @@ beforeAll(async () => {
 
   const system = await createSystem(team.id, { name: 'MCP Sys' })
   const module = await createModule(system.id, { name: 'MCP Mod' })
-  const node = await createLogicNode(module.id, user.id, { name: 'MCP Node Alpha', summary: 'mcp searchable' })
+  const node = await createLogicNode(module.id, user.id, { name: 'MCP Node Alpha', summary: 'mcp searchable', codeRef: 'src/mcp/alpha.ts#L10-L20' })
   systemId = system.id
   moduleId = module.id
   nodeId = node.id
@@ -94,6 +94,24 @@ describe('MCP handleRpc', () => {
     const text = (res?.result as { content: Array<{ text: string }> }).content[0].text
     expect(text).toContain('MCP Node Alpha')
     expect(text).toContain(moduleId)
+  })
+
+  it('tools/call find_nodes_by_code 反查引用节点', async () => {
+    const res = await handleRpc(
+      { jsonrpc: '2.0', id: 9, method: 'tools/call', params: { name: 'find_nodes_by_code', arguments: { teamId: session.teamIds[0], path: 'src/mcp/alpha.ts', line: 15 } } },
+      session
+    )
+    const text = (res?.result as { content: Array<{ text: string }> }).content[0].text
+    expect(text).toContain('MCP Node Alpha')
+    expect(text).toContain('"lineMatched": true')
+  })
+
+  it('find_nodes_by_code 越权访问他团队返回 isError', async () => {
+    const res = await handleRpc(
+      { jsonrpc: '2.0', id: 10, method: 'tools/call', params: { name: 'find_nodes_by_code', arguments: { teamId: session.teamIds[0], path: 'src/mcp/alpha.ts' } } },
+      outsiderSession
+    )
+    expect((res?.result as { isError?: boolean }).isError).toBe(true)
   })
 
   it('越权访问其他团队系统返回 isError', async () => {

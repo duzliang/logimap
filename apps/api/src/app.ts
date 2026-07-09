@@ -15,6 +15,7 @@ import { searchRoutes } from './routes/search.routes.js'
 import { impactRoutes } from './routes/impact.routes.js'
 import { gitImportRoutes } from './routes/git-import.routes.js'
 import { tokensRoutes } from './routes/tokens.routes.js'
+import { codeLinksRoutes } from './routes/code-links.routes.js'
 import { authMiddleware } from './middleware/auth.middleware.js'
 import { ModulesService } from './services/modules.service.js'
 import { requireTeamRole, teamResolvers } from './middleware/rbac.middleware.js'
@@ -84,3 +85,4 @@ app.route('/api/v1/search', searchRoutes)
 app.route('/api/v1/impact', impactRoutes)
 app.route('/api/v1/git-import', gitImportRoutes)
 app.route('/api/v1/tokens', tokensRoutes)
+app.route('/api/v1/code-links', codeLinksRoutes)

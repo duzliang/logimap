@@ -1,5 +1,6 @@
 import { prisma } from '../db/prisma.js'
 import { SearchService } from '../services/search.service.js'
+import { CodeLinksService } from '../services/code-links.service.js'
 
 /**
  * MCP 只读工具（T3-19）
@@ -78,12 +79,26 @@ export const mcpTools: McpToolDefinition[] = [
       properties: { nodeId: { type: 'string', description: '节点 ID' } },
       required: ['nodeId']
     }
+  },
+  {
+    name: 'find_nodes_by_code',
+    description: '代码反向关联：给定代码文件路径（及可选行号），反查引用它的逻辑节点',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        teamId: { type: 'string', description: '团队 ID' },
+        path: { type: 'string', description: '文件路径（仓库相对或绝对均可）' },
+        line: { type: 'number', description: '可选行号，用于按节点行号区间过滤' }
+      },
+      required: ['teamId', 'path']
+    }
   }
 ]
 
 export class McpToolError extends Error {}
 
 const searchService = new SearchService()
+const codeLinksService = new CodeLinksService()
 
 function assertTeamAccess(session: McpSession, teamId: string) {
   if (!session.teamIds.includes(teamId)) {
@@ -197,6 +212,14 @@ export async function executeTool(
       })
       if (!node) throw new McpToolError('节点不存在')
       return { node }
+    }
+    case 'find_nodes_by_code': {
+      const teamId = requireString(args, 'teamId')
+      const path = requireString(args, 'path')
+      assertTeamAccess(session, teamId)
+      const line = typeof args.line === 'number' ? args.line : undefined
+      const result = await codeLinksService.findNodesByPath({ teamId, path, line })
+      return result
     }
     default:
       throw new McpToolError(`未知工具：${name}`)
