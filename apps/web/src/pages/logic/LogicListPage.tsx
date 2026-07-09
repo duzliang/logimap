@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
@@ -135,7 +135,11 @@ export function LogicListPage() {
     node.name.toLowerCase().includes(search.toLowerCase())
   )
 
-  const columns: ColumnDef<LogicNode>[] = [
+  // 必须 memoize：columns 若每次渲染都新建，flexRender 会把 cell 当作新组件类型，
+  // 导致单元格子树（含 NodeApprovalActions 的审批弹窗状态）在每次渲染时被卸载重挂，
+  // 表现为点击「提交评审/通过」后弹窗一闪即失。deps 仅 userRole；
+  // 闭包内的 handleEdit/handleDelete/handleOpenVersions 只调用稳定的 setState / mutate。
+  const columns = useMemo<ColumnDef<LogicNode>[]>(() => [
     {
       accessorKey: 'name',
       header: '节点名称'
@@ -230,7 +234,7 @@ export function LogicListPage() {
         )
       }
     }
-  ]
+  ], [userRole])
 
   const table = useReactTable({
     data: filteredNodes,
