@@ -1,11 +1,6 @@
 import type { TeamRole } from '@logimap/types'
 
-export const roleLabels: Record<TeamRole, string> = {
-  OWNER: '所有者',
-  ADMIN: '管理员',
-  MEMBER: '成员',
-  VIEWER: '只读'
-}
+// 角色本地化标签见 `@/lib/i18n-labels` 的 roleLabel(t, role)
 
 export const roleBadgeVariant: Record<TeamRole, 'default' | 'secondary' | 'outline' | 'destructive'> = {
   OWNER: 'default',

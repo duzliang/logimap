@@ -12,11 +12,14 @@ import { LogicNodeEditor } from '@/components/editor/LogicNodeEditor'
 import { toast } from 'sonner'
 import { ArrowLeft, Plus, Pencil, Trash2, FileText, Network, History } from 'lucide-react'
 import { VersionHistoryDialog } from '@/components/versions/VersionHistoryDialog'
+import { useTranslation } from '@/i18n'
+import { nodeStatusLabel, priorityLongLabel } from '@/lib/i18n-labels'
 
 export function ModuleDetailPage() {
   const { moduleId } = useParams<{ moduleId: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { t } = useTranslation()
   const { currentTeamId, teams } = useAuthStore()
   const currentTeam = teams.find((t) => t.id === currentTeamId)
   const userRole = currentTeam?.role || 'VIEWER'
@@ -47,11 +50,11 @@ export function ModuleDetailPage() {
     mutationFn: (data: CreateLogicNodeInput) => createLogicNode(moduleId!, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['logicNodes', moduleId] })
-      toast.success('创建成功')
+      toast.success(t('logic.createSuccess'))
       setIsEditorOpen(false)
     },
     onError: (error) => {
-      toast.error(error.message || '创建失败')
+      toast.error(error.message || t('logic.createFailed'))
     }
   })
 
@@ -61,12 +64,12 @@ export function ModuleDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['logicNodes', moduleId] })
       queryClient.invalidateQueries({ queryKey: ['logicNode', editingNode?.id] })
-      toast.success('更新成功')
+      toast.success(t('logic.updateSuccess'))
       setIsEditorOpen(false)
       setEditingNode(null)
     },
     onError: (error) => {
-      toast.error(error.message || '更新失败')
+      toast.error(error.message || t('logic.updateFailed'))
     }
   })
 
@@ -74,10 +77,10 @@ export function ModuleDetailPage() {
     mutationFn: deleteLogicNode,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['logicNodes', moduleId] })
-      toast.success('删除成功')
+      toast.success(t('logic.deleteSuccess'))
     },
     onError: (error) => {
-      toast.error(error.message || '删除失败')
+      toast.error(error.message || t('logic.deleteFailed'))
     }
   })
 
@@ -99,7 +102,7 @@ export function ModuleDetailPage() {
   }
 
   const handleDelete = (nodeId: string) => {
-    if (confirm('确定要删除此节点吗？')) {
+    if (confirm(t('logic.deleteConfirm'))) {
       deleteMutation.mutate(nodeId)
     }
   }
@@ -130,7 +133,7 @@ export function ModuleDetailPage() {
   if (loadingModule) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center text-[var(--color-text-secondary)]">加载中...</div>
+        <div className="text-center text-[var(--color-text-secondary)]">{t('logic.loading')}</div>
       </div>
     )
   }
@@ -138,7 +141,7 @@ export function ModuleDetailPage() {
   if (!module) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center text-[var(--color-text-secondary)]">模块不存在</div>
+        <div className="text-center text-[var(--color-text-secondary)]">{t('logic.moduleNotFound')}</div>
       </div>
     )
   }
@@ -150,7 +153,7 @@ export function ModuleDetailPage() {
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" onClick={() => navigate(`/systems/${module.systemId}`)}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              返回
+              {t('logic.back')}
             </Button>
             <div>
               <h1 className="text-xl font-bold text-[var(--color-text-primary)]">{module.name}</h1>
@@ -160,25 +163,25 @@ export function ModuleDetailPage() {
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => navigate(`/modules/${moduleId}/graph`)}>
               <Network className="h-4 w-4 mr-2" />
-              图谱视图
+              {t('logic.graphView')}
             </Button>
             <Button onClick={openNewNodeDialog}>
               <Plus className="h-4 w-4 mr-2" />
-              创建节点
+              {t('logic.createNode')}
             </Button>
           </div>
         </div>
 
         {loadingNodes ? (
-          <div className="text-center text-[var(--color-text-secondary)] py-12">加载节点列表...</div>
+          <div className="text-center text-[var(--color-text-secondary)] py-12">{t('logic.loadingNodes')}</div>
         ) : nodes.length === 0 ? (
           <div className="text-center py-12 bg-[var(--color-bg-elevated)] rounded-lg border border-[var(--color-border-default)]">
             <FileText className="h-16 w-16 mx-auto text-[var(--color-text-tertiary)] mb-4" />
-            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">暂无逻辑节点</h3>
-            <p className="text-[var(--color-text-secondary)] mb-4">创建第一个逻辑节点来开始管理业务规则</p>
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">{t('logic.emptyTitle')}</h3>
+            <p className="text-[var(--color-text-secondary)] mb-4">{t('logic.emptyDesc')}</p>
             <Button onClick={openNewNodeDialog}>
               <Plus className="h-4 w-4 mr-2" />
-              创建节点
+              {t('logic.createNode')}
             </Button>
           </div>
         ) : (
@@ -196,19 +199,14 @@ export function ModuleDetailPage() {
                           node.status === 'DEPRECATED' ? 'destructive' :
                           'secondary'
                         }>
-                          {node.status === 'DRAFT' && '草稿'}
-                          {node.status === 'REVIEW' && '待评审'}
-                          {node.status === 'APPROVED' && '已确认'}
-                          {node.status === 'DEPRECATED' && '已废弃'}
+                          {nodeStatusLabel(t, node.status)}
                         </Badge>
                         <Badge variant={
                           node.priority === 'HIGH' ? 'destructive' :
                           node.priority === 'LOW' ? 'secondary' :
                           'outline'
                         }>
-                          {node.priority === 'HIGH' && '高优先级'}
-                          {node.priority === 'NORMAL' && '普通'}
-                          {node.priority === 'LOW' && '低优先级'}
+                          {priorityLongLabel(t, node.priority)}
                         </Badge>
                       </div>
                     </div>
@@ -219,8 +217,8 @@ export function ModuleDetailPage() {
                     <p className="text-sm text-[var(--color-text-secondary)] line-clamp-2 mb-4">{node.summary}</p>
                     <div className="flex items-center justify-between text-sm text-[var(--color-text-secondary)]">
                       <span>
-                        分支：{node.branches?.length || 0} |
-                        边界：{node.edgeCases?.length || 0}
+                        {t('logic.branchesCount', { count: node.branches?.length || 0 })} |{' '}
+                        {t('logic.edgeCasesCount', { count: node.edgeCases?.length || 0 })}
                       </span>
                       <div className="flex items-center gap-2">
                         <NodeApprovalActions node={node} userRole={userRole} size="sm" />
@@ -261,12 +259,12 @@ export function ModuleDetailPage() {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingNode ? '编辑节点' : '创建新节点'}
+              {editingNode ? t('logic.editNode') : t('logic.createNodeTitle')}
             </DialogTitle>
             <DialogDescription>
               {editingNode
-                ? `编辑：${editingNode.name}`
-                : `在"${module.name}"下创建逻辑节点`}
+                ? t('logic.editNodeDesc', { name: editingNode.name })
+                : t('logic.createNodeDesc', { module: module.name })}
             </DialogDescription>
           </DialogHeader>
           <LogicNodeEditor

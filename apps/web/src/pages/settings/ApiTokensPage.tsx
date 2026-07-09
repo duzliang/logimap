@@ -15,6 +15,7 @@ import {
 import { toast } from 'sonner'
 import { KeyRound, Plus, Copy, Check, Trash2, Loader2 } from 'lucide-react'
 import { fetchApiTokens, createApiToken, revokeApiToken } from '@/api/tokens.api'
+import { useTranslation } from '@/i18n'
 import type { ApiTokenCreated } from '@logimap/types'
 
 function formatDate(value: string | null): string {
@@ -24,6 +25,7 @@ function formatDate(value: string | null): string {
 
 export function ApiTokensPage() {
   const queryClient = useQueryClient()
+  const { t } = useTranslation()
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [name, setName] = useState('')
   const [expiresInDays, setExpiresInDays] = useState('')
@@ -49,18 +51,18 @@ export function ApiTokensPage() {
       queryClient.invalidateQueries({ queryKey: ['api-tokens'] })
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : '创建令牌失败')
+      toast.error(error instanceof Error ? error.message : t('tokens.createFailed'))
     }
   })
 
   const revokeMutation = useMutation({
     mutationFn: (id: string) => revokeApiToken(id),
     onSuccess: () => {
-      toast.success('令牌已撤销')
+      toast.success(t('tokens.revokeSuccess'))
       queryClient.invalidateQueries({ queryKey: ['api-tokens'] })
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : '撤销失败')
+      toast.error(error instanceof Error ? error.message : t('tokens.revokeFailed'))
     }
   })
 
@@ -78,25 +80,25 @@ export function ApiTokensPage() {
           <div>
             <h1 className="text-2xl font-bold text-[var(--color-text-primary)] flex items-center gap-2">
               <KeyRound className="h-6 w-6" />
-              API 令牌
+              {t('tokens.title')}
             </h1>
             <p className="text-sm text-[var(--color-text-secondary)]">
-              用于以编程方式访问 LogiMap API，可在请求头 <code>Authorization: Bearer &lt;token&gt;</code> 中使用。
+              {t('tokens.subtitlePrefix')}<code>Authorization: Bearer &lt;token&gt;</code>{t('tokens.subtitleSuffix')}
             </p>
           </div>
           <Button onClick={() => setIsCreateOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            创建令牌
+            {t('tokens.createToken')}
           </Button>
         </div>
 
         {isLoading ? (
-          <div className="text-center text-[var(--color-text-secondary)] py-12">加载中...</div>
+          <div className="text-center text-[var(--color-text-secondary)] py-12">{t('tokens.loading')}</div>
         ) : tokens.length === 0 ? (
           <div className="text-center py-12 bg-[var(--color-bg-elevated)] rounded-lg border border-[var(--color-border-default)]">
             <KeyRound className="h-16 w-16 mx-auto text-[var(--color-text-tertiary)] mb-4" />
-            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">暂无 API 令牌</h3>
-            <p className="text-[var(--color-text-secondary)] mb-4">创建令牌以从 CI、脚本或第三方工具访问 API</p>
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">{t('tokens.emptyTitle')}</h3>
+            <p className="text-[var(--color-text-secondary)] mb-4">{t('tokens.emptyDesc')}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -112,12 +114,15 @@ export function ApiTokensPage() {
                         <code className="text-xs text-[var(--color-text-tertiary)] bg-[var(--color-bg-base)] px-1.5 py-0.5 rounded">
                           {token.prefix}…
                         </code>
-                        {revoked && <span className="text-xs text-[var(--color-error-text)]">已撤销</span>}
-                        {!revoked && expired && <span className="text-xs text-[var(--color-warning-icon)]">已过期</span>}
+                        {revoked && <span className="text-xs text-[var(--color-error-text)]">{t('tokens.revoked')}</span>}
+                        {!revoked && expired && <span className="text-xs text-[var(--color-warning-icon)]">{t('tokens.expired')}</span>}
                       </div>
                       <div className="text-xs text-[var(--color-text-tertiary)]">
-                        创建 {formatDate(token.createdAt)} · 最近使用 {formatDate(token.lastUsedAt)} · 过期{' '}
-                        {token.expiresAt ? formatDate(token.expiresAt) : '永不'}
+                        {t('tokens.metaLine', {
+                          created: formatDate(token.createdAt),
+                          lastUsed: formatDate(token.lastUsedAt),
+                          expires: token.expiresAt ? formatDate(token.expiresAt) : t('tokens.never')
+                        })}
                       </div>
                     </div>
                     {!revoked && (
@@ -128,7 +133,7 @@ export function ApiTokensPage() {
                         disabled={revokeMutation.isPending}
                       >
                         <Trash2 className="h-4 w-4 mr-1" />
-                        撤销
+                        {t('tokens.revoke')}
                       </Button>
                     )}
                   </CardContent>
@@ -143,30 +148,30 @@ export function ApiTokensPage() {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>创建 API 令牌</DialogTitle>
-            <DialogDescription>令牌明文仅在创建后显示一次，请妥善保存。</DialogDescription>
+            <DialogTitle>{t('tokens.createDialogTitle')}</DialogTitle>
+            <DialogDescription>{t('tokens.createDialogDesc')}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <label className="text-sm font-medium" htmlFor="token-name">
-                名称
+                {t('tokens.name')}
               </label>
               <Input
                 id="token-name"
-                placeholder="例如：CI 部署"
+                placeholder={t('tokens.namePlaceholder')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
             </div>
             <div className="grid gap-2">
               <label className="text-sm font-medium" htmlFor="token-expiry">
-                有效期（天，可选）
+                {t('tokens.expiry')}
               </label>
               <Input
                 id="token-expiry"
                 type="number"
                 min={1}
-                placeholder="留空表示永不过期"
+                placeholder={t('tokens.expiryPlaceholder')}
                 value={expiresInDays}
                 onChange={(e) => setExpiresInDays(e.target.value)}
               />
@@ -174,11 +179,11 @@ export function ApiTokensPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-              取消
+              {t('tokens.cancel')}
             </Button>
             <Button onClick={() => createMutation.mutate()} disabled={createMutation.isPending || !name.trim()}>
               {createMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-              创建
+              {t('tokens.create')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -190,9 +195,9 @@ export function ApiTokensPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Check className="h-5 w-5 text-[var(--color-success-icon)]" />
-              令牌已创建
+              {t('tokens.createdTitle')}
             </DialogTitle>
-            <DialogDescription>请立即复制并保存，关闭后将无法再次查看完整令牌。</DialogDescription>
+            <DialogDescription>{t('tokens.createdDesc')}</DialogDescription>
           </DialogHeader>
           <div className="flex items-center gap-2 py-2">
             <code className="flex-1 text-sm bg-[var(--color-bg-base)] p-3 rounded-md break-all font-mono">
@@ -203,7 +208,7 @@ export function ApiTokensPage() {
             </Button>
           </div>
           <DialogFooter>
-            <Button onClick={() => setCreatedToken(null)}>完成</Button>
+            <Button onClick={() => setCreatedToken(null)}>{t('tokens.done')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

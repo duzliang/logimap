@@ -18,11 +18,14 @@ import { LogicNodeEditor } from '@/components/editor/LogicNodeEditor'
 import { toast } from 'sonner'
 import { Pencil, Trash2, FileText, ArrowLeft, Network, Plus, History } from 'lucide-react'
 import { VersionHistoryDialog } from '@/components/versions/VersionHistoryDialog'
+import { useTranslation } from '@/i18n'
+import { nodeStatusLabel, priorityLabel } from '@/lib/i18n-labels'
 
 export function LogicListPage() {
   const { moduleId } = useParams<{ moduleId: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { t } = useTranslation()
   const { currentTeamId, teams } = useAuthStore()
   const currentTeam = teams.find((t) => t.id === currentTeamId)
   const userRole = currentTeam?.role || 'VIEWER'
@@ -54,12 +57,12 @@ export function LogicListPage() {
     mutationFn: (data: CreateLogicNodeInput) => createLogicNode(moduleId!, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['logicNodes', moduleId] })
-      toast.success('创建成功')
+      toast.success(t('logic.createSuccess'))
       setIsEditorOpen(false)
       setEditingNode(null)
     },
     onError: (error) => {
-      toast.error(error.message || '创建失败')
+      toast.error(error.message || t('logic.createFailed'))
     }
   })
 
@@ -69,12 +72,12 @@ export function LogicListPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['logicNodes', moduleId] })
       queryClient.invalidateQueries({ queryKey: ['logicNode', editingNode?.id] })
-      toast.success('更新成功')
+      toast.success(t('logic.updateSuccess'))
       setIsEditorOpen(false)
       setEditingNode(null)
     },
     onError: (error) => {
-      toast.error(error.message || '更新失败')
+      toast.error(error.message || t('logic.updateFailed'))
     }
   })
 
@@ -82,15 +85,15 @@ export function LogicListPage() {
     mutationFn: deleteLogicNode,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['logicNodes', moduleId] })
-      toast.success('删除成功')
+      toast.success(t('logic.deleteSuccess'))
     },
     onError: (error) => {
-      toast.error(error.message || '删除失败')
+      toast.error(error.message || t('logic.deleteFailed'))
     }
   })
 
   function handleDelete(nodeId: string) {
-    if (confirm('确定要删除此节点吗？')) {
+    if (confirm(t('logic.deleteConfirm'))) {
       deleteMutation.mutate(nodeId)
     }
   }
@@ -137,49 +140,43 @@ export function LogicListPage() {
 
   // 必须 memoize：columns 若每次渲染都新建，flexRender 会把 cell 当作新组件类型，
   // 导致单元格子树（含 NodeApprovalActions 的审批弹窗状态）在每次渲染时被卸载重挂，
-  // 表现为点击「提交评审/通过」后弹窗一闪即失。deps 仅 userRole；
+  // 表现为点击「提交评审/通过」后弹窗一闪即失。deps 为 userRole + t（语言切换需刷新表头/标签）；
   // 闭包内的 handleEdit/handleDelete/handleOpenVersions 只调用稳定的 setState / mutate。
   const columns = useMemo<ColumnDef<LogicNode>[]>(() => [
     {
       accessorKey: 'name',
-      header: '节点名称'
+      header: t('logic.colName')
     },
     {
       accessorKey: 'status',
-      header: '状态',
+      header: t('logic.colStatus'),
       cell: ({ getValue }) => {
         const status = getValue() as LogicNode['status']
-        const statusMap: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' | 'draft' | 'review' | 'approved' | 'deprecated' }> = {
-          DRAFT: { label: '草稿', variant: 'draft' },
-          REVIEW: { label: '待评审', variant: 'review' },
-          APPROVED: { label: '已确认', variant: 'approved' },
-          DEPRECATED: { label: '已废弃', variant: 'deprecated' }
+        const variantMap: Record<string, 'default' | 'secondary' | 'outline' | 'destructive' | 'draft' | 'review' | 'approved' | 'deprecated'> = {
+          DRAFT: 'draft',
+          REVIEW: 'review',
+          APPROVED: 'approved',
+          DEPRECATED: 'deprecated'
         }
-        const config = statusMap[status] || { label: status, variant: 'secondary' }
-        return <Badge variant={config.variant}>{config.label}</Badge>
+        return <Badge variant={variantMap[status] || 'secondary'}>{nodeStatusLabel(t, status)}</Badge>
       }
     },
     {
       accessorKey: 'priority',
-      header: '优先级',
+      header: t('logic.colPriority'),
       cell: ({ getValue }) => {
         const priority = getValue() as LogicNode['priority']
-        const priorityMap: Record<string, string> = {
-          HIGH: '高',
-          NORMAL: '中',
-          LOW: '低'
-        }
-        return <span>{priorityMap[priority] || priority}</span>
+        return <span>{priorityLabel(t, priority)}</span>
       }
     },
     {
       accessorKey: 'branches',
-      header: '分支数',
+      header: t('logic.colBranches'),
       cell: ({ getValue }) => (getValue() as Branch[])?.length || 0
     },
     {
       accessorKey: 'edgeCases',
-      header: '边界条件',
+      header: t('logic.colEdgeCases'),
       cell: ({ getValue }) => {
         const edgeCases = getValue() as EdgeCase[]
         const criticalCount = edgeCases?.filter((e) => e.severity === 'critical').length || 0
@@ -195,12 +192,12 @@ export function LogicListPage() {
     },
     {
       accessorKey: 'updatedAt',
-      header: '最后更新',
-      cell: ({ getValue }) => new Date(getValue() as string).toLocaleString('zh-CN')
+      header: t('logic.colUpdatedAt'),
+      cell: ({ getValue }) => new Date(getValue() as string).toLocaleString()
     },
     {
       id: 'actions',
-      header: '操作',
+      header: t('logic.colActions'),
       cell: ({ row }) => {
         const node = row.original
         const canEdit = node.status !== 'APPROVED'
@@ -234,7 +231,7 @@ export function LogicListPage() {
         )
       }
     }
-  ], [userRole])
+  ], [userRole, t])
 
   const table = useReactTable({
     data: filteredNodes,
@@ -245,7 +242,7 @@ export function LogicListPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center text-[var(--color-text-secondary)]">加载中...</div>
+        <div className="text-center text-[var(--color-text-secondary)]">{t('logic.loading')}</div>
       </div>
     )
   }
@@ -257,10 +254,10 @@ export function LogicListPage() {
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" onClick={() => navigate(`/systems/${module?.systemId}`)}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              返回
+              {t('logic.back')}
             </Button>
             <div>
-              <h1 className="text-xl font-bold text-[var(--color-text-primary)]">{module?.name || '逻辑节点管理'}</h1>
+              <h1 className="text-xl font-bold text-[var(--color-text-primary)]">{module?.name || t('logic.defaultTitle')}</h1>
               {module?.description && (
                 <p className="text-sm text-[var(--color-text-secondary)]">{module.description}</p>
               )}
@@ -269,11 +266,11 @@ export function LogicListPage() {
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => navigate(`/modules/${moduleId}/graph`)}>
               <Network className="h-4 w-4 mr-2" />
-              图谱视图
+              {t('logic.graphView')}
             </Button>
             <Button onClick={handleCreate}>
               <Plus className="h-4 w-4 mr-2" />
-              创建节点
+              {t('logic.createNode')}
             </Button>
           </div>
         </div>
@@ -281,7 +278,7 @@ export function LogicListPage() {
         <div className="bg-[var(--color-bg-elevated)] rounded-xl border border-[var(--color-border-default)] shadow-card p-5">
           <div className="flex gap-4 mb-4">
             <Input
-              placeholder="搜索节点名称..."
+              placeholder={t('logic.searchNodePlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="max-w-xs"
@@ -326,7 +323,7 @@ export function LogicListPage() {
             {table.getRowModel().rows.length === 0 && (
               <div className="text-center text-[var(--color-text-secondary)] py-12">
                 <FileText className="h-12 w-12 mx-auto mb-4 text-[var(--color-text-tertiary)]" />
-                <p>暂无节点数据</p>
+                <p>{t('logic.emptyTable')}</p>
               </div>
             )}
           </div>
@@ -337,12 +334,12 @@ export function LogicListPage() {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingNode ? '编辑节点' : '创建新节点'}
+              {editingNode ? t('logic.editNode') : t('logic.createNodeTitle')}
             </DialogTitle>
             <DialogDescription>
               {editingNode
-                ? `编辑：${editingNode.name}`
-                : `在"${module?.name || ''}"下创建逻辑节点`}
+                ? t('logic.editNodeDesc', { name: editingNode.name })
+                : t('logic.createNodeDesc', { module: module?.name || '' })}
             </DialogDescription>
           </DialogHeader>
           <LogicNodeEditor

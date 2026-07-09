@@ -10,6 +10,7 @@ import { fetchMembers } from '@/api/teams.api'
 import { SearchFilters, type SearchFilterState } from '@/components/search/SearchFilters'
 import { SearchResultItem } from '@/components/search/SearchResultItem'
 import { NaturalLanguageQuery } from '@/components/search/NaturalLanguageQuery'
+import { useTranslation } from '@/i18n'
 import type { SearchResultItem as SearchResultItemType } from '@logimap/types'
 
 const PAGE_SIZE = 20
@@ -21,6 +22,7 @@ function serializeArray(value: string[]): string | undefined {
 export function SearchResultsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const { currentTeamId } = useAuthStore()
 
   const [qInput, setQInput] = useState(searchParams.get('q') ?? '')
@@ -160,11 +162,11 @@ export function SearchResultsPage() {
     <div className="min-h-full bg-[var(--color-bg-base)] text-[var(--color-text-primary)]">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold mb-4">全局搜索</h1>
+          <h1 className="text-2xl font-bold mb-4">{t('search.title')}</h1>
           <div className="relative max-w-2xl">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-text-tertiary)]" />
             <Input
-              placeholder="搜索节点、模块、系统..."
+              placeholder={t('search.placeholder')}
               value={qInput}
               onChange={(e) => setQInput(e.target.value)}
               className="pl-10 h-11 bg-[var(--color-bg-elevated)] border-[var(--color-border-default)]"
@@ -175,7 +177,7 @@ export function SearchResultsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <aside className="lg:col-span-1 space-y-4">
             <div className="bg-[var(--color-bg-elevated)] rounded-xl border border-[var(--color-border-default)] p-4">
-              <h2 className="font-medium mb-4">筛选器</h2>
+              <h2 className="font-medium mb-4">{t('search.filters')}</h2>
               <SearchFilters
                 filters={filters}
                 systems={systems}
@@ -197,21 +199,21 @@ export function SearchResultsPage() {
 
           <div className="lg:col-span-3 space-y-6">
             {isLoading && (
-              <div className="text-center py-12 text-[var(--color-text-secondary)]">搜索中...</div>
+              <div className="text-center py-12 text-[var(--color-text-secondary)]">{t('search.searching')}</div>
             )}
 
             {!isLoading && allItems.length === 0 && (
               <div className="flex flex-col items-center justify-center py-16 bg-[var(--color-bg-elevated)] rounded-xl border border-[var(--color-border-default)]">
                 <FileText className="h-12 w-12 text-[var(--color-text-tertiary)] mb-4" />
-                <p className="text-[var(--color-text-secondary)]">未找到匹配结果</p>
-                <p className="text-sm text-[var(--color-text-tertiary)] mt-1">请尝试调整关键词或筛选条件</p>
+                <p className="text-[var(--color-text-secondary)]">{t('search.noResults')}</p>
+                <p className="text-sm text-[var(--color-text-tertiary)] mt-1">{t('search.noResultsHint')}</p>
               </div>
             )}
 
             {!isLoading && allItems.length > 0 && (
               <>
                 <p className="text-sm text-[var(--color-text-secondary)]">
-                  共 {totalResults} 条结果
+                  {t('search.totalResults', { count: totalResults })}
                 </p>
 
                 <div className="space-y-3">
@@ -237,10 +239,10 @@ export function SearchResultsPage() {
                     onClick={() => handlePageChange(-1)}
                   >
                     <ChevronLeft className="h-4 w-4 mr-1" />
-                    上一页
+                    {t('search.prevPage')}
                   </Button>
                   <span className="text-sm text-[var(--color-text-secondary)]">
-                    第 {offset / PAGE_SIZE + 1} 页
+                    {t('search.pageN', { page: offset / PAGE_SIZE + 1 })}
                   </span>
                   <Button
                     variant="outline"
@@ -248,7 +250,7 @@ export function SearchResultsPage() {
                     disabled={!hasNext}
                     onClick={() => handlePageChange(1)}
                   >
-                    下一页
+                    {t('search.nextPage')}
                     <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>
                 </div>
