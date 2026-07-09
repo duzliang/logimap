@@ -33,7 +33,9 @@
 | Phase 2 P2 | API Token 管理（T3-18）：令牌创建/撤销、Bearer 认证集成 | ✅ 已提交 |
 | Phase 2 P2 | MCP 服务接口（T3-19）：stdio JSON-RPC 图谱查询、API 令牌认证 | ✅ 已提交 |
 | Phase 2 P2 | 图谱导出增强（T3-20）：PNG/SVG/PDF/Markdown | ✅ 已提交 |
-| **下一步** | **Phase 2 P2 全部完成；可选项：T3-9 代码反向关联设计 / T3-16 邮件通知；或进入 Phase 3（v0.4.0）** | 🔄 待定 |
+| Phase 2 收尾 | 代码反向关联（T3-9）：反查 API + MCP find_nodes_by_code + Web 页面 + 设计文档 | ✅ 已提交 |
+| Phase 2 收尾 | 邮件通知（T3-16）：可插拔 Transport 邮件服务 + 用户级开关 + 通知 hook | ✅ 已提交 |
+| **下一步** | **Phase 2 全部完成；可进入 Phase 3（v0.4.0）** | 🔄 待定 |
 
 > 下次会话直接从此任务开始，无需重新确认。
 
@@ -144,4 +146,4 @@ pnpm dev
 
 ---
 
-*最后更新：2026-07-08（Phase 2 P2 全部交付：T3-7 / T3-8 / T3-17 / T3-18 / T3-19 / T3-20）*
+*最后更新：2026-07-09（Phase 2 收尾：T3-9 代码反向关联 + T3-16 邮件通知，均已 build+test+chrome-devtools 验证）*
