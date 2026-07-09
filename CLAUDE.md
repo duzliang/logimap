@@ -35,7 +35,8 @@
 | Phase 2 P2 | 图谱导出增强（T3-20）：PNG/SVG/PDF/Markdown | ✅ 已提交 |
 | Phase 2 收尾 | 代码反向关联（T3-9）：反查 API + MCP find_nodes_by_code + Web 页面 + 设计文档 | ✅ 已提交 |
 | Phase 2 收尾 | 邮件通知（T3-16）：可插拔 Transport 邮件服务 + 用户级开关 + 通知 hook | ✅ 已提交 |
-| **下一步** | **Phase 2 全部完成；可进入 Phase 3（v0.4.0）** | 🔄 待定 |
+| Phase 3 (v0.4.0) | 国际化 i18n（T4-2）基础：I18nProvider + t() + 中/EN 切换器 + 核心界面（AppShell/登录注册/仪表盘/账户设置）文案 + 单测 | ✅ 已提交（基础+核心页面） |
+| **下一步** | **T4-2 续：将剩余页面（systems/search/notifications/team/tokens 等）文案迁移到 t()；或推进 T4-1 性能 / T4-3 暗色模式 / T4-4 CI/CD** | 🔄 待定 |
 
 > 下次会话直接从此任务开始，无需重新确认。
 
@@ -146,4 +147,4 @@ pnpm dev
 
 ---
 
-*最后更新：2026-07-09（Phase 2 收尾：T3-9 代码反向关联 + T3-16 邮件通知，均已 build+test+chrome-devtools 验证）*
+*最后更新：2026-07-09（Phase 3 起步：T4-2 i18n 基础 + 核心页面文案，build+31 单测通过，dev server 经 curl 确认下发翻译模块；沙盒 Chrome 磁盘缓存无法自动化绕过，可视渲染需在用户浏览器验证）*
