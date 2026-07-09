@@ -55,9 +55,11 @@ export function NodeDetailDialog({ open, onOpenChange, nodeData, userRole, onEdi
             {nodeData.name}
             <div className={`w-3 h-3 rounded-full ${status.color}`} title={status.label} />
           </DialogTitle>
-          <DialogDescription className="flex items-center gap-2">
-            <Badge variant="secondary">{status.label}</Badge>
-            <span className={`text-sm ${priority.color}`}>{priority.label}</span>
+          <DialogDescription asChild>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">{status.label}</Badge>
+              <span className={`text-sm ${priority.color}`}>{priority.label}</span>
+            </div>
           </DialogDescription>
         </DialogHeader>
 
