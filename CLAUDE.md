@@ -38,7 +38,8 @@
 | Phase 3 (v0.4.0) | 国际化 i18n（T4-2）基础：I18nProvider + t() + 中/EN 切换器 + 核心界面（AppShell/登录注册/仪表盘/账户设置）文案 + 单测 | ✅ 已提交（基础+核心页面） |
 | Phase 3 (v0.4.0) | 国际化 i18n（T4-2）续：系统管理页 + 通知中心页文案迁移到 t()（含插值） | ✅ 已提交 |
 | Phase 3 (v0.4.0) | 「砚」自然设计语言 v2（T4-3 相关）：动效 token 五档 + 缓动四曲、中文字体栈、图谱四签名动效（云雾聚焦/墨滴涟漪/落印/墨线流动）、统一组件状态层、EmptyState/Skeleton 三态、reduced-motion 降级 | ✅ 已提交（规范 + 前端落地，5 commit） |
-| **下一步** | **①「砚」收尾：暗色徽章「深底浅字」逐组件复核（规范 §8 步骤5）；②T4-2 续：剩余页面（search/team/tokens/logic）文案迁移 t()；③T4-1 性能 / T4-4 CI/CD** | 🔄 待定 |
+| Phase 3 (v0.4.0) | 国际化 i18n（T4-2）收尾：search/team/tokens/code-links/logic 页面文案迁移 t() + 共享标签助手 lib/i18n-labels（节点状态/优先级/角色） | ✅ 已提交 |
+| **下一步** | **T4-2 基本完成（主要页面已国际化）；推进 T4-1 性能 / T4-3 暗色模式完善 / T4-4 CI/CD，或补齐剩余零散组件文案** | 🔄 待定 |
 
 > 下次会话直接从此任务开始，无需重新确认。
 > 「砚」设计规范全文见 `docs/superpowers/specs/2026-07-10-yan-design-language-design.md`；动效/字体 token 在 `packages/ui/src/styles/tokens.css` + `tailwind.preset.js`。
@@ -150,4 +151,4 @@ pnpm dev
 
 ---
 
-*最后更新：2026-07-09（T4-2 续：systems + notifications 页文案迁移 t()，build+31 单测通过。沙盒 Chrome 磁盘缓存无法自动化绕过，可视渲染需在用户浏览器验证）*
+*最后更新：2026-07-09（T4-2 收尾：search/team/tokens/code-links/logic 页面文案迁移 t()，新增 lib/i18n-labels 共享标签助手，build + 35 web 单测通过。沙盒 Chrome 磁盘缓存无法自动化绕过，可视渲染需在用户浏览器验证）*
