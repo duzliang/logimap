@@ -229,6 +229,8 @@ function LogicGraphInner() {
       // 影响分析的三层作用域 = BFS 图距（hop 1/2/3），用于墨滴涟漪的逐层错峰
       const impactHopById = new Map<string, number>()
       if (whatIfScope) {
+        // 源节点自己应为焦点（hop 0），不应被云雾雾化
+        impactHopById.set(whatIfScope.startNodeId, 0)
         whatIfScope.direct.forEach((n) => impactHopById.set(n.id, 1))
         whatIfScope.indirect.forEach((n) => { if (!impactHopById.has(n.id)) impactHopById.set(n.id, 2) })
         whatIfScope.thirdLevel.forEach((n) => { if (!impactHopById.has(n.id)) impactHopById.set(n.id, 3) })
@@ -316,6 +318,15 @@ function LogicGraphInner() {
       }
     },
     [graphData]
+  )
+
+  // 处理节点单击：同时更新工具栏可用的 selectedNode
+  const onNodeClick = useCallback(
+    (_: unknown, node: Node) => {
+      const data = node.data as unknown as NodeDetailData
+      setSelectedNode(data)
+    },
+    []
   )
 
   // 处理节点双击
@@ -495,6 +506,7 @@ function LogicGraphInner() {
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           onNodeDragStop={onNodeDragStop}
+          onNodeClick={onNodeClick}
           onEdgeClick={onEdgeClick}
           onNodeDoubleClick={onNodeDoubleClick}
           nodeTypes={nodeTypes}
