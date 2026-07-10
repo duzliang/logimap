@@ -4,19 +4,21 @@
 /* 图谱画布背景 */
 .react-flow {
   background-color: #FAFAF9; /* bg-base */
+  --fog-far: 0.22;           /* 云雾聚焦：无关节点的薄雾透明度（亮色）*/
 }
 
 .dark .react-flow {
   background-color: #0C0A09;
+  --fog-far: 0.30;           /* 暗底下 0.22 会不可读，上调至 0.30 */
 }
 
-/* 点阵背景（取代默认的十字线） */
+/* 点阵背景（取代默认的十字线）—— 减淡为纸纹般的水痕 */
 .react-flow__background pattern circle {
-  fill: #D6D3D1; /* neutral-300 */
+  fill: #E7E5E4; /* neutral-200，比 v1 的 neutral-300 更淡，退为纸纹 */
 }
 
 .dark .react-flow__background pattern circle {
-  fill: #44403C;
+  fill: #292524;
 }
 
 /* 连线样式 */
@@ -164,6 +166,57 @@
 .react-flow__node:focus-visible {
   outline: 2px solid #4F46E5;
   outline-offset: 2px;
+}
+
+/* ───────────────────────────────────── */
+/* 「砚」图谱水墨动效                     */
+/* ───────────────────────────────────── */
+
+/* 节点过渡：opacity/filter 走「缓·落定」（云雾聚焦），box-shadow/transform 走「疾」（hover）*/
+.logimap-node {
+  transition:
+    opacity   var(--motion-slow) var(--ease-settle),
+    filter    var(--motion-slow) var(--ease-settle),
+    box-shadow var(--motion-fast) var(--ease-settle),
+    transform var(--motion-base) var(--ease-settle);
+}
+
+/* ① 云雾聚焦 —— 焦点之外的节点退成薄雾并去饱和，如借景中的远山 */
+.logimap-node.is-dimmed {
+  opacity: var(--fog-far, 0.22);
+  filter: grayscale(0.6);
+}
+
+/* ② 墨滴涟漪 —— 影响分析结果按图距逐层点亮；animation-delay 由 hop 内联注入 */
+@keyframes yan-ripple-in {
+  0%   { transform: translateY(0);    }
+  50%  { transform: translateY(-3px); }
+  100% { transform: translateY(-2px); }
+}
+.logimap-node.is-rippling {
+  animation: yan-ripple-in var(--motion-base) var(--ease-settle) both;
+}
+
+/* ④ 墨线流动 —— hover / 选中连线时虚线相位单向流动一次，指示传播方向 */
+@keyframes yan-edge-flow {
+  from { stroke-dashoffset: 24; }
+  to   { stroke-dashoffset: 0;  }
+}
+.react-flow__edge:hover .react-flow__edge-path,
+.react-flow__edge.selected .react-flow__edge-path {
+  animation: yan-edge-flow var(--motion-deliberate) linear;
+}
+
+/* 尊重「减少动态效果」：停用图谱内所有位移/循环动效，仅保留即时状态切换 */
+@media (prefers-reduced-motion: reduce) {
+  .logimap-node.is-rippling,
+  .react-flow__edge:hover .react-flow__edge-path,
+  .react-flow__edge.selected .react-flow__edge-path {
+    animation: none;
+  }
+  .logimap-node {
+    transition: opacity 120ms linear;
+  }
 }
 
 /* ───────────────────────────────────── */

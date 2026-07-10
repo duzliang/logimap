@@ -44,6 +44,9 @@ export const LogicNodeComponent = memo(({ data, selected }: NodeProps<LogicNodeT
   const statusStyle = statusStyles[status] || statusStyles.DRAFT
   const highlighted = data.highlighted === true
   const dimmed = data.dimmed === true
+  // 墨滴涟漪：影响分析结果按 BFS 图距（hop）逐层点亮，每跳延迟 120ms
+  const impactHop = typeof data.impactHop === 'number' ? data.impactHop : undefined
+  const rippling = highlighted && impactHop !== undefined
 
   const branchCount = data.branches?.length || 0
   const edgeCaseCount = data.edgeCases?.length || 0
@@ -52,14 +55,16 @@ export const LogicNodeComponent = memo(({ data, selected }: NodeProps<LogicNodeT
   return (
     <div
       className={cn(
-        "w-[220px] bg-[var(--color-bg-elevated)] rounded-xl border shadow-node",
-        "cursor-pointer select-none",
-        "hover:shadow-node-hover transition-all duration-150",
+        // logimap-node：过渡节奏由 graph.css 统一（fog 走缓/落定，hover 走疾）
+        "logimap-node w-[220px] bg-[var(--color-bg-elevated)] rounded-xl border shadow-node",
+        "cursor-pointer select-none hover:shadow-node-hover",
         selected && "ring-2 ring-[var(--color-node-selected-ring)] shadow-node-selected",
         highlighted && "ring-2 ring-[var(--color-brand-default)] shadow-node-selected",
-        dimmed && "opacity-30",
+        dimmed && "is-dimmed",
+        rippling && "is-rippling",
         statusStyle.card
       )}
+      style={rippling ? { animationDelay: `${impactHop! * 120}ms` } : undefined}
     >
       <NodeHandle type="target" />
 

@@ -226,11 +226,14 @@ function LogicGraphInner() {
   useEffect(() => {
     if (graphData) {
       const searchHighlightSet = new Set(matchedNodeIds)
-      const impactNodeIds = new Set(whatIfScope ? [
-        ...whatIfScope.direct.map((n) => n.id),
-        ...whatIfScope.indirect.map((n) => n.id),
-        ...whatIfScope.thirdLevel.map((n) => n.id)
-      ] : [])
+      // 影响分析的三层作用域 = BFS 图距（hop 1/2/3），用于墨滴涟漪的逐层错峰
+      const impactHopById = new Map<string, number>()
+      if (whatIfScope) {
+        whatIfScope.direct.forEach((n) => impactHopById.set(n.id, 1))
+        whatIfScope.indirect.forEach((n) => { if (!impactHopById.has(n.id)) impactHopById.set(n.id, 2) })
+        whatIfScope.thirdLevel.forEach((n) => { if (!impactHopById.has(n.id)) impactHopById.set(n.id, 3) })
+      }
+      const impactNodeIds = new Set(impactHopById.keys())
       const hasSearchHighlight = searchHighlightSet.size > 0
       const hasImpactHighlight = impactNodeIds.size > 0
       const highlightSet = hasImpactHighlight ? impactNodeIds : searchHighlightSet
@@ -244,6 +247,7 @@ function LogicGraphInner() {
           ...node,
           highlighted: hasHighlight && highlightSet.has(node.id),
           dimmed: hasHighlight && !highlightSet.has(node.id),
+          impactHop: hasImpactHighlight ? impactHopById.get(node.id) : undefined,
           whatIf: isWhatIfMode
         } as unknown as Record<string, unknown>
       }))
