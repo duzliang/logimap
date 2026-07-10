@@ -39,8 +39,8 @@ import { EdgeEditDialog } from './EdgeEditDialog'
 import { NodeDetailDialog } from './NodeDetailDialog'
 import { ImpactAnalysisDialog } from '@/components/impact/ImpactAnalysisDialog'
 import { toast } from 'sonner'
-import { ArrowLeft } from 'lucide-react'
-import { Button } from '@logimap/ui'
+import { ArrowLeft, Plus } from 'lucide-react'
+import { Button, EmptyState, Skeleton } from '@logimap/ui'
 import { useAuthStore } from '@/stores/auth.store'
 import type { ImpactScope } from '@logimap/types'
 
@@ -434,14 +434,30 @@ function LogicGraphInner() {
   const moduleNodes = graphData?.nodes.map((n) => ({ id: n.id, name: n.name })) ?? []
 
   if (isLoading) {
+    // 呼吸骨架：形状忠实于节点卡轮廓，减少加载完成时的布局跳动
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-3.5rem)] bg-[var(--color-bg-base)] text-[var(--color-text-primary)]">
-        <div className="text-center">
-          <h1 className="text-xl font-semibold">加载图谱数据...</h1>
+      <div className="flex items-center justify-center h-[calc(100vh-3.5rem)] bg-[var(--color-bg-base)]">
+        <div className="flex items-start gap-10">
+          {[0, 1, 2].map((col) => (
+            <div key={col} className="flex flex-col gap-6" style={{ marginTop: col === 1 ? 40 : 0 }}>
+              {[0, 1].map((row) => (
+                <div key={row} className="w-[220px] rounded-xl border border-[var(--color-border-default)] bg-[var(--color-bg-elevated)] p-3 shadow-node">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-10" />
+                  </div>
+                  <Skeleton className="mb-2 h-3 w-full" />
+                  <Skeleton className="h-3 w-2/3" />
+                </div>
+              ))}
+            </div>
+          ))}
         </div>
       </div>
     )
   }
+
+  const isEmpty = (graphData?.nodes.length ?? 0) === 0
 
   return (
     <div className="relative w-full h-[calc(100vh-3.5rem)] bg-[var(--color-bg-base)]">
@@ -503,6 +519,23 @@ function LogicGraphInner() {
           />
         </ReactFlow>
       </div>
+
+      {/* 空状态：留白即款待 —— 衬线引导语 + 单一主操作 */}
+      {isEmpty && (
+        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
+          <div className="pointer-events-auto">
+            <EmptyState
+              message="纸墨已备，画下第一个节点。"
+              action={
+                <Button onClick={handleCreateNode}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  创建节点
+                </Button>
+              }
+            />
+          </div>
+        </div>
+      )}
 
       {/* 连线编辑对话框 */}
       <EdgeEditDialog
