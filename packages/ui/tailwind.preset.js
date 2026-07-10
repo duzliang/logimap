@@ -61,8 +61,11 @@ export default {
         'node-hover':    '0 4px 12px rgba(0,0,0,.10)',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+        // 中西合璧：Inter 承担拉丁，中文按平台落到高质量黑体
+        sans: ['Inter', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Microsoft YaHei', 'system-ui', 'sans-serif'],
+        // 唯一衬线落点：空状态引导语（如卷轴题跋）
+        serif: ['Noto Serif SC', 'Songti SC', 'STSong', 'SimSun', 'serif'],
+        mono: ['JetBrains Mono', 'PingFang SC', 'ui-monospace', 'SF Mono', 'Menlo', 'monospace'],
       },
       fontSize: {
         'xs':   ['11px', { lineHeight: '16px' }],
@@ -90,9 +93,19 @@ export default {
         '16':  '64px',
       },
       transitionDuration: {
-        fast:   '100ms',
-        normal: '150ms',
-        slow:   '200ms',
+        // 「砚」时长五档 —— 引用 CSS 变量，reduced-motion 时自动归零
+        instant:    'var(--motion-instant)',    // 瞬 80ms
+        fast:       'var(--motion-fast)',        // 疾 140ms
+        base:       'var(--motion-base)',        // 常 220ms
+        normal:     'var(--motion-base)',        // 别名，兼容既有 duration-normal
+        slow:       'var(--motion-slow)',        // 缓 320ms
+        deliberate: 'var(--motion-deliberate)',  // 凝 560ms
+      },
+      transitionTimingFunction: {
+        settle:  'var(--ease-settle)',   // 落定 —— 进入主曲线
+        drift:   'var(--ease-drift)',    // 行云 —— 位置移动
+        exit:    'var(--ease-exit)',     // 收笔 —— 退出加速
+        breathe: 'var(--ease-breathe)',  // 呼吸 —— 循环专用
       },
       keyframes: {
         'accordion-down': {
@@ -103,10 +116,22 @@ export default {
           from: { height: 'var(--radix-accordion-content-height)' },
           to: { height: '0' },
         },
+        // 呼吸 —— 加载骨架 / AI 思考中，唯一允许的循环动画
+        'breathe': {
+          '0%, 100%': { opacity: '0.5' },
+          '50%':      { opacity: '0.95' },
+        },
+        // 落定进入 —— 列表 / 面板项入场
+        'settle-in': {
+          from: { opacity: '0', transform: 'translateY(8px)' },
+          to:   { opacity: '1', transform: 'none' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'breathe': 'breathe 1.9s var(--ease-breathe) infinite',
+        'settle-in': 'settle-in var(--motion-base) var(--ease-settle)',
       },
     },
   },

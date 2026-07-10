@@ -138,6 +138,39 @@
   /* 选中状态 */
   --color-node-selected-ring:   var(--violet-600);
   --color-node-selected-shadow: rgba(79, 70, 229, 0.20);
+
+  /* ───────────────────────────────────── */
+  /* 「砚」动效 Token（书写的节奏）         */
+  /* ───────────────────────────────────── */
+
+  /* 时长五档 —— 命名取运笔节奏 */
+  --motion-instant:    80ms;   /* 瞬 —— 按下反馈、取消、退出首帧 */
+  --motion-fast:       140ms;  /* 疾 —— hover、退出、行内切换 */
+  --motion-base:       220ms;  /* 常 —— 进入、展开折叠、Dialog */
+  --motion-slow:       320ms;  /* 缓 —— 侧栏面板、场景切换、云雾聚焦 */
+  --motion-deliberate: 560ms;  /* 凝 —— 涟漪单跳、落印（含义重大的时刻）*/
+
+  /* 缓动四曲 —— 全部 ease-out 主导，无回弹 */
+  --ease-settle:  cubic-bezier(0.22, 1, 0.36, 1);    /* 落定 —— 进入主曲线，如叶落水面 */
+  --ease-drift:   cubic-bezier(0.45, 0.05, 0.55, 0.95); /* 行云 —— 位置移动、图谱视口 */
+  --ease-exit:    cubic-bezier(0.4, 0, 1, 1);         /* 收笔 —— 退出，加速离场 */
+  --ease-breathe: cubic-bezier(0.37, 0, 0.63, 1);     /* 呼吸 —— 循环动画专用 */
+
+  /* ── 字体栈（中西合璧，补齐中文字形缺口）── */
+  --font-sans:  'Inter', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --font-serif: 'Noto Serif SC', 'Songti SC', 'STSong', 'SimSun', serif; /* 唯一衬线落点：空状态引导语 */
+  --font-mono:  'JetBrains Mono', 'PingFang SC', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+/* ── 尊重系统「减少动态效果」偏好：位移/缩放/循环全停 ── */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-instant:    0.01ms;
+    --motion-fast:       0.01ms;
+    --motion-base:       0.01ms;
+    --motion-slow:       0.01ms;
+    --motion-deliberate: 0.01ms;
+  }
 }
 
 /* ───────────────────────────────────── */
