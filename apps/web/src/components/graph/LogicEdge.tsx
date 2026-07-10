@@ -12,11 +12,11 @@ interface EdgeData {
   label?: string
 }
 
-const connectionTypeConfig: Record<ConnectionType, { label: string; color: string }> = {
-  TRIGGERS: { label: '触发', color: 'var(--color-info-icon)' },
-  DEPENDS_ON: { label: '依赖', color: 'var(--color-text-brand)' },
-  BLOCKS: { label: '阻断', color: 'var(--color-error-icon)' },
-  EXTENDS: { label: '扩展', color: 'var(--color-success-icon)' }
+const connectionTypeConfig: Record<ConnectionType, { label: string; color: string; dasharray: string }> = {
+  TRIGGERS:   { label: '触发', color: 'var(--color-info-icon)',  dasharray: '24 0' },
+  DEPENDS_ON: { label: '依赖', color: 'var(--color-text-brand)', dasharray: '4 4' },
+  BLOCKS:     { label: '阻断', color: 'var(--color-error-icon)', dasharray: '24 0' },
+  EXTENDS:    { label: '扩展', color: 'var(--color-success-icon)', dasharray: '8 4' }
 }
 
 export const LogicEdge = memo((props: EdgeProps) => {
@@ -50,8 +50,17 @@ export const LogicEdge = memo((props: EdgeProps) => {
   })
 
   return (
-    <>
-      <BaseEdge path={edgePath} markerEnd={markerEnd} style={{ strokeWidth: 2, stroke: config.color, opacity }} />
+    <g data-connection-type={connectionType}>
+      <BaseEdge
+        path={edgePath}
+        markerEnd={markerEnd}
+        style={{
+          strokeWidth: 2,
+          stroke: config.color,
+          opacity,
+          strokeDasharray: config.dasharray,
+        }}
+      />
       <EdgeLabelRenderer>
         <div
           style={{
@@ -73,7 +82,7 @@ export const LogicEdge = memo((props: EdgeProps) => {
           {label}
         </div>
       </EdgeLabelRenderer>
-    </>
+    </g>
   )
 })
 

@@ -29,7 +29,7 @@ const statusStyles = {
   },
   APPROVED: {
     card: 'bg-[var(--color-bg-elevated)] border-[var(--color-success-border)]',
-    badge: 'bg-[var(--color-success-bg)] text-[var(--color-success-text)]',
+    badge: 'bg-[var(--color-success-bg)] text-[var(--color-success-text)] yan-seal',
     label: '已确认',
   },
   DEPRECATED: {

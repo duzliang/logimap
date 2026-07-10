@@ -197,6 +197,35 @@
   animation: yan-ripple-in var(--motion-base) var(--ease-settle) both;
 }
 
+/* ③ 落印 —— 审批确认时印章落下并脉冲，含义重大的时刻 */
+@keyframes yan-seal-drop {
+  0%   { opacity: 0; transform: translateY(-8px) scale(0.6); }
+  100% { opacity: 1; transform: translateY(0)    scale(1);   }
+}
+@keyframes yan-seal-pulse {
+  0%, 100% { transform: scale(1);   box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.25); }
+  50%      { transform: scale(1.04); box-shadow: 0 0 0 4px rgba(52, 211, 153, 0);  }
+}
+.yan-seal {
+  position: relative;
+  overflow: hidden;
+}
+.yan-seal::before {
+  content: '';
+  position: absolute;
+  right: 3px;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  margin-top: -2.5px;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0;
+  animation:
+    yan-seal-drop var(--motion-base) var(--ease-settle) forwards,
+    yan-seal-pulse var(--motion-deliberate) var(--ease-breathe) var(--motion-base) 1;
+}
+
 /* ④ 墨线流动 —— hover / 选中连线时虚线相位单向流动一次，指示传播方向 */
 @keyframes yan-edge-flow {
   from { stroke-dashoffset: 24; }
