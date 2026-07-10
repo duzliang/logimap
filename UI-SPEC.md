@@ -725,6 +725,62 @@ const badgeVariants = {
 ">
 ```
 
+### 3.11 仪表盘 / 工作台（Dashboard）
+
+> 对应 SPEC §5.11。仪表盘是登录后的默认工作台，遵循「留白即款待、信息分层」原则：
+> 顶部一句欢迎语，向下依次是**统计 → 状态分布 → 待办/活动 → 快捷入口**，
+> 越靠上越是「全局体感」，越靠下越是「具体动作」。
+
+**整体容器**
+
+```tsx
+<main className="container mx-auto max-w-6xl px-4 py-8">
+  <header className="mb-6">
+    <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">欢迎回来，{name}</h2>
+    <p className="mt-1 text-sm text-[var(--color-text-secondary)]">这里汇总了当前团队待办与最新动态</p>
+  </header>
+  <div className="space-y-6">{/* 各区块，区块间距 space-y-6 = 24px */}</div>
+</main>
+```
+
+**区块布局**
+
+```
+┌───────────────────────────────────────────────┐
+│  欢迎语 + 副标题                                 │
+├──────┬──────┬──────┬──────┐  统计卡 grid       │
+│ 系统 │ 模块 │ 节点 │ 未读 │  2列(sm)→4列       │
+├──────┴──────┴──────┴──────┘                    │
+│  节点状态分布（分布条 + 图例）  Card            │
+├────────────────────┬──────────────────────────┤
+│  待评审  Card       │  最近更新  Card           │  lg:grid-cols-2
+│  (REVIEW 列表)      │  (最近节点列表)           │
+├────────────────────┴──────────────────────────┤
+│  快捷入口  1→2→4 列自适应                        │
+└───────────────────────────────────────────────┘
+```
+
+**统计卡（StatCard）**：`rounded-xl border bg-elevated px-4 py-3`，左侧 40px 圆角图标底
+用 `bg-[var(--color-brand-subtle)]` + 品牌色图标；数字用 `text-2xl font-semibold tabular-nums`，
+标签用 `text-xs text-secondary`。**数值一律 `tabular-nums`** 防止跳动。
+
+**状态分布条**：整条 `h-2.5 rounded-full bg-sunken`，内部按 APPROVED→REVIEW→DRAFT→DEPRECATED
+顺序填充四态语义色（emerald / amber / neutral / rose，与 §3.7 Badge 同源），
+图例小圆点复用同色。空态给出「暂无节点」。
+
+**列表行（NodeRow）**：整行为可点按钮，`hover:bg-sunken rounded-lg`；
+主行 = 节点名 + 状态 Badge；副行 = `系统 · 模块 · 更新人 · 相对时间`（`text-xs text-tertiary`）；
+悬停时右侧 `ArrowRight` 淡入（`opacity-0 group-hover:opacity-100`）。点击跳转
+`/modules/:moduleId/graph?highlightNodeIds=:id` 并高亮。
+
+**空/加载/异常三态**：
+- 加载：用 `Skeleton`（呼吸骨架）铺出统计卡 + 两栏列表骨架，形状忠于最终布局；
+- 空：区块内用 `EmptyState`（衬线引导语），如「没有待评审的节点，一切都已跟上 🎉」；
+- 异常：整屏 `EmptyState` + `重试` 按钮（outline）。
+
+**动效**：区块入场走「常·落定」（settle-in），悬停过渡走 `transition-colors`；
+所有动效在 `prefers-reduced-motion` 下自动降级（token 时长归零）。
+
 ---
 
 ## 第四层：图谱专项样式（React Flow）
