@@ -90,6 +90,10 @@ export function ModuleDetailPage() {
   }
 
   const handleEdit = (node: LogicNode) => {
+    if (node.status === 'APPROVED') {
+      toast.info('已确认节点需先「撤销确认」后才能编辑')
+      return
+    }
     setEditingNode(node)
     setIsEditorOpen(true)
   }
@@ -231,7 +235,7 @@ export function ModuleDetailPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleEdit(node)}
-                          disabled={node.status === 'APPROVED'}
+                          title={node.status === 'APPROVED' ? '已确认节点需先「撤销确认」后才能编辑' : '编辑'}
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>

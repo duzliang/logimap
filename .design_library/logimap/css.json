@@ -440,10 +440,11 @@
   },
   "font": {
     "family": {
-      "font-display": "'Inter', sans-serif",
-      "font-heading": "'Inter', sans-serif",
-      "font-body": "'Inter', sans-serif",
-      "font-mono": "'JetBrains Mono', monospace"
+      "font-display": "'Inter', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Microsoft YaHei', sans-serif",
+      "font-heading": "'Inter', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Microsoft YaHei', sans-serif",
+      "font-body": "'Inter', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Microsoft YaHei', sans-serif",
+      "font-mono": "'JetBrains Mono', 'PingFang SC', ui-monospace, monospace",
+      "font-serif-accent": "'Noto Serif SC', 'Songti SC', 'SimSun', serif"
     },
     "size": {
       "font-size-display": "32px",
@@ -477,9 +478,9 @@
       "line-height-h2": "1.3",
       "line-height-h3": "1.4",
       "line-height-h4": "1.45",
-      "line-height-body": "1.55",
+      "line-height-body": "1.7",
       "line-height-lead": "1.6",
-      "line-height-caption": "1.4",
+      "line-height-caption": "1.6",
       "line-height-mono": "1.55"
     }
   },

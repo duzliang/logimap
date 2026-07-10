@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LogiMap · 排版预览</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+body { margin: 0; padding: var(--space-4); background: var(--background); color: var(--foreground); font-family: var(--font-body); }
+.group { margin-bottom: var(--space-6); }
+.row { display: grid; grid-template-columns: 92px 1fr; gap: var(--space-4); align-items: baseline; margin-bottom: var(--space-3); }
+.label { font-size: var(--font-size-caption); color: var(--muted-foreground); white-space: nowrap; line-height: 1.4; }
+.label b { display: block; color: var(--foreground); font-weight: 600; }
+.text { min-width: 0; word-break: keep-all; overflow-wrap: break-word; }
+.mono { color: var(--muted-foreground); }
+hr.divider { border: none; border-top: 1px solid var(--border); margin: var(--space-6) 0; }
+</style>
+</head>
+<body>
+<div class="group">
+<div class="row"><span class="label"><b>Display</b>32px</span><span class="text logimap-display">业务逻辑可视化与治理平台</span></div>
+<div class="row"><span class="label"><b>H1</b>24px</span><span class="text logimap-h1">逻辑图谱</span></div>
+<div class="row"><span class="label"><b>H2</b>20px</span><span class="text logimap-h2">退款模块</span></div>
+<div class="row"><span class="label"><b>H3</b>17px</span><span class="text logimap-h3">节点详情</span></div>
+<div class="row"><span class="label"><b>H4</b>15px</span><span class="text logimap-h4">影响分析</span></div>
+</div>
+<hr class="divider">
+<div class="group">
+<div class="row"><span class="label"><b>Lead</b>16px</span><span class="text logimap-lead">把散落在代码、文档、会议、人脑中的业务知识沉淀为可检索的逻辑资产</span></div>
+<div class="row"><span class="label"><b>Body</b>14px</span><span class="text logimap-body">当维修工单状态变为「已完成」时，触发结算流程，检查 7 天无退款记录后释放押金</span></div>
+<div class="row"><span class="label"><b>Caption</b>12px</span><span class="text logimap-caption">3 分支 · 2 边界 · 已确认 · 更新于 2026-07-10</span></div>
+<div class="row"><span class="label"><b>Mono</b>13px</span><span class="text logimap-mono mono">src/services/refund.ts#processRefund</span></div>
+<div class="row"><span class="label"><b>Serif</b>18px</span><span class="text logimap-serif-accent">纸墨已备，画下第一个节点</span></div>
+<div class="row"><span class="label"><b>Tabular</b>—</span><span class="text logimap-caption logimap-tabular">v1.2.0 · 2026-07-10 · 128 节点</span></div>
+</div>
+</body>
+</html>

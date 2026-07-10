@@ -88,10 +88,11 @@
   --ring: var(--logimap-primary-500); /* AI-generated */
   --input-border: var(--logimap-neutral-300); /* AI-generated */
   /* === Typography === */
-  --font-display: 'Inter', sans-serif; /* AI-generated */
-  --font-heading: 'Inter', sans-serif; /* AI-generated */
-  --font-body: 'Inter', sans-serif; /* AI-generated */
-  --font-mono: 'JetBrains Mono', monospace; /* AI-generated */
+  --font-display: 'Inter', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Microsoft YaHei', sans-serif; /* AI-generated */
+  --font-heading: 'Inter', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Microsoft YaHei', sans-serif; /* AI-generated */
+  --font-body: 'Inter', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Microsoft YaHei', sans-serif; /* AI-generated */
+  --font-mono: 'JetBrains Mono', 'PingFang SC', ui-monospace, monospace; /* AI-generated */
+  --font-serif-accent: 'Noto Serif SC', 'Songti SC', 'SimSun', serif; /* AI-generated */
   --font-size-display: 32px; /* AI-generated */
   --font-size-h1: 24px; /* AI-generated */
   --font-size-h2: 20px; /* AI-generated */
@@ -115,9 +116,9 @@
   --line-height-h2: 1.3; /* AI-generated */
   --line-height-h3: 1.4; /* AI-generated */
   --line-height-h4: 1.45; /* AI-generated */
-  --line-height-body: 1.55; /* AI-generated */
+  --line-height-body: 1.7; /* AI-generated */
   --line-height-lead: 1.6; /* AI-generated */
-  --line-height-caption: 1.4; /* AI-generated */
+  --line-height-caption: 1.6; /* AI-generated */
   --line-height-mono: 1.55; /* AI-generated */
   /* === Spacing === */
   --space-1: 4px; /* AI-generated */
@@ -150,6 +151,17 @@
   --shadow-3: 0 6px 16px -4px rgba(28,25,23,.12); /* Float */
   --shadow-4: 0 14px 32px -8px rgba(28,25,23,.18); /* Modal */
   --shadow-5: 0 24px 48px -12px rgba(28,25,23,.24); /* Overlay */
+  /* === Motion === */
+  --motion-instant: 80ms; /* 瞬 — press feedback, cancel, first frame of exit */
+  --motion-fast: 140ms; /* 疾 — hover, exit animation, inline toggle */
+  --motion-base: 220ms; /* 常 — enter animation, expand/collapse, Dialog */
+  --motion-slow: 320ms; /* 缓 — side panel, scene switch, cloud-focus */
+  --motion-deliberate: 560ms; /* 凝 — graph ripple, seal-stamp confirmation */
+  /* === Easing === */
+  --ease-settle: cubic-bezier(0.22, 1, 0.36, 1); /* 落定 — enter main curve */
+  --ease-drift: cubic-bezier(0.45, 0.05, 0.55, 0.95); /* 行云 — position move, graph viewport */
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1); /* 收笔 — exit, accelerate departure */
+  --ease-breathe: cubic-bezier(0.37, 0, 0.63, 1); /* 呼吸 — loop animation only */
   /* === Portable Aliases === */
   --color-primary: var(--primary); /* AI-generated */
   --color-success: var(--logimap-success-600); /* AI-generated */
@@ -194,4 +206,28 @@
   --shadow-3: 0 6px 16px -4px rgba(0,0,0,.50); /* Float */
   --shadow-4: 0 14px 32px -8px rgba(0,0,0,.60); /* Modal */
   --shadow-5: 0 24px 48px -12px rgba(0,0,0,.70); /* Overlay */
+}
+
+/* === Typography Classes (中文示例 / Chinese-first) === */
+/* 排版类：每个层级均以中文示例标注，展示中西文混排效果 */
+.logimap-display { font-family: var(--font-display); font-size: 2rem; font-weight: var(--font-weight-display); line-height: var(--line-height-display); letter-spacing: -0.02em; } /* 业务逻辑可视化与治理平台 */
+.logimap-h1 { font-family: var(--font-heading); font-size: 1.5rem; font-weight: var(--font-weight-h1); line-height: var(--line-height-h1); } /* 逻辑图谱 */
+.logimap-h2 { font-family: var(--font-heading); font-size: 1.25rem; font-weight: var(--font-weight-h2); line-height: var(--line-height-h2); } /* 退款模块 */
+.logimap-h3 { font-family: var(--font-heading); font-size: 1.0625rem; font-weight: var(--font-weight-h3); line-height: var(--line-height-h3); } /* 节点详情 */
+.logimap-h4 { font-family: var(--font-heading); font-size: 0.9375rem; font-weight: var(--font-weight-h4); line-height: var(--line-height-h4); } /* 影响分析 */
+.logimap-body { font-family: var(--font-body); font-size: 0.875rem; font-weight: var(--font-weight-body); line-height: var(--line-height-body); } /* 当维修工单状态变为「已完成」时，触发结算流程 */
+.logimap-lead { font-family: var(--font-body); font-size: 1rem; font-weight: var(--font-weight-lead); line-height: var(--line-height-lead); } /* 把散落在代码、文档、会议、人脑中的业务知识沉淀为可检索的逻辑资产 */
+.logimap-caption { font-family: var(--font-body); font-size: 0.75rem; font-weight: var(--font-weight-caption); line-height: var(--line-height-caption); } /* 3 分支 · 2 边界 · 已确认 */
+.logimap-mono { font-family: var(--font-mono); font-size: 0.8125rem; font-weight: var(--font-weight-mono); line-height: var(--line-height-mono); } /* src/services/refund.ts#processRefund */
+.logimap-serif-accent { font-family: var(--font-serif-accent); font-size: 1.125rem; font-weight: 400; line-height: 1.8; } /* 纸墨已备，画下第一个节点 */
+.logimap-tabular { font-variant-numeric: tabular-nums; } /* v1.2.0 · 2026-07-10 · 128 节点 */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-instant: 0ms;
+    --motion-fast: 0ms;
+    --motion-base: 0ms;
+    --motion-slow: 0ms;
+    --motion-deliberate: 0ms;
+  }
 }
