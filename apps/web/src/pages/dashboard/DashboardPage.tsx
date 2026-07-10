@@ -32,6 +32,14 @@ export function DashboardPage() {
         setUser(userData)
       } catch (error) {
         console.error('Failed to fetch user:', error)
+        // 会话确已失效（token 无效或对应用户不存在）→ 清理并跳转登录，
+        // 而非误报网络异常；其余错误（网络波动等）保留原提示。
+        const status = (error as { response?: { status?: number } })?.response?.status
+        if (status === 401 || status === 404) {
+          logout()
+          navigate('/login')
+          return
+        }
         toast.warning(t('dashboard.authWarning'))
       } finally {
         setIsChecking(false)
