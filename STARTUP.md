@@ -62,6 +62,7 @@ pnpm dev
 2. 点击「立即注册」创建账户
 3. 注册成功后自动跳转到 Dashboard
 4. 点击「系统管理」卡片开始使用
+5. 测试账号：t39test@example.com，test1234
 
 ## 常见问题
 
