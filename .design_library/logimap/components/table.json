@@ -1,0 +1,28 @@
+{
+  "slug": "table",
+  "schemaVersion": 2,
+  "name": "Table",
+  "category": "Data Display",
+  "sourceKind": "from-scratch",
+  "confidence": "medium",
+  "semanticTypeCandidates": [
+    {"candidate": "data-table", "evidence": "Node list with name, status, priority, owner columns"},
+    {"candidate": "version-history-table", "evidence": "Version history with version number, change note, operator, time"},
+    {"candidate": "member-table", "evidence": "Team member list with avatar, email, role"}
+  ],
+  "variantDimensions": [
+    {"dimension": "variant", "values": ["default", "with-status"]},
+    {"dimension": "row-state", "values": ["default", "hover", "selected"]},
+    {"dimension": "density", "values": ["normal"]}
+  ],
+  "representativeVariants": [
+    {"whySelected": "Default node list table", "traits": {"headerBackground": "var(--muted)", "rowBackground": "var(--surface)", "rowHoverBackground": "var(--muted)", "border": "1px solid var(--border)", "radius": "var(--radius-lg)"}, "childrenDigest": "columns: 节点名称 | 状态 | 优先级 | 负责人 | 更新时间"},
+    {"whySelected": "Row with status badges", "traits": {"variant": "with-status", "statusBadges": ["草稿", "待审", "已确认", "已废弃"]}, "childrenDigest": "name + status badge + priority + owner + time"}
+  ],
+  "anatomy": ["header row (muted bg)", "data rows (hover tint)", "optional status badge cell"],
+  "structurePatterns": ["width full", "rounded var(--radius-lg) overflow hidden", "border 1px solid var(--border)", "header background var(--muted) font-weight var(--font-weight-medium)", "row hover background var(--muted)"],
+  "usageHints": {"priorityHint": "medium", "typicalCount": "1-2 per list view", "copyExamples": ["节点名称", "状态", "优先级", "负责人", "更新时间", "草稿", "已确认"]},
+  "doNotInvent": ["column resize handles", "inline edit cells", "expandable row detail"],
+  "unknowns": ["exact row height"],
+  "keyInsightSeed": "Row-hover tint instead of borders; status badges inline for node states"
+}

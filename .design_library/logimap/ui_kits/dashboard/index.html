@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="../../colors_and_type.css">
+<link rel="stylesheet" href="../../components.css">
+<title>LogiMap · 逻辑图谱工作台</title>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--background);color:var(--foreground);
+    font-family:var(--font-body);font-size:var(--font-size-body);line-height:var(--line-height-body);
+    -webkit-font-smoothing:antialiased}
+  .kpi-num,.mono-num{font-variant-numeric:tabular-nums}
+  .lm-mono{font-family:var(--font-mono);font-size:var(--font-size-mono)}
+
+  /* ── page layout skeleton ── */
+  .uikit-shell{width:100%;max-width:1184px;margin:0 auto;overflow:hidden;
+    display:grid;grid-template-columns:var(--uikit-sidebar-w, 220px) minmax(0,1fr);
+    gap:var(--space-4);padding:var(--space-4)}
+  .uikit-sidebar,.uikit-main,.uikit-toolbar{min-width:0}
+  .uikit-sidebar{overflow:hidden;max-width:100%}
+  [data-component]{min-width:0;max-width:100%;overflow:hidden}
+  .uikit-main{display:flex;flex-direction:column;gap:var(--space-4)}
+  .uikit-toolbar{display:flex;align-items:center;gap:var(--space-2)}
+  .uikit-responsive-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-4)}
+  .uikit-table-wrap{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain}
+  .uikit-truncate{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .uikit-nowrap{white-space:nowrap;flex-shrink:0}
+  .uikit-action-cell{display:flex;align-items:center;gap:8px;min-width:0;max-width:160px;overflow:hidden}
+  .uikit-action{min-width:0;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* ── page-level composition (not overriding component internals) ── */
+  .toolbar-search{flex:1;min-width:0;display:flex}
+  .toolbar-search .input{width:100%}
+  .lm-ico{width:var(--size-icon-sm);height:var(--size-icon-sm);display:inline-block;flex-shrink:0}
+  .lm-ico-md{width:var(--size-icon-md);height:var(--size-icon-md);display:inline-block;flex-shrink:0}
+
+  .nav-section{font-size:11px;font-weight:var(--font-weight-caption);color:var(--subtle-foreground);
+    text-transform:uppercase;letter-spacing:.04em;padding:var(--space-3) var(--space-3) var(--space-1)}
+  .nav-divider{height:1px;background:var(--border);margin:var(--space-2) var(--space-2)}
+
+  .page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-4);min-width:0}
+  .page-title{font-family:var(--font-heading);font-size:var(--font-size-h2);font-weight:var(--font-weight-h2);
+    line-height:var(--line-height-h2);color:var(--foreground);margin:0;word-break:keep-all}
+  .page-sub{font-size:var(--font-size-caption);color:var(--muted-foreground);margin-top:var(--space-1)}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-3)}
+  .stat-card{transition:box-shadow .15s,border-color .15s}
+  .stat-card:hover{box-shadow:var(--shadow-2);border-color:var(--input-border)}
+  .stat-label{display:flex;align-items:center;gap:var(--space-2);font-size:var(--font-size-caption);
+    color:var(--muted-foreground);margin-bottom:var(--space-2)}
+  .stat-value{font-size:var(--font-size-display);font-weight:var(--font-weight-display);
+    line-height:1.05;color:var(--foreground)}
+  .stat-delta{font-size:var(--font-size-caption);color:var(--color-success);margin-top:var(--space-1)}
+
+  .node-row{display:flex;gap:var(--space-3);overflow-x:auto;padding-bottom:var(--space-1)}
+  .node-card.is-warning{border-left-color:var(--color-warning)}
+  .node-card.is-neutral{border-left-color:var(--logimap-neutral-400)}
+  .node-card.is-error{border-left-color:var(--color-error)}
+  .node-desc{font-size:var(--font-size-caption);color:var(--muted-foreground);
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+  .card-head{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);
+    margin-bottom:var(--space-4);min-width:0}
+  .card-heading{font-family:var(--font-heading);font-size:var(--font-size-h4);
+    font-weight:var(--font-weight-h4);color:var(--foreground)}
+
+  /* chart */
+  .chart{display:flex;align-items:flex-end;gap:var(--space-2);height:172px;padding-top:var(--space-2)}
+  .chart-col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:var(--space-2)}
+  .bar{width:100%;max-width:26px;background:var(--logimap-primary-500);
+    border-radius:var(--radius-xs) var(--radius-xs) 0 0;transition:background .15s}
+  .chart-col:hover .bar{background:var(--primary-hover)}
+  .bar-lab{font-size:11px;color:var(--subtle-foreground)}
+  .bh0{height:46px}.bh1{height:60px}.bh2{height:78px}.bh3{height:68px}
+  .bh4{height:88px}.bh5{height:104px}.bh6{height:96px}.bh7{height:116px}
+  .bh8{height:130px}.bh9{height:122px}.bh10{height:144px}.bh11{height:156px}
+
+  .impact-item{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) 0;
+    border-bottom:1px solid var(--border);min-width:0}
+  .impact-item:last-child{border-bottom:none}
+  .impact-main{min-width:0;flex:1}
+  .impact-name{font-size:var(--font-size-body);font-weight:var(--font-weight-h4);color:var(--foreground)}
+  .impact-path{font-size:var(--font-size-caption);color:var(--muted-foreground)}
+
+  .table-foot{display:flex;align-items:center;justify-content:space-between;
+    gap:var(--space-3);margin-top:var(--space-3)}
+  .pager{display:flex;align-items:center;gap:var(--space-2)}
+  .page-dots{font-size:var(--font-size-caption);color:var(--muted-foreground)}
+
+  .modal-stage{position:fixed;inset:0;z-index:50;display:flex;align-items:center;
+    justify-content:center;padding:var(--space-4)}
+  .field-stack{margin-bottom:var(--space-4)}
+  .field-stack:last-child{margin-bottom:0}
+
+  @media (max-width:900px){
+    .uikit-shell{grid-template-columns:minmax(0,1fr)}
+    .uikit-responsive-grid{grid-template-columns:minmax(0,1fr)}
+    .stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+  @media (max-width:640px){
+    .uikit-toolbar{flex-direction:column;align-items:stretch}
+    .uikit-responsive-grid{grid-template-columns:minmax(0,1fr)}
+    .stat-grid{grid-template-columns:minmax(0,1fr)}
+    .page-head{flex-direction:column}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect} = React;
+
+const NODES = [
+  {name:"退款申请",mod:"退款模块",st:"success",stLabel:"已确认",pri:"high",priLabel:"高",owner:"张明",ini:"ZM",time:"08-06 14:22",id:"nd_refund_apply"},
+  {name:"订单结算",mod:"结算模块",st:"warning",stLabel:"待审",pri:"high",priLabel:"高",owner:"李伟",ini:"LW",time:"08-06 11:05",id:"nd_order_settle"},
+  {name:"优惠券计算",mod:"结算模块",st:"neutral",stLabel:"草稿",pri:"mid",priLabel:"中",owner:"王芳",ini:"WF",time:"08-05 19:40",id:"nd_coupon_calc"},
+  {name:"库存扣减",mod:"订单系统",st:"success",stLabel:"已确认",pri:"mid",priLabel:"中",owner:"陈涛",ini:"CT",time:"08-05 16:18",id:"nd_stock_deduct"},
+  {name:"支付回调",mod:"结算模块",st:"warning",stLabel:"待审",pri:"high",priLabel:"高",owner:"赵敏",ini:"ZM",time:"08-04 09:52",id:"nd_pay_callback"},
+  {name:"积分兑换",mod:"会员系统",st:"error",stLabel:"已废弃",pri:"low",priLabel:"低",owner:"刘洋",ini:"LY",time:"08-02 13:11",id:"nd_points_swap"},
+  {name:"会员等级",mod:"会员系统",st:"neutral",stLabel:"草稿",pri:"low",priLabel:"低",owner:"孙娜",ini:"SN",time:"08-01 10:30",id:"nd_member_tier"}
+];
+const CHART = [
+  {m:"7月",h:0},{m:"8月",h:1},{m:"9月",h:2},{m:"10月",h:3},{m:"11月",h:4},{m:"12月",h:5},
+  {m:"1月",h:6},{m:"2月",h:7},{m:"3月",h:8},{m:"4月",h:9},{m:"5月",h:10},{m:"6月",h:11}
+];
+const CHART_VAL = [18,24,31,27,35,42,38,46,52,49,58,63];
+const IMPACT = [
+  {n:"订单结算",p:"订单系统 / 结算模块",lv:"warning",lb:"待审"},
+  {n:"支付回调",p:"订单系统 / 结算模块",lv:"warning",lb:"待审"},
+  {n:"库存扣减",p:"订单系统",lv:"success",lb:"已确认"},
+  {n:"优惠券计算",p:"订单系统 / 结算模块",lv:"neutral",lb:"草稿"},
+  {n:"积分兑换",p:"会员系统",lv:"error",lb:"已废弃"}
+];
+const VERSIONS = [
+  {v:"v12",note:"修正退款金额取整规则",who:"张明",ini:"ZM",time:"08-06 14:22",st:"success",lb:"已确认"},
+  {v:"v11",note:"新增支付回调超时重试",who:"赵敏",ini:"ZM",time:"08-04 09:52",st:"warning",lb:"待审"},
+  {v:"v10",note:"结算链路拆分优惠券节点",who:"王芳",ini:"WF",time:"08-05 19:40",st:"neutral",lb:"草稿"},
+  {v:"v9",note:"库存扣减改为预占模式",who:"陈涛",ini:"CT",time:"08-05 16:18",st:"success",lb:"已确认"},
+  {v:"v8",note:"废弃旧积分兑换逻辑",who:"刘洋",ini:"LY",time:"08-02 13:11",st:"error",lb:"已废弃"},
+  {v:"v7",note:"会员等级节点初稿",who:"孙娜",ini:"SN",time:"08-01 10:30",st:"neutral",lb:"草稿"}
+];
+
+function Sidebar({view,setView}){
+  const item=(key,label,icon,badge)=>(
+    <a href="#" className={"nav-item"+(view===key?" active":"")}
+       onClick={e=>{e.preventDefault();setView(key)}}>
+      <i data-lucide={icon} className="lm-ico"></i>
+      <span className="uikit-truncate">{label}</span>
+      {badge?<span className="nav-badge">{badge}</span>:null}
+    </a>
+  );
+  return (
+    <nav className="nav" data-component="navigation">
+      <div className="nav-brand">
+        <i data-lucide="git-branch" className="lm-ico-md"></i>
+        <span className="uikit-truncate">LogiMap</span>
+      </div>
+      <a href="#" className="nav-search" onClick={e=>e.preventDefault()}>
+        <i data-lucide="search" className="lm-ico"></i>
+        <span className="uikit-truncate">全局搜索</span>
+      </a>
+      {item("graph","逻辑图谱","workflow","24")}
+      <div className="nav-section">业务系统</div>
+      <a href="#" className="nav-item" onClick={e=>{e.preventDefault();setView("graph")}}>
+        <i data-lucide="folder" className="lm-ico"></i>
+        <span className="uikit-truncate">订单系统</span>
+        <i data-lucide="chevron-down" className="lm-ico" style={{marginLeft:"auto",opacity:.6}}></i>
+      </a>
+      <div className="nav-children">
+        <a href="#" className="nav-item" onClick={e=>{e.preventDefault();setView("graph")}}>
+          <span className="uikit-truncate">退款模块</span></a>
+        <a href="#" className="nav-item" onClick={e=>{e.preventDefault();setView("graph")}}>
+          <span className="uikit-truncate">结算模块</span></a>
+      </div>
+      <a href="#" className="nav-item" onClick={e=>{e.preventDefault();setView("graph")}}>
+        <i data-lucide="users" className="lm-ico"></i>
+        <span className="uikit-truncate">会员系统</span>
+      </a>
+      <div className="nav-divider"></div>
+      <div className="nav-section">治理</div>
+      {item("impact","影响分析","git-compare")}
+      {item("history","版本历史","history")}
+    </nav>
+  );
+}
+
+function Toolbar({onAI}){
+  return (
+    <div className="uikit-toolbar" data-component="input">
+      <button className="btn secondary uikit-nowrap">
+        <i data-lucide="layers" className="lm-ico"></i>
+        <span className="uikit-truncate">订单系统</span>
+        <i data-lucide="chevron-down" className="lm-ico"></i>
+      </button>
+      <div className="toolbar-search">
+        <div className="input">
+          <i data-lucide="search" className="input-icon"></i>
+          <input className="input-inner" type="text" placeholder="搜索节点、模块或代码关联…" aria-label="全局搜索" />
+        </div>
+      </div>
+      <button className="btn secondary uikit-nowrap" onClick={onAI}>
+        <i data-lucide="sparkles" className="lm-ico"></i><span>AI 生成</span>
+      </button>
+      <button className="btn ghost uikit-nowrap" aria-label="通知">
+        <i data-lucide="bell" className="lm-ico"></i>
+      </button>
+    </div>
+  );
+}
+
+function StatCard({icon,label,value,delta}){
+  return (
+    <div className="card content-card stat-card" data-component="card">
+      <div className="stat-label"><i data-lucide={icon} className="lm-ico"></i>
+        <span className="uikit-truncate">{label}</span></div>
+      <div className="stat-value kpi-num">{value}</div>
+      {delta?<div className="stat-delta uikit-truncate">{delta}</div>:null}
+    </div>
+  );
+}
+
+function Badge({st,lb}){return <span className={"lm-badge is-"+st}>{lb}</span>;}
+
+function NodeTable({onEdit}){
+  const [sel,setSel]=useState("nd_order_settle");
+  return (
+    <div className="card" data-component="table">
+      <div className="card-head">
+        <div className="card-heading">节点列表</div>
+        <button className="btn ghost sm uikit-nowrap">
+          <i data-lucide="filter" className="lm-ico"></i><span>筛选</span></button>
+      </div>
+      <div className="uikit-table-wrap">
+        <table className="lm-table">
+          <thead><tr>
+            <th>节点名称</th><th>状态</th><th>优先级</th><th>负责人</th><th>更新时间</th><th>操作</th>
+          </tr></thead>
+          <tbody>
+            {NODES.map(n=>(
+              <tr key={n.id} className={sel===n.id?"is-selected":""} onClick={()=>setSel(n.id)}>
+                <td className="lm-cell-name uikit-truncate">{n.name}
+                  <div className="lm-cell-meta lm-mono">{n.mod}</div></td>
+                <td><Badge st={n.st} lb={n.stLabel}/></td>
+                <td><span className={"lm-pri"+(n.pri==="high"?" is-high":n.pri==="mid"?" is-mid":"")}>{n.priLabel}</span></td>
+                <td><span className="lm-owner"><span className="lm-avatar">{n.ini}</span>
+                  <span className="uikit-truncate">{n.owner}</span></span></td>
+                <td className="uikit-nowrap lm-mono">{n.time}</td>
+                <td>
+                  <div className="uikit-action-cell">
+                    <button className="btn ghost sm uikit-action" onClick={e=>{e.stopPropagation();onEdit(n)}}>编辑</button>
+                    <button className="btn ghost sm" aria-label="更多"
+                      onClick={e=>e.stopPropagation()}><i data-lucide="more-horizontal" className="lm-ico"></i></button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="table-foot">
+        <span className="page-dots">共 128 个节点 · 第 1 / 22 页</span>
+        <div className="pager">
+          <button className="btn secondary sm uikit-nowrap" disabled>上一页</button>
+          <button className="btn secondary sm uikit-nowrap">下一页</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GraphView({onCreate,onEdit}){
+  return (<React.Fragment>
+    <div className="page-head">
+      <div>
+        <h1 className="page-title">逻辑图谱</h1>
+        <div className="page-sub">订单系统 · 结算模块 — 共 4 个模块 / 128 个逻辑节点</div>
+      </div>
+      <button className="btn primary uikit-nowrap" data-component="button" onClick={onCreate}>
+        <i data-lucide="plus" className="lm-ico"></i><span>创建节点</span>
+      </button>
+    </div>
+    <div className="stat-grid">
+      <StatCard icon="boxes" label="节点总数" value="128" delta="本周 +9"/>
+      <StatCard icon="clock" label="待审节点" value="12" delta="待你评审 4"/>
+      <StatCard icon="check-circle" label="已确认" value="86" delta="覆盖率 67%"/>
+      <StatCard icon="link" label="代码关联" value="54" delta="本周 +6"/>
+    </div>
+    <div className="node-row">
+      {NODES.slice(0,4).map(n=>(
+        <div key={n.id} className={"card node-card is-"+n.st} data-component="card">
+          <div className="node-head">
+            <span className="card-title uikit-truncate">{n.name}</span>
+            <Badge st={n.st} lb={n.stLabel}/>
+          </div>
+          <div className="node-desc">{n.mod} · 负责人 {n.owner}，优先级{n.priLabel}。</div>
+          <div className="node-meta lm-mono uikit-truncate">{n.id}</div>
+        </div>
+      ))}
+    </div>
+    <NodeTable onEdit={onEdit}/>
+  </React.Fragment>);
+}
+
+function ImpactView(){
+  return (<React.Fragment>
+    <div className="page-head">
+      <div>
+        <h1 className="page-title">影响分析</h1>
+        <div className="page-sub">变更节点「订单结算」将波及下游 5 个节点</div>
+      </div>
+      <button className="btn primary uikit-nowrap" data-component="button">
+        <i data-lucide="download" className="lm-ico"></i><span>导出报告</span>
+      </button>
+    </div>
+    <div className="uikit-responsive-grid">
+      <div className="card" data-component="card">
+        <div className="card-head">
+          <div className="card-heading">节点变更趋势</div>
+          <span className="page-dots lm-mono">近 12 个月 · 单位 个</span>
+        </div>
+        <div className="chart">
+          {CHART.map((c,i)=>(
+            <div className="chart-col" key={c.m}>
+              <div className={"bar bh"+c.h}></div>
+              <span className="bar-lab lm-mono">{CHART_VAL[i]}</span>
+              <span className="bar-lab uikit-nowrap">{c.m}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="card" data-component="card">
+        <div className="card-head">
+          <div className="card-heading">受影响节点</div>
+          <button className="btn secondary sm uikit-nowrap">
+            <i data-lucide="git-compare" className="lm-ico"></i><span>提交评审</span></button>
+        </div>
+        {IMPACT.map(it=>(
+          <div className="impact-item" key={it.n}>
+            <i data-lucide="git-branch" className="lm-ico" style={{color:"var(--muted-foreground)"}}></i>
+            <div className="impact-main">
+              <div className="impact-name uikit-truncate">{it.n}</div>
+              <div className="impact-path uikit-truncate lm-mono">{it.p}</div>
+            </div>
+            <Badge st={it.lv} lb={it.lb}/>
+          </div>
+        ))}
+      </div>
+    </div>
+  </React.Fragment>);
+}
+
+function HistoryView(){
+  const [sel,setSel]=useState("v11");
+  return (<React.Fragment>
+    <div className="page-head">
+      <div>
+        <h1 className="page-title">版本历史</h1>
+        <div className="page-sub">退款申请 · 共 12 个版本，最近更新 08-06</div>
+      </div>
+      <button className="btn primary uikit-nowrap" data-component="button">
+        <i data-lucide="git-commit" className="lm-ico"></i><span>创建版本</span>
+      </button>
+    </div>
+    <div className="card" data-component="table">
+      <div className="uikit-table-wrap">
+        <table className="lm-table">
+          <thead><tr>
+            <th>版本</th><th>变更说明</th><th>状态</th><th>操作人</th><th>时间</th><th>操作</th>
+          </tr></thead>
+          <tbody>
+            {VERSIONS.map(v=>(
+              <tr key={v.v} className={sel===v.v?"is-selected":""} onClick={()=>setSel(v.v)}>
+                <td className="lm-cell-name lm-mono">{v.v}</td>
+                <td className="uikit-truncate">{v.note}</td>
+                <td><Badge st={v.st} lb={v.lb}/></td>
+                <td><span className="lm-owner"><span className="lm-avatar">{v.ini}</span>
+                  <span className="uikit-truncate">{v.who}</span></span></td>
+                <td className="uikit-nowrap lm-mono">{v.time}</td>
+                <td>
+                  <div className="uikit-action-cell">
+                    <button className="btn ghost sm uikit-action" onClick={e=>e.stopPropagation()}>回滚</button>
+                    <button className="btn ghost sm" aria-label="对比"
+                      onClick={e=>e.stopPropagation()}><i data-lucide="eye" className="lm-ico"></i></button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </React.Fragment>);
+}
+
+function NodeModal({node,onClose}){
+  return (
+    <div className="modal-stage" data-component="modal" role="dialog" aria-modal="true" aria-label="节点详情">
+      <div className="modal-overlay" onClick={onClose}></div>
+      <div className="modal-panel">
+        <div className="modal-header">
+          <div className="modal-title">{node?"节点详情":"创建节点"}</div>
+          <button className="modal-close" aria-label="关闭" onClick={onClose}>
+            <i data-lucide="x" className="lm-ico-md"></i></button>
+        </div>
+        <div className="modal-body">
+          <div className="field-stack">
+            <label className="field-label" htmlFor="m-name">节点名称</label>
+            <input id="m-name" className="modal-input" type="text" defaultValue={node?node.name:""} placeholder="如：退款申请" />
+          </div>
+          <div className="field-stack">
+            <label className="field-label" htmlFor="m-mod">所属模块</label>
+            <input id="m-mod" className="modal-input" type="text" defaultValue={node?node.mod:"结算模块"} />
+          </div>
+          <div className="field-stack">
+            <label className="field-label" htmlFor="m-code">代码关联</label>
+            <input id="m-code" className="modal-input lm-mono" type="text" defaultValue={node?node.id:"nd_new_node"} />
+          </div>
+          <div className="field-stack">
+            <label className="field-label" htmlFor="m-desc">业务描述</label>
+            <input id="m-desc" className="modal-input" type="text" placeholder="描述该节点承载的业务逻辑…" />
+          </div>
+        </div>
+        <div className="modal-footer">
+          <button className="btn-secondary" onClick={onClose}>取消</button>
+          <button className="btn-primary" onClick={onClose}>提交评审</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function App(){
+  const [view,setView]=useState("graph");
+  const [modal,setModal]=useState(null); // null | {node} | {create:true}
+  useEffect(()=>{ if(window.lucide) window.lucide.createIcons(); });
+  return (
+    <div className="uikit-shell" data-layout-guard="uikit-v1" style={{"--uikit-sidebar-w":"240px"}}>
+      <aside className="uikit-sidebar"><Sidebar view={view} setView={setView}/></aside>
+      <main className="uikit-main">
+        <Toolbar onAI={()=>setModal({create:true})}/>
+        {view==="graph" && <GraphView onCreate={()=>setModal({create:true})} onEdit={n=>setModal({node:n})}/>}
+        {view==="impact" && <ImpactView/>}
+        {view==="history" && <HistoryView/>}
+      </main>
+      {modal && <NodeModal node={modal.node} onClose={()=>setModal(null)}/>}
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+<script>lucide.createIcons();</script>
+</body>
+</html>

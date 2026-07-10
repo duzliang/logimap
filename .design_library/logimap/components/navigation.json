@@ -1,0 +1,29 @@
+{
+  "slug": "navigation",
+  "schemaVersion": 2,
+  "name": "Navigation",
+  "category": "Navigation",
+  "sourceKind": "from-scratch",
+  "confidence": "medium",
+  "semanticTypeCandidates": [
+    {"candidate": "sidebar-nav", "evidence": "Left sidebar with systems > modules tree hierarchy"},
+    {"candidate": "topbar-nav", "evidence": "Top bar with team switcher, search, notifications, avatar"},
+    {"candidate": "nav-item", "evidence": "Individual sidebar item with active/inactive states"}
+  ],
+  "variantDimensions": [
+    {"dimension": "variant", "values": ["sidebar-item", "topbar"]},
+    {"dimension": "state", "values": ["default", "hover", "active"]},
+    {"dimension": "level", "values": ["system", "module"]}
+  ],
+  "representativeVariants": [
+    {"whySelected": "Active sidebar item - violet tint", "traits": {"variant": "sidebar-item", "state": "active", "background": "var(--primary-subtle)", "color": "var(--primary)", "fontWeight": "var(--font-weight-medium)", "radius": "var(--radius-md)", "height": "var(--size-nav-item)"}, "childrenDigest": "icon + label"},
+    {"whySelected": "Default sidebar item", "traits": {"variant": "sidebar-item", "state": "default", "color": "var(--muted-foreground)", "hoverBackground": "var(--muted)"}, "childrenDigest": "icon + label"},
+    {"whySelected": "Sidebar container with tree", "traits": {"variant": "sidebar", "width": "240px", "background": "var(--surface)", "border": "1px solid var(--border)"}, "childrenDigest": "logo + team switcher + system/module tree"}
+  ],
+  "anatomy": ["leading icon", "label text", "optional trailing count badge"],
+  "structurePatterns": ["flex items-center gap var(--space-2)", "padding-x var(--space-3) height var(--size-nav-item)", "rounded var(--radius-md)", "active background var(--primary-subtle) color var(--primary)"],
+  "usageHints": {"priorityHint": "medium", "typicalCount": "8-20 items in tree", "copyExamples": ["订单系统", "退款模块", "结算模块", "会员系统", "全局搜索"]},
+  "doNotInvent": ["collapsible drawer animation", "breadcrumb", "command palette"],
+  "unknowns": ["exact tree indent per level"],
+  "keyInsightSeed": "Sidebar tree with violet-tint active state; 32px row height for system/module hierarchy"
+}

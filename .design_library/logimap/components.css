@@ -1,0 +1,123 @@
+/* ═══════════════════════════════════════════════════════════════
+   components.css — Design System Component Definitions
+   Auto-extracted from preview/component-*.html
+   DO NOT EDIT MANUALLY — regenerate via extract-components-css.mjs
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Button ────────────────────────────────────────────────── */
+/* @anatomy
+   <span class="label">变体</span> <button class="btn primary" data-evidence-sample="primary">创建节点</button> <button class="btn secondary" data-evidence-sample="secondary">取消</button> <button class="btn danger" data-evidence-sample="danger">删除</button> <button class="btn ghost" data-evidence-sample="ghost">保存</button>
+*/
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:var(--space-2); border:none; cursor:pointer; font-family:inherit; font-weight:500; white-space:nowrap; border-radius:var(--radius-md); height:var(--size-button-md); min-width:var(--size-button-md); padding:0 var(--space-4); font-size:var(--font-size-body); transition:background .15s,border-color .15s,filter .15s; }
+.btn:focus-visible { outline:2px solid var(--ring); outline-offset:2px; }
+.btn.primary { background:var(--primary); color:var(--primary-foreground); }
+.btn.primary:not(:disabled):hover { background:var(--primary-hover); }
+.btn.secondary { background:var(--surface); color:var(--foreground); border:1px solid var(--border); }
+.btn.secondary:not(:disabled):hover { background:var(--muted); }
+.btn.danger { background:var(--color-error); color:var(--primary-foreground); }
+.btn.danger:not(:disabled):hover { filter:brightness(.92); }
+.btn.ghost { background:transparent; color:var(--muted-foreground); }
+.btn.ghost:not(:disabled):hover { background:var(--muted); }
+.btn.sm { height:var(--size-button-sm); min-width:var(--size-button-sm); padding:0 var(--space-3); font-size:var(--font-size-caption); }
+.btn:disabled { opacity:.5; cursor:not-allowed; }
+
+/* ── Card ──────────────────────────────────────────────────── */
+/* @anatomy
+   <span class="label">默认</span> <div class="card content-card"> <div class="card-title">系统信息
+*/
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-1); padding: var(--space-4); }
+.content-card { flex: 1; }
+.content-card .card-title { font-size: var(--font-size-h4); font-weight: var(--font-weight-h4); color: var(--foreground); margin-bottom: var(--space-1); }
+.content-card .card-body { font-size: var(--font-size-body); color: var(--muted-foreground); }
+.clickable-card { flex: 1; display: flex; align-items: center; gap: var(--space-3); text-decoration: none; color: var(--foreground); transition: box-shadow .15s, border-color .15s; }
+.clickable-card:hover { box-shadow: var(--shadow-3); border-color: var(--input-border); }
+.clickable-card img { flex-shrink: 0; display: block; }
+.card-main { min-width: 0; }
+.clickable-card .card-title { font-size: var(--font-size-h4); font-weight: var(--font-weight-h4); white-space: nowrap; }
+.clickable-card .card-meta { font-size: var(--font-size-caption); color: var(--muted-foreground); }
+.node-card { width: 220px; flex-shrink: 0; border-left: 3px solid var(--color-success); }
+.node-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-2); }
+.node-card .card-title { font-size: var(--font-size-h4); font-weight: var(--font-weight-h4); white-space: nowrap; }
+.node-meta { font-size: var(--font-size-caption); color: var(--muted-foreground); }
+.badge { font-size: var(--font-size-caption); font-weight: var(--font-weight-caption); padding: 2px var(--space-2); border-radius: var(--radius-full); white-space: nowrap; line-height: 1.4; }
+.badge.approved { background: var(--color-success); color: var(--on-primary); }
+
+/* ── Input ─────────────────────────────────────────────────── */
+/* @anatomy
+   <span class="label">默认</span> <div class="field"><input class="input" type="text" placeholder="节点名称" data-evidence-sample="default-text-input">
+*/
+.input{display:flex;align-items:center;gap:var(--space-2);height:var(--size-input);width:100%;padding:0 var(--space-3);background:var(--muted);border:1px solid var(--border);border-radius:var(--radius-md);color:var(--foreground);font-size:var(--font-size-body);font-family:var(--font-body);box-sizing:border-box;transition:border-color .15s,box-shadow .15s;}
+.input:focus{border-color:var(--primary);box-shadow:0 0 0 2px var(--ring);background:var(--surface);}
+.input.is-error{border-color:var(--color-error);}
+.input::placeholder{color:var(--muted-foreground);}
+.input-icon{width:var(--size-icon-sm);height:var(--size-icon-sm);flex-shrink:0;opacity:.7;}
+.input-inner{flex:1;min-width:0;border:none;background:transparent;outline:none;color:var(--foreground);font-size:var(--font-size-body);font-family:var(--font-body);padding:0;}
+.input-inner::placeholder{color:var(--muted-foreground);}
+.input-error{font-size:var(--font-size-caption);color:var(--color-error);}
+
+/* ── Modal ─────────────────────────────────────────────────── */
+/* @anatomy
+   <div class="stage" data-evidence-sample="default-node-editor"> <div class="modal-overlay"></div>
+*/
+/* Component definitions - extracted to components.css by deterministic script */
+.modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,.48); backdrop-filter: blur(2px); z-index: 0; }
+.modal-panel { position: relative; z-index: 1; width: 100%; max-width: 480px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-4); padding: var(--space-6); box-sizing: border-box; }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-5); }
+.modal-title { font-size: var(--font-size-h3); font-weight: var(--font-weight-h3); line-height: var(--line-height-h3); color: var(--foreground); }
+.modal-close { display: inline-flex; align-items: center; justify-content: center; width: var(--size-icon-lg); height: var(--size-icon-lg); flex-shrink: 0; border: none; background: transparent; color: var(--muted-foreground); border-radius: var(--radius-sm); cursor: pointer; transition: background .15s, color .15s; }
+.modal-close:hover { background: var(--muted); color: var(--foreground); }
+.modal-body { margin-bottom: var(--space-6); }
+.field-label { display: block; font-size: var(--font-size-caption); font-weight: var(--font-weight-caption); color: var(--muted-foreground); margin-bottom: var(--space-2); }
+.modal-input { width: 100%; height: var(--size-input); padding: 0 var(--space-3); background: var(--surface); border: 1px solid var(--input-border); border-radius: var(--radius-sm); color: var(--foreground); font-size: var(--font-size-body); font-family: inherit; box-sizing: border-box; transition: border-color .15s; }
+.modal-input:focus { outline: 2px solid var(--ring); outline-offset: 1px; border-color: var(--ring); }
+.modal-footer { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-3); }
+.btn { display: inline-flex; align-items: center; justify-content: center; height: var(--size-button-md); min-width: var(--size-button-md); padding: 0 var(--space-5); border-radius: var(--radius-md); font-size: var(--font-size-body); font-weight: var(--font-weight-h4); font-family: inherit; cursor: pointer; white-space: nowrap; transition: background .15s, border-color .15s; }
+.btn-secondary { background: var(--surface); color: var(--foreground); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--muted); border-color: var(--input-border); }
+.btn-primary { background: var(--primary); color: var(--on-primary); border: 1px solid var(--primary); }
+.btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+
+/* ── Navigation ────────────────────────────────────────────── */
+/* @anatomy
+   <span class="label">侧边栏</span>
+*/
+.nav { width:240px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:var(--space-3); display:flex; flex-direction:column; gap:var(--space-1); }
+.nav-brand { display:flex; align-items:center; gap:var(--space-2); padding:var(--space-2) var(--space-3); font-weight:var(--font-weight-h4); font-size:var(--font-size-h4); color:var(--foreground); }
+.nav-search { display:flex; align-items:center; gap:var(--space-2); padding:0 var(--space-3); height:32px; border-radius:var(--radius-md); background:var(--muted); color:var(--muted-foreground); font-size:var(--font-size-caption); text-decoration:none; white-space:nowrap; transition:background .15s; }
+.nav-search:hover { background:var(--surface-sunken); }
+.nav-item { display:flex; align-items:center; gap:var(--space-2); padding:0 var(--space-3); height:32px; border-radius:var(--radius-md); color:var(--muted-foreground); text-decoration:none; white-space:nowrap; transition:background .15s; min-width:32px; }
+.nav-item img { width:var(--size-icon-sm); height:var(--size-icon-sm); flex-shrink:0; opacity:.8; }
+.nav-item:hover { background:var(--muted); }
+.nav-item.active { background:var(--logimap-primary-50); color:var(--primary); font-weight:var(--font-weight-h4); }
+.nav-item.active img { opacity:1; }
+.nav-badge { margin-left:auto; min-width:18px; height:18px; padding:0 5px; border-radius:var(--radius-full); background:var(--primary); color:var(--on-primary); font-size:11px; display:inline-flex; align-items:center; justify-content:center; font-weight:var(--font-weight-caption); flex-shrink:0; }
+.nav-children { display:flex; flex-direction:column; gap:var(--space-1); margin-left:24px; }
+.nav-children .nav-item { font-size:var(--font-size-caption); }
+
+/* ── Table ─────────────────────────────────────────────────── */
+/* @anatomy
+   <div class="row table-row" data-evidence-sample="default-node-list"> <span class="label">节点列表</span> <table class="lm-table"> <thead> <tr> <th>节点名称</th><th>状态</th><th>优先级</th><th>负责人</th><th>更新时间</th> </tr> </thead> <tbody> <tr data-evidence-sample="row-confirmed"> <td class="lm-cell-name">订单结算</td> <td><span class="lm-badge is-success"><svg width="10" height="10"><use href="#i-check"/></svg>已确...
+*/
+.lm-table { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; font-size: var(--font-size-body); }
+  .lm-table thead th { background: var(--color-muted); color: var(--color-text-secondary); font-weight: var(--font-weight-caption); font-size: var(--font-size-caption); text-align: left; padding: var(--space-3) var(--space-4); white-space: nowrap; border-bottom: 1px solid var(--color-border); }
+  .lm-table tbody td { background: var(--color-surface); padding: var(--space-3) var(--space-4); color: var(--color-text-primary); border-bottom: 1px solid var(--color-border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+  .lm-table tbody tr:last-child td { border-bottom: none; }
+  .lm-table tbody tr:hover td { background: var(--color-muted); }
+  .lm-table tbody tr.is-selected td { background: var(--logimap-primary-50); }
+  .lm-cell-name { font-weight: var(--font-weight-h4); color: var(--color-text-primary); }
+  .lm-cell-meta { color: var(--color-text-secondary); font-size: var(--font-size-caption); }
+  .lm-pri { font-size: var(--font-size-caption); color: var(--color-text-secondary); }
+  .lm-pri.is-high { color: var(--color-error); font-weight: var(--font-weight-caption); }
+  .lm-pri.is-mid { color: var(--color-warning); font-weight: var(--font-weight-caption); }
+  .lm-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: var(--radius-full); font-size: var(--font-size-caption); font-weight: var(--font-weight-caption); line-height: 1.4; white-space: nowrap; }
+  .lm-badge::before { content: ""; width: 6px; height: 6px; border-radius: var(--radius-full); flex-shrink: 0; }
+  .lm-badge.is-neutral { background: var(--logimap-neutral-100); color: var(--color-text-secondary); }
+  .lm-badge.is-neutral::before { background: var(--logimap-neutral-400); }
+  .lm-badge.is-success { background: var(--logimap-success-50); color: var(--logimap-success-700); }
+  .lm-badge.is-success::before { background: var(--color-success); }
+  .lm-badge.is-warning { background: var(--logimap-warning-50); color: var(--logimap-warning-700); }
+  .lm-badge.is-warning::before { background: var(--color-warning); }
+  .lm-badge.is-error { background: var(--logimap-error-50); color: var(--logimap-error-700); }
+  .lm-badge.is-error::before { background: var(--color-error); }
+  .lm-owner { display: inline-flex; align-items: center; gap: 6px; color: var(--color-text-primary); }
+  .lm-avatar { width: 20px; height: 20px; border-radius: var(--radius-full); background: var(--logimap-primary-100); color: var(--logimap-primary-700); font-size: 10px; font-weight: var(--font-weight-caption); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }

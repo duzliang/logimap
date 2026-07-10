@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modal Preview - LogiMap</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+/* Page scaffold - NOT extracted */
+body { margin: 0; padding: 12px; background: var(--background); font-family: var(--font-body); color: var(--foreground); }
+.stage { position: relative; display: flex; align-items: center; justify-content: center; height: 340px; background: var(--surface-sunken); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+
+/* @component-css-start */
+/* Component definitions - extracted to components.css by deterministic script */
+.modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,.48); backdrop-filter: blur(2px); z-index: 0; }
+.modal-panel { position: relative; z-index: 1; width: 100%; max-width: 480px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-4); padding: var(--space-6); box-sizing: border-box; }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-5); }
+.modal-title { font-size: var(--font-size-h3); font-weight: var(--font-weight-h3); line-height: var(--line-height-h3); color: var(--foreground); }
+.modal-close { display: inline-flex; align-items: center; justify-content: center; width: var(--size-icon-lg); height: var(--size-icon-lg); flex-shrink: 0; border: none; background: transparent; color: var(--muted-foreground); border-radius: var(--radius-sm); cursor: pointer; transition: background .15s, color .15s; }
+.modal-close:hover { background: var(--muted); color: var(--foreground); }
+.modal-body { margin-bottom: var(--space-6); }
+.field-label { display: block; font-size: var(--font-size-caption); font-weight: var(--font-weight-caption); color: var(--muted-foreground); margin-bottom: var(--space-2); }
+.modal-input { width: 100%; height: var(--size-input); padding: 0 var(--space-3); background: var(--surface); border: 1px solid var(--input-border); border-radius: var(--radius-sm); color: var(--foreground); font-size: var(--font-size-body); font-family: inherit; box-sizing: border-box; transition: border-color .15s; }
+.modal-input:focus { outline: 2px solid var(--ring); outline-offset: 1px; border-color: var(--ring); }
+.modal-footer { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-3); }
+.btn { display: inline-flex; align-items: center; justify-content: center; height: var(--size-button-md); min-width: var(--size-button-md); padding: 0 var(--space-5); border-radius: var(--radius-md); font-size: var(--font-size-body); font-weight: var(--font-weight-h4); font-family: inherit; cursor: pointer; white-space: nowrap; transition: background .15s, border-color .15s; }
+.btn-secondary { background: var(--surface); color: var(--foreground); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--muted); border-color: var(--input-border); }
+.btn-primary { background: var(--primary); color: var(--on-primary); border: 1px solid var(--primary); }
+.btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="stage" data-evidence-sample="default-node-editor">
+  <div class="modal-overlay"></div>
+  <div class="modal-panel">
+    <div class="modal-header">
+      <span class="modal-title">编辑节点</span>
+      <button class="modal-close" aria-label="关闭"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <label class="field-label" for="node-name">节点名称</label>
+      <input class="modal-input" id="node-name" type="text" value="退款申请">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary">取消</button>
+      <button class="btn btn-primary">保存</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

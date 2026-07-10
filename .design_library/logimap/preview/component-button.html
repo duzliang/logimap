@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+body { margin:0; padding:12px; background:var(--background); font-family:var(--font-body); color:var(--foreground); font-size:var(--font-size-body); }
+.row { display:flex; gap:var(--space-2); align-items:center; margin-bottom:var(--space-2); flex-wrap:wrap; }
+.label { width:92px; flex-shrink:0; font-size:var(--font-size-caption); color:var(--muted-foreground); text-transform:uppercase; letter-spacing:.04em; }
+.divider { border:0; border-top:1px solid var(--border); margin:var(--space-3) 0; }
+/* @component-css-start */
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:var(--space-2); border:none; cursor:pointer; font-family:inherit; font-weight:500; white-space:nowrap; border-radius:var(--radius-md); height:var(--size-button-md); min-width:var(--size-button-md); padding:0 var(--space-4); font-size:var(--font-size-body); transition:background .15s,border-color .15s,filter .15s; }
+.btn:focus-visible { outline:2px solid var(--ring); outline-offset:2px; }
+.btn.primary { background:var(--primary); color:var(--primary-foreground); }
+.btn.primary:not(:disabled):hover { background:var(--primary-hover); }
+.btn.secondary { background:var(--surface); color:var(--foreground); border:1px solid var(--border); }
+.btn.secondary:not(:disabled):hover { background:var(--muted); }
+.btn.danger { background:var(--color-error); color:var(--primary-foreground); }
+.btn.danger:not(:disabled):hover { filter:brightness(.92); }
+.btn.ghost { background:transparent; color:var(--muted-foreground); }
+.btn.ghost:not(:disabled):hover { background:var(--muted); }
+.btn.sm { height:var(--size-button-sm); min-width:var(--size-button-sm); padding:0 var(--space-3); font-size:var(--font-size-caption); }
+.btn:disabled { opacity:.5; cursor:not-allowed; }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="row"><span class="label">变体</span>
+  <button class="btn primary" data-evidence-sample="primary">创建节点</button>
+  <button class="btn secondary" data-evidence-sample="secondary">取消</button>
+  <button class="btn danger" data-evidence-sample="danger">删除</button>
+  <button class="btn ghost" data-evidence-sample="ghost">保存</button>
+</div>
+<hr class="divider">
+<div class="row"><span class="label">小尺寸</span>
+  <button class="btn primary sm">AI 生成</button>
+  <button class="btn secondary sm">提交评审</button>
+  <button class="btn danger sm">删除</button>
+</div>
+<div class="row"><span class="label">禁用</span>
+  <button class="btn primary" disabled>提交评审</button>
+  <button class="btn secondary" disabled>取消</button>
+</div>
+</body>
+</html>

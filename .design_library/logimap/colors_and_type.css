@@ -1,0 +1,197 @@
+/* @group-priority: primary, success, info, warning, error */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* primary */
+  --logimap-primary-50: #EEF2FF; /* AI-generated */
+  --logimap-primary-100: #E0E7FF; /* AI-generated */
+  --logimap-primary-200: #C7D2FE; /* AI-generated */
+  --logimap-primary-300: #A5B4FC; /* AI-generated */
+  --logimap-primary-400: #818CF8; /* AI-generated */
+  --logimap-primary-500: #6366F1; /* AI-generated */
+  --logimap-primary-600: #4F46E5; /* @primary */ /* AI-generated */
+  --logimap-primary-700: #4338CA; /* AI-generated */
+  --logimap-primary-800: #3730A3; /* AI-generated */
+  --logimap-primary-900: #312E81; /* AI-generated */
+  --primary: var(--logimap-primary-600); /* AI-generated */
+  --primary-foreground: #FFFFFF; /* AI-generated */
+  --primary-hover: var(--logimap-primary-700); /* AI-generated */
+  /* neutral */
+  --logimap-neutral-50: #FAFAF9; /* AI-generated */
+  --logimap-neutral-100: #F5F5F4; /* AI-generated */
+  --logimap-neutral-200: #E7E5E4; /* AI-generated */
+  --logimap-neutral-300: #D6D3D1; /* AI-generated */
+  --logimap-neutral-400: #A8A29E; /* AI-generated */
+  --logimap-neutral-500: #78716C; /* AI-generated */
+  --logimap-neutral-600: #57534E; /* @primary */ /* AI-generated */
+  --logimap-neutral-700: #44403C; /* AI-generated */
+  --logimap-neutral-800: #292524; /* AI-generated */
+  --logimap-neutral-900: #1C1917; /* AI-generated */
+  /* success */
+  --logimap-success-50: #ECFDF5; /* AI-generated */
+  --logimap-success-100: #D1FAE5; /* AI-generated */
+  --logimap-success-200: #A7F3D0; /* AI-generated */
+  --logimap-success-300: #6EE7B7; /* AI-generated */
+  --logimap-success-400: #34D399; /* AI-generated */
+  --logimap-success-500: #10B981; /* AI-generated */
+  --logimap-success-600: #059669; /* @primary */ /* AI-generated */
+  --logimap-success-700: #047857; /* AI-generated */
+  --logimap-success-800: #065F46; /* AI-generated */
+  --logimap-success-900: #064E3B; /* AI-generated */
+  /* warning */
+  --logimap-warning-50: #FFFBEB; /* AI-generated */
+  --logimap-warning-100: #FEF3C7; /* AI-generated */
+  --logimap-warning-200: #FDE68A; /* AI-generated */
+  --logimap-warning-300: #FCD34D; /* AI-generated */
+  --logimap-warning-400: #FBBF24; /* AI-generated */
+  --logimap-warning-500: #F59E0B; /* AI-generated */
+  --logimap-warning-600: #D97706; /* @primary */ /* AI-generated */
+  --logimap-warning-700: #B45309; /* AI-generated */
+  --logimap-warning-800: #92400E; /* AI-generated */
+  --logimap-warning-900: #78350F; /* AI-generated */
+  /* error */
+  --logimap-error-50: #FFF1F2; /* AI-generated */
+  --logimap-error-100: #FFE4E6; /* AI-generated */
+  --logimap-error-200: #FECDD3; /* AI-generated */
+  --logimap-error-300: #FDA4AF; /* AI-generated */
+  --logimap-error-400: #FB7185; /* AI-generated */
+  --logimap-error-500: #F43F5E; /* AI-generated */
+  --logimap-error-600: #E11D48; /* @primary */ /* AI-generated */
+  --logimap-error-700: #BE123C; /* AI-generated */
+  --logimap-error-800: #9F1239; /* AI-generated */
+  --logimap-error-900: #881337; /* AI-generated */
+  /* info */
+  --logimap-info-50: #F0F9FF; /* AI-generated */
+  --logimap-info-100: #E0F2FE; /* AI-generated */
+  --logimap-info-200: #BAE6FD; /* AI-generated */
+  --logimap-info-300: #7DD3FC; /* AI-generated */
+  --logimap-info-400: #38BDF8; /* AI-generated */
+  --logimap-info-500: #0EA5E9; /* AI-generated */
+  --logimap-info-600: #0284C7; /* @primary */ /* AI-generated */
+  --logimap-info-700: #0369A1; /* AI-generated */
+  --logimap-info-800: #075985; /* AI-generated */
+  --logimap-info-900: #0C4A6E; /* AI-generated */
+  /* text */
+  --foreground: var(--logimap-neutral-900); /* AI-generated */
+  --muted-foreground: var(--logimap-neutral-500); /* AI-generated */
+  --subtle-foreground: var(--logimap-neutral-400); /* AI-generated */
+  --on-primary: #FFFFFF; /* AI-generated */
+  /* surface */
+  --background: var(--logimap-neutral-50); /* AI-generated */
+  --surface: #FFFFFF; /* AI-generated */
+  --surface-elevated: #FFFFFF; /* AI-generated */
+  --surface-sunken: var(--logimap-neutral-100); /* AI-generated */
+  --card: #FFFFFF; /* AI-generated */
+  --popover: #FFFFFF; /* AI-generated */
+  --muted: var(--logimap-neutral-100); /* AI-generated */
+  --border: var(--logimap-neutral-200); /* AI-generated */
+  --ring: var(--logimap-primary-500); /* AI-generated */
+  --input-border: var(--logimap-neutral-300); /* AI-generated */
+  /* === Typography === */
+  --font-display: 'Inter', sans-serif; /* AI-generated */
+  --font-heading: 'Inter', sans-serif; /* AI-generated */
+  --font-body: 'Inter', sans-serif; /* AI-generated */
+  --font-mono: 'JetBrains Mono', monospace; /* AI-generated */
+  --font-size-display: 32px; /* AI-generated */
+  --font-size-h1: 24px; /* AI-generated */
+  --font-size-h2: 20px; /* AI-generated */
+  --font-size-h3: 17px; /* AI-generated */
+  --font-size-h4: 15px; /* AI-generated */
+  --font-size-body: 14px; /* AI-generated */
+  --font-size-lead: 16px; /* AI-generated */
+  --font-size-caption: 12px; /* AI-generated */
+  --font-size-mono: 13px; /* AI-generated */
+  --font-weight-display: 700; /* AI-generated */
+  --font-weight-h1: 700; /* AI-generated */
+  --font-weight-h2: 600; /* AI-generated */
+  --font-weight-h3: 600; /* AI-generated */
+  --font-weight-h4: 600; /* AI-generated */
+  --font-weight-body: 400; /* AI-generated */
+  --font-weight-lead: 400; /* AI-generated */
+  --font-weight-caption: 500; /* AI-generated */
+  --font-weight-mono: 400; /* AI-generated */
+  --line-height-display: 1.15; /* AI-generated */
+  --line-height-h1: 1.25; /* AI-generated */
+  --line-height-h2: 1.3; /* AI-generated */
+  --line-height-h3: 1.4; /* AI-generated */
+  --line-height-h4: 1.45; /* AI-generated */
+  --line-height-body: 1.55; /* AI-generated */
+  --line-height-lead: 1.6; /* AI-generated */
+  --line-height-caption: 1.4; /* AI-generated */
+  --line-height-mono: 1.55; /* AI-generated */
+  /* === Spacing === */
+  --space-1: 4px; /* AI-generated */
+  --space-2: 8px; /* AI-generated */
+  --space-3: 12px; /* AI-generated */
+  --space-4: 16px; /* AI-generated */
+  --space-5: 20px; /* AI-generated */
+  --space-6: 24px; /* AI-generated */
+  --space-8: 32px; /* AI-generated */
+  --space-12: 48px; /* AI-generated */
+  --space-16: 64px; /* AI-generated */
+  /* === Sizing === */
+  --size-icon-sm: 16px; /* AI-generated */
+  --size-icon-md: 20px; /* AI-generated */
+  --size-icon-lg: 24px; /* AI-generated */
+  --size-button-sm: 32px; /* AI-generated */
+  --size-button-md: 36px; /* AI-generated */
+  --size-button-lg: 40px; /* AI-generated */
+  --size-input: 36px; /* AI-generated */
+  /* === Radius === */
+  --radius-xs: 4px; /* AI-generated */
+  --radius-sm: 6px; /* AI-generated */
+  --radius-md: 8px; /* AI-generated */
+  --radius-lg: 12px; /* AI-generated */
+  --radius-xl: 16px; /* AI-generated */
+  --radius-full: 9999px; /* AI-generated */
+  /* === Shadows === */
+  --shadow-1: 0 1px 2px rgba(28,25,23,.05); /* Card */
+  --shadow-2: 0 2px 6px -1px rgba(28,25,23,.08); /* Card Hover */
+  --shadow-3: 0 6px 16px -4px rgba(28,25,23,.12); /* Float */
+  --shadow-4: 0 14px 32px -8px rgba(28,25,23,.18); /* Modal */
+  --shadow-5: 0 24px 48px -12px rgba(28,25,23,.24); /* Overlay */
+  /* === Portable Aliases === */
+  --color-primary: var(--primary); /* AI-generated */
+  --color-success: var(--logimap-success-600); /* AI-generated */
+  --color-warning: var(--logimap-warning-600); /* AI-generated */
+  --color-error: var(--logimap-error-600); /* AI-generated */
+  --color-info: var(--logimap-info-600); /* AI-generated */
+  --color-bg: var(--background); /* AI-generated */
+  --color-bg-elevated: var(--surface); /* AI-generated */
+  --color-bg-sunken: var(--surface-sunken); /* AI-generated */
+  --color-text-primary: var(--foreground); /* AI-generated */
+  --color-text-secondary: var(--muted-foreground); /* AI-generated */
+  --color-text-tertiary: var(--subtle-foreground); /* AI-generated */
+  --color-border: var(--border); /* AI-generated */
+  --color-surface: var(--surface); /* AI-generated */
+  --color-card: var(--card); /* AI-generated */
+  --color-muted: var(--muted); /* AI-generated */
+  --color-ring: var(--ring); /* AI-generated */
+  --type-display: var(--font-size-display); /* AI-generated */
+  --type-h1: var(--font-size-h1); /* AI-generated */
+  --type-body: var(--font-size-body); /* AI-generated */
+  --type-mono: var(--font-size-mono); /* AI-generated */
+}
+
+.dark {
+  --background: #0C0A09; /* AI-generated */
+  --surface: #1C1917; /* AI-generated */
+  --surface-elevated: #292524; /* AI-generated */
+  --surface-sunken: #0C0A09; /* AI-generated */
+  --card: #1C1917; /* AI-generated */
+  --popover: #292524; /* AI-generated */
+  --muted: #292524; /* AI-generated */
+  --border: #44403C; /* AI-generated */
+  --input-border: #57534E; /* AI-generated */
+  --foreground: #FAFAF9; /* AI-generated */
+  --muted-foreground: #A8A29E; /* AI-generated */
+  --subtle-foreground: #78716C; /* AI-generated */
+  --primary: var(--logimap-primary-500); /* AI-generated */
+  --primary-hover: var(--logimap-primary-600); /* AI-generated */
+  --ring: var(--logimap-primary-400); /* AI-generated */
+  --shadow-1: 0 1px 2px rgba(0,0,0,.30); /* Card */
+  --shadow-2: 0 2px 6px -1px rgba(0,0,0,.40); /* Card Hover */
+  --shadow-3: 0 6px 16px -4px rgba(0,0,0,.50); /* Float */
+  --shadow-4: 0 14px 32px -8px rgba(0,0,0,.60); /* Modal */
+  --shadow-5: 0 24px 48px -12px rgba(0,0,0,.70); /* Overlay */
+}

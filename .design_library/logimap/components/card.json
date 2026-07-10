@@ -1,0 +1,29 @@
+{
+  "slug": "card",
+  "schemaVersion": 2,
+  "name": "Card",
+  "category": "Containers",
+  "sourceKind": "from-scratch",
+  "confidence": "medium",
+  "semanticTypeCandidates": [
+    {"candidate": "content-card", "evidence": "System/module list cards and stat cards on dashboard"},
+    {"candidate": "node-card", "evidence": "LogicNode graph node card with status badge and branch/edge counts"},
+    {"candidate": "clickable-card", "evidence": "Navigation cards for systems that lift on hover"}
+  ],
+  "variantDimensions": [
+    {"dimension": "variant", "values": ["default", "clickable", "selected"]},
+    {"dimension": "state", "values": ["default", "hover", "selected"]},
+    {"dimension": "status", "values": ["none", "draft", "review", "approved", "deprecated"]}
+  ],
+  "representativeVariants": [
+    {"whySelected": "Default content card - dashboard stats / system info", "traits": {"background": "var(--card)", "border": "1px solid var(--border)", "radius": "var(--radius-lg)", "shadow": "var(--shadow-1)", "padding": "var(--space-4)"}, "childrenDigest": "title + body"},
+    {"whySelected": "Clickable system card - lifts on hover", "traits": {"variant": "clickable", "background": "var(--card)", "border": "1px solid var(--border)", "hoverShadow": "var(--shadow-3)", "hoverBorder": "var(--border-strong)"}, "childrenDigest": "icon + title + meta"},
+    {"whySelected": "Node card with approved status", "traits": {"variant": "node", "width": "220px", "borderColor": "var(--color-success-border)", "badge": "已确认"}, "childrenDigest": "name + status badge + summary + branch/edge counts"}
+  ],
+  "anatomy": ["header (title + optional badge)", "body content", "optional footer meta"],
+  "structurePatterns": ["background var(--card)", "rounded var(--radius-lg)", "border 1px solid var(--border)", "shadow var(--shadow-1)", "padding var(--space-4)"],
+  "usageHints": {"priorityHint": "high", "typicalCount": "4-12 per dashboard view", "copyExamples": ["订单系统", "退款模块", "退款申请", "已确认", "3 分支"]},
+  "doNotInvent": ["collapsible accordion behavior", "drag handle", "image header"],
+  "unknowns": ["exact node-card width on mobile"],
+  "keyInsightSeed": "Layered background tints over heavy shadows; clickable cards lift subtly on hover"
+}

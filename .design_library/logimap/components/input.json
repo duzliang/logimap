@@ -1,0 +1,30 @@
+{
+  "slug": "input",
+  "schemaVersion": 2,
+  "name": "Input",
+  "category": "Forms",
+  "sourceKind": "from-scratch",
+  "confidence": "medium",
+  "semanticTypeCandidates": [
+    {"candidate": "text-input", "evidence": "Node name, summary, codeRef fields in node editor"},
+    {"candidate": "search-input", "evidence": "Global search box with leading search icon in topbar"},
+    {"candidate": "form-input", "evidence": "System/module creation form fields"}
+  ],
+  "variantDimensions": [
+    {"dimension": "variant", "values": ["default", "search", "error"]},
+    {"dimension": "state", "values": ["default", "focus", "error", "disabled"]},
+    {"dimension": "size", "values": ["md"]}
+  ],
+  "representativeVariants": [
+    {"whySelected": "Default text input - node editor fields", "traits": {"background": "var(--muted)", "border": "1px solid var(--border)", "color": "var(--foreground)", "radius": "var(--radius-md)", "height": "var(--size-input-md)", "placeholderColor": "var(--muted-foreground)"}, "childrenDigest": "placeholder or value"},
+    {"whySelected": "Focused state - violet ring", "traits": {"variant": "focus", "border": "1px solid var(--primary)", "ring": "2px var(--ring)"}, "childrenDigest": "value"},
+    {"whySelected": "Error state - validation", "traits": {"variant": "error", "border": "1px solid var(--error)"}, "childrenDigest": "value + error text"},
+    {"whySelected": "Search input - global search", "traits": {"variant": "search", "leadingIcon": "search", "placeholder": "搜索节点、模块、系统…"}, "childrenDigest": "search icon + placeholder"}
+  ],
+  "anatomy": ["leading icon (search variant)", "text value / placeholder", "optional trailing clear button"],
+  "structurePatterns": ["flex height var(--size-input-md) width full", "rounded var(--radius-md)", "border 1px solid var(--border)", "background var(--muted)", "padding-x var(--space-3)", "focus ring 2px var(--ring) border var(--primary)"],
+  "usageHints": {"priorityHint": "high", "typicalCount": "2-6 per form", "copyExamples": ["节点名称", "搜索节点、模块、系统…", "代码关联", "退款申请"]},
+  "doNotInvent": ["textarea multiline", "select dropdown", "password reveal toggle"],
+  "unknowns": ["exact focus ring offset"],
+  "keyInsightSeed": "Sunken inset background, violet focus ring, 36px height matching buttons"
+}

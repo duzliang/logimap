@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+body{margin:0;padding:12px;background:var(--background);font-family:var(--font-body);color:var(--foreground);}
+.row{display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;}
+.label{width:92px;flex-shrink:0;padding-top:8px;font-size:var(--font-size-caption);color:var(--muted-foreground);text-transform:uppercase;letter-spacing:.04em;}
+.field{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;}
+.divider{border:none;border-top:1px solid var(--border);margin:8px 0;}
+/* @component-css-start */
+.input{display:flex;align-items:center;gap:var(--space-2);height:var(--size-input);width:100%;padding:0 var(--space-3);background:var(--muted);border:1px solid var(--border);border-radius:var(--radius-md);color:var(--foreground);font-size:var(--font-size-body);font-family:var(--font-body);box-sizing:border-box;transition:border-color .15s,box-shadow .15s;}
+.input:focus{border-color:var(--primary);box-shadow:0 0 0 2px var(--ring);background:var(--surface);}
+.input.is-error{border-color:var(--color-error);}
+.input::placeholder{color:var(--muted-foreground);}
+.input-icon{width:var(--size-icon-sm);height:var(--size-icon-sm);flex-shrink:0;opacity:.7;}
+.input-inner{flex:1;min-width:0;border:none;background:transparent;outline:none;color:var(--foreground);font-size:var(--font-size-body);font-family:var(--font-body);padding:0;}
+.input-inner::placeholder{color:var(--muted-foreground);}
+.input-error{font-size:var(--font-size-caption);color:var(--color-error);}
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="row">
+  <span class="label">默认</span>
+  <div class="field"><input class="input" type="text" placeholder="节点名称" data-evidence-sample="default-text-input"></div>
+</div>
+<div class="row">
+  <span class="label">聚焦</span>
+  <div class="field"><input class="input" type="text" value="退款申请" autofocus data-evidence-sample="focus-ring"></div>
+</div>
+<div class="row">
+  <span class="label">错误</span>
+  <div class="field"><input class="input is-error" type="text" value="代码关联" data-evidence-sample="error-state"><span class="input-error">代码关联格式不正确</span></div>
+</div>
+<hr class="divider">
+<div class="row">
+  <span class="label">搜索</span>
+  <div class="field"><div class="input" data-evidence-sample="search-input"><img class="input-icon" src="https://cdn.jsdelivr.net/npm/lucide-static@1.8.0/icons/search.svg" alt="search"><input class="input-inner" type="text" placeholder="搜索节点、模块、系统…"></div></div>
+</div>
+</body>
+</html>

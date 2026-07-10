@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "tokenSource": "css.json",
+  "uikitPlan": null,
+  "recommendedReadOrder": [
+    "SKILL.md",
+    "css.json",
+    "components/index.json",
+    "components.css",
+    "preview/component-button.html",
+    "preview/component-card.html",
+    "preview/component-input.html"
+  ],
+  "coreComponents": ["button", "card", "input"],
+  "supportComponents": ["table", "navigation", "modal"]
+}

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Card</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+body { margin: 0; padding: 12px; background: var(--background); font-family: var(--font-body); color: var(--foreground); }
+.row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.label { width: 92px; flex-shrink: 0; font-size: var(--font-size-caption); color: var(--muted-foreground); text-transform: uppercase; letter-spacing: .04em; }
+.divider { border: none; border-top: 1px solid var(--border); margin: 8px 0; }
+/* @component-css-start */
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-1); padding: var(--space-4); }
+.content-card { flex: 1; }
+.content-card .card-title { font-size: var(--font-size-h4); font-weight: var(--font-weight-h4); color: var(--foreground); margin-bottom: var(--space-1); }
+.content-card .card-body { font-size: var(--font-size-body); color: var(--muted-foreground); }
+.clickable-card { flex: 1; display: flex; align-items: center; gap: var(--space-3); text-decoration: none; color: var(--foreground); transition: box-shadow .15s, border-color .15s; }
+.clickable-card:hover { box-shadow: var(--shadow-3); border-color: var(--input-border); }
+.clickable-card img { flex-shrink: 0; display: block; }
+.card-main { min-width: 0; }
+.clickable-card .card-title { font-size: var(--font-size-h4); font-weight: var(--font-weight-h4); white-space: nowrap; }
+.clickable-card .card-meta { font-size: var(--font-size-caption); color: var(--muted-foreground); }
+.node-card { width: 220px; flex-shrink: 0; border-left: 3px solid var(--color-success); }
+.node-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-2); }
+.node-card .card-title { font-size: var(--font-size-h4); font-weight: var(--font-weight-h4); white-space: nowrap; }
+.node-meta { font-size: var(--font-size-caption); color: var(--muted-foreground); }
+.badge { font-size: var(--font-size-caption); font-weight: var(--font-weight-caption); padding: 2px var(--space-2); border-radius: var(--radius-full); white-space: nowrap; line-height: 1.4; }
+.badge.approved { background: var(--color-success); color: var(--on-primary); }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="row">
+  <span class="label">默认</span>
+  <div class="card content-card">
+    <div class="card-title">系统信息</div>
+    <div class="card-body">退款模块</div>
+  </div>
+</div>
+<div class="row">
+  <span class="label">可点击</span>
+  <a class="card clickable-card" href="#">
+    <img src="https://cdn.jsdelivr.net/npm/lucide-static@1.8.0/icons/layers.svg" width="20" height="20" alt="">
+    <div class="card-main">
+      <div class="card-title">订单系统</div>
+      <div class="card-meta">草稿</div>
+    </div>
+  </a>
+</div>
+<hr class="divider">
+<div class="row">
+  <span class="label">节点</span>
+  <div class="card node-card">
+    <div class="node-head">
+      <div class="card-title">退款申请</div>
+      <span class="badge approved">已确认</span>
+    </div>
+    <div class="node-meta">3 分支 / 2 边界</div>
+  </div>
+</div>
+</body>
+</html>

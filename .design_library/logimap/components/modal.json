@@ -1,0 +1,28 @@
+{
+  "slug": "modal",
+  "schemaVersion": 2,
+  "name": "Modal",
+  "category": "Overlays",
+  "sourceKind": "from-scratch",
+  "confidence": "medium",
+  "semanticTypeCandidates": [
+    {"candidate": "dialog", "evidence": "Node editor dialog with form fields and AI generate button"},
+    {"candidate": "confirm-dialog", "evidence": "Confirm rollback / delete / status change"},
+    {"candidate": "settings-dialog", "evidence": "Team settings, member management"}
+  ],
+  "variantDimensions": [
+    {"dimension": "variant", "values": ["default", "confirm"]},
+    {"dimension": "state", "values": ["open", "closed"]},
+    {"dimension": "size", "values": ["md", "lg"]}
+  ],
+  "representativeVariants": [
+    {"whySelected": "Default dialog - node editor", "traits": {"overlay": "var(--color-bg-overlay)", "panelBackground": "var(--surface)", "border": "1px solid var(--border)", "radius": "var(--radius-xl)", "shadow": "var(--shadow-4)", "maxWidth": "560px", "padding": "var(--space-6)"}, "childrenDigest": "header title + close + form body + footer actions"},
+    {"whySelected": "Confirm dialog - rollback warning", "traits": {"variant": "confirm", "maxWidth": "420px"}, "childrenDigest": "warning icon + title + message + cancel/confirm buttons"}
+  ],
+  "anatomy": ["overlay (48% black + 2px blur)", "panel (elevated bg, xl radius, shadow-4)", "header (title + close button)", "body content", "footer (action buttons)"],
+  "structurePatterns": ["overlay fixed inset-0 background var(--color-bg-overlay) backdrop-blur 2px", "panel fixed centered max-width 560px", "background var(--surface) border var(--border) rounded var(--radius-xl) shadow var(--shadow-4)"],
+  "usageHints": {"priorityHint": "medium", "typicalCount": "1 open at a time", "copyExamples": ["编辑节点", "确认回滚", "提交评审", "取消", "保存"]},
+  "doNotInvent": ["side sheet/drawer variant", "full-screen modal", "nested modals"],
+  "unknowns": ["exact overlay opacity in dark mode"],
+  "keyInsightSeed": "48% black overlay with 2px blur; centered panel with soft shadow; used for node editor and confirmations"
+}

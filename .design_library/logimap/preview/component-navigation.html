@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Navigation · LogiMap</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+body { margin:0; padding:12px; background:var(--background); font-family:var(--font-body); color:var(--foreground); font-size:var(--font-size-body); }
+.row { display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap; }
+.label { font-size:var(--font-size-caption); color:var(--muted-foreground); text-transform:uppercase; letter-spacing:.04em; width:92px; flex-shrink:0; }
+.divider { border:none; border-top:1px solid var(--border); margin:8px 0; width:100%; }
+/* @component-css-start */
+.nav { width:240px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:var(--space-3); display:flex; flex-direction:column; gap:var(--space-1); }
+.nav-brand { display:flex; align-items:center; gap:var(--space-2); padding:var(--space-2) var(--space-3); font-weight:var(--font-weight-h4); font-size:var(--font-size-h4); color:var(--foreground); }
+.nav-search { display:flex; align-items:center; gap:var(--space-2); padding:0 var(--space-3); height:32px; border-radius:var(--radius-md); background:var(--muted); color:var(--muted-foreground); font-size:var(--font-size-caption); text-decoration:none; white-space:nowrap; transition:background .15s; }
+.nav-search:hover { background:var(--surface-sunken); }
+.nav-item { display:flex; align-items:center; gap:var(--space-2); padding:0 var(--space-3); height:32px; border-radius:var(--radius-md); color:var(--muted-foreground); text-decoration:none; white-space:nowrap; transition:background .15s; min-width:32px; }
+.nav-item img { width:var(--size-icon-sm); height:var(--size-icon-sm); flex-shrink:0; opacity:.8; }
+.nav-item:hover { background:var(--muted); }
+.nav-item.active { background:var(--logimap-primary-50); color:var(--primary); font-weight:var(--font-weight-h4); }
+.nav-item.active img { opacity:1; }
+.nav-badge { margin-left:auto; min-width:18px; height:18px; padding:0 5px; border-radius:var(--radius-full); background:var(--primary); color:var(--on-primary); font-size:11px; display:inline-flex; align-items:center; justify-content:center; font-weight:var(--font-weight-caption); flex-shrink:0; }
+.nav-children { display:flex; flex-direction:column; gap:var(--space-1); margin-left:24px; }
+.nav-children .nav-item { font-size:var(--font-size-caption); }
+/* @component-css-end */
+</style>
+</head>
+<body>
+<div class="row"><span class="label">侧边栏</span></div>
+<div class="row">
+  <nav class="nav">
+    <div class="nav-brand"><img src="https://cdn.jsdelivr.net/npm/lucide-static@1.8.0/icons/boxes.svg" width="16" height="16" alt="logo">LogiMap</div>
+    <a class="nav-search" href="#"><img src="https://cdn.jsdelivr.net/npm/lucide-static@1.8.0/icons/search.svg" width="16" height="16" alt="search">全局搜索</a>
+    <a class="nav-item" href="#"><img src="https://cdn.jsdelivr.net/npm/lucide-static@1.8.0/icons/layout-dashboard.svg" width="16" height="16" alt="dashboard">仪表盘</a>
+    <a class="nav-item active" href="#" data-evidence-sample="active-sidebar-item"><img src="https://cdn.jsdelivr.net/npm/lucide-static@1.8.0/icons/package.svg" width="16" height="16" alt="orders">订单系统<span class="nav-badge">12</span></a>
+    <div class="nav-children">
+      <a class="nav-item" href="#"><img src="https://cdn.jsdelivr.net/npm/lucide-static@1.8.0/icons/rotate-ccw.svg" width="16" height="16" alt="refund">退款模块</a>
+      <a class="nav-item" href="#"><img src="https://cdn.jsdelivr.net/npm/lucide-static@1.8.0/icons/receipt.svg" width="16" height="16" alt="settlement">结算模块</a>
+    </div>
+    <a class="nav-item" href="#"><img src="https://cdn.jsdelivr.net/npm/lucide-static@1.8.0/icons/users.svg" width="16" height="16" alt="members">会员系统</a>
+  </nav>
+</div>
+</body>
+</html>
