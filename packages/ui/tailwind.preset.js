@@ -38,7 +38,9 @@ export default {
             text: '#9F1239',
           },
         },
-        // 背景色
+      },
+      backgroundColor: {
+        // 背景色：放在 backgroundColor 下，避免与 fontSize.text-base 冲突生成 text-base 颜色类
         base: 'var(--color-bg-base)',
         elevated: 'var(--color-bg-elevated)',
         sunken: 'var(--color-bg-sunken)',

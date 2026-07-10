@@ -114,6 +114,26 @@
   --color-info-text:      var(--sky-900);
   --color-info-icon:      var(--sky-500);
 
+  --color-success-bg:     rgba(16, 185, 129, 0.12);
+  --color-success-border: rgba(16, 185, 129, 0.30);
+  --color-success-text:   #A7F3D0;
+  --color-success-icon:   #34D399;
+
+  --color-warning-bg:     rgba(245, 158, 11, 0.12);
+  --color-warning-border: rgba(245, 158, 11, 0.30);
+  --color-warning-text:   #FDE68A;
+  --color-warning-icon:   #FBBF24;
+
+  --color-error-bg:       rgba(239, 68, 68, 0.12);
+  --color-error-border:   rgba(239, 68, 68, 0.25);
+  --color-error-text:     #FECDD3;
+  --color-error-icon:     #F87171;
+
+  --color-info-bg:        rgba(59, 130, 246, 0.12);
+  --color-info-border:    rgba(59, 130, 246, 0.30);
+  --color-info-text:      #BFDBFE;
+  --color-info-icon:      #60A5FA;
+
   /* ── 节点状态色（LogicNode 专用）── */
   --color-node-draft-bg:        var(--neutral-100);
   --color-node-draft-border:    var(--neutral-300);
