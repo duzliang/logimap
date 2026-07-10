@@ -12,7 +12,7 @@ const Card = React.forwardRef<
   const variantStyles = {
     default: '',
     interactive:
-      'cursor-pointer hover:border-neutral-300 hover:shadow-panel transition-all duration-150 dark:hover:border-neutral-600',
+      'cursor-pointer hover:border-neutral-300 hover:shadow-panel transition-[border-color,box-shadow,transform] duration-fast ease-settle dark:hover:border-neutral-600',
     selected:
       'border-2 border-violet-600 ring-4 ring-violet-100 dark:border-violet-500 dark:ring-violet-900/30',
   }

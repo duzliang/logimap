@@ -17,7 +17,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           'rounded-lg text-sm font-medium',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2',
           'disabled:pointer-events-none disabled:opacity-50',
-          'transition-colors duration-150',
+          // 统一状态层：hover 走「疾·落定」，按下如收笔轻按（scale 0.98）
+          'transition-[color,background-color,border-color,box-shadow,transform] duration-fast ease-settle',
+          'active:scale-[0.98] motion-reduce:active:scale-100',
           // 变体样式
           {
             // 主按钮：品牌紫

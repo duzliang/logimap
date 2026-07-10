@@ -6,7 +6,7 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
-  ({ className, variant = 'default', ...props }, ref) => {
+  ({ className, variant = 'default', children, ...props }, ref) => {
     // 根据 variant 确定样式
     const variantStyles = {
       default: 'bg-violet-100 text-violet-700 dark:bg-violet-900/20 dark:text-violet-200',
@@ -21,19 +21,31 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
       deprecated: 'bg-rose-50 text-rose-800 border border-rose-200 dark:bg-rose-900/20 dark:text-rose-200 dark:border-rose-800',
     }
 
+    // 节点生命周期状态：圆点 + 颜色 + 文字三重编码，色盲亦可辨（前注意加工）
+    const statusVariants = ['draft', 'review', 'approved', 'deprecated']
+    const hasDot = statusVariants.includes(variant)
+
     return (
       <div
         ref={ref}
         className={cn(
           // 基础样式
-          'inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium',
-          'transition-colors duration-150',
+          'inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium',
+          'transition-colors duration-fast ease-settle',
           // 变体样式
           variantStyles[variant],
           className
         )}
         {...props}
-      />
+      >
+        {hasDot && (
+          <span
+            aria-hidden="true"
+            className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-current opacity-80"
+          />
+        )}
+        {children}
+      </div>
     )
   }
 )
