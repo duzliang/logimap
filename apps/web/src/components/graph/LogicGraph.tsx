@@ -37,7 +37,7 @@ import { LogicEdge } from './LogicEdge'
 import { GraphToolbar } from './GraphToolbar'
 import { EdgeEditDialog } from './EdgeEditDialog'
 import { NodeDetailDialog } from './NodeDetailDialog'
-import { ImpactAnalysisDialog } from '@/components/impact/ImpactAnalysisDialog'
+import { LazyImpactAnalysisDialog } from '@/components/impact/LazyImpactAnalysisDialog'
 import { toast } from 'sonner'
 import { ArrowLeft, Plus } from 'lucide-react'
 import { Button, EmptyState, Skeleton } from '@logimap/ui'
@@ -574,7 +574,7 @@ function LogicGraphInner() {
         onImpactAnalysis={handleImpactAnalysis}
       />
 
-      <ImpactAnalysisDialog
+      <LazyImpactAnalysisDialog
         open={isImpactDialogOpen}
         onOpenChange={setIsImpactDialogOpen}
         nodeId={selectedNode?.id ?? ''}

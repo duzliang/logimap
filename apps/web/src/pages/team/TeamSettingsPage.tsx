@@ -12,7 +12,7 @@ import { roleBadgeVariant, teamRoles } from '@/lib/team'
 import { hasRole } from '@/lib/rbac'
 import { useTranslation } from '@/i18n'
 import { roleLabel } from '@/lib/i18n-labels'
-import { AgentContextExport } from '@/components/ai/AgentContextExport'
+import { LazyAgentContextExport } from '@/components/ai/LazyAgentContextExport'
 
 export function TeamSettingsPage() {
   const queryClient = useQueryClient()
@@ -216,7 +216,7 @@ export function TeamSettingsPage() {
             )}
           </CardContent>
         </Card>
-        <AgentContextExport teamId={currentTeamId} />
+        <LazyAgentContextExport teamId={currentTeamId} />
       </div>
 
       <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>

@@ -1,6 +1,7 @@
 import { Button } from '@logimap/ui'
 import { Plus, Layout, Maximize, List, Radar, FlaskConical } from 'lucide-react'
-import { GraphExportMenu, type GraphExportFormat } from './GraphExportMenu'
+import { type GraphExportFormat } from './GraphExportMenu'
+import { LazyGraphExportMenu } from './LazyGraphExportMenu'
 
 interface GraphToolbarProps {
   onCreateNode?: () => void
@@ -55,7 +56,7 @@ export function GraphToolbar({
           假设分析
         </Button>
         <div className="w-px h-6 bg-[var(--color-border-default)] mx-2" />
-        {onExport && <GraphExportMenu onExport={onExport} />}
+        {onExport && <LazyGraphExportMenu onExport={onExport} />}
         <Button variant="ghost" size="sm" onClick={onToggleListView}>
           <List className="w-4 h-4" />
         </Button>

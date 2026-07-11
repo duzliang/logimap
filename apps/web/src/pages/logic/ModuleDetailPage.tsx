@@ -11,7 +11,7 @@ import { Button, Card, CardContent, CardHeader, CardTitle, Badge, Dialog, Dialog
 import { LogicNodeEditor } from '@/components/editor/LogicNodeEditor'
 import { toast } from 'sonner'
 import { ArrowLeft, Plus, Pencil, Trash2, FileText, Network, History } from 'lucide-react'
-import { VersionHistoryDialog } from '@/components/versions/VersionHistoryDialog'
+import { LazyVersionHistoryDialog } from '@/components/versions/LazyVersionHistoryDialog'
 import { useTranslation } from '@/i18n'
 import { nodeStatusLabel, priorityLongLabel } from '@/lib/i18n-labels'
 
@@ -279,7 +279,7 @@ export function ModuleDetailPage() {
           />
         </DialogContent>
       </Dialog>
-      <VersionHistoryDialog
+      <LazyVersionHistoryDialog
         nodeId={versionNode?.id || ''}
         nodeName={versionNode?.name || ''}
         open={isVersionOpen}
