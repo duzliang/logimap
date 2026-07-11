@@ -7,7 +7,8 @@ export const zh = {
     save: '保存',
     cancel: '取消',
     confirm: '确认',
-    appName: 'LogiMap'
+    appName: 'LogiMap',
+    error: '出错了'
   },
   language: {
     label: '语言',
@@ -117,7 +118,10 @@ export const zh = {
     clear: '清空',
     clearConfirm: '确定要清空所有通知吗？',
     allMarkedRead: '全部标记为已读',
-    empty: '暂无通知'
+    empty: '暂无通知',
+    loadMore: '加载更多',
+    noMore: '没有更多通知了',
+    notificationCenter: '通知中心'
   },
   node: {
     statusDraft: '草稿',
@@ -267,7 +271,8 @@ export const en: Messages = {
     save: 'Save',
     cancel: 'Cancel',
     confirm: 'Confirm',
-    appName: 'LogiMap'
+    appName: 'LogiMap',
+    error: 'Something went wrong'
   },
   language: {
     label: 'Language',
@@ -377,7 +382,10 @@ export const en: Messages = {
     clear: 'Clear',
     clearConfirm: 'Clear all notifications?',
     allMarkedRead: 'All marked as read',
-    empty: 'No notifications'
+    empty: 'No notifications',
+    loadMore: 'Load more',
+    noMore: 'No more notifications',
+    notificationCenter: 'Notification center'
   },
   node: {
     statusDraft: 'Draft',

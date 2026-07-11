@@ -10,14 +10,24 @@ export interface FetchNotificationsParams {
   includeRead?: boolean
 }
 
-export async function fetchNotifications(params: FetchNotificationsParams = {}) {
+export interface FetchNotificationsResult {
+  notifications: Notification[]
+  nextCursor: string | undefined
+}
+
+export async function fetchNotifications(params: FetchNotificationsParams = {}): Promise<FetchNotificationsResult> {
   const searchParams = new URLSearchParams()
   if (params.cursor) searchParams.set('cursor', params.cursor)
   if (params.limit) searchParams.set('limit', String(params.limit))
   searchParams.set('includeRead', String(params.includeRead ?? true))
 
   const response = await apiClient.get(`/api/v1/notifications?${searchParams.toString()}`)
-  return response.data.data as Notification[]
+  const notifications = response.data.data as Notification[]
+  const last = notifications[notifications.length - 1]
+  return {
+    notifications,
+    nextCursor: last ? new Date(last.createdAt).toISOString() : undefined
+  }
 }
 
 export async function fetchUnreadCount() {
