@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { fetchModule, fetchSystem } from '@/api/systems.api'
 import { fetchLogicNodes, createLogicNode, updateLogicNode, deleteLogicNode } from '@/api/logicNodes.api'
 import type { LogicNode } from '@/types/logic-node.types'
@@ -130,6 +131,14 @@ export function ModuleDetailPage() {
     notes: node.notes || undefined
   })
 
+  const listContainerRef = useRef<HTMLDivElement>(null)
+  const cardVirtualizer = useVirtualizer({
+    count: nodes.length,
+    getScrollElement: () => listContainerRef.current,
+    estimateSize: () => 152,
+    overscan: 5
+  })
+
   if (loadingModule) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -185,72 +194,88 @@ export function ModuleDetailPage() {
             </Button>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {nodes.map((node) => (
-              <Card key={node.id} className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg">{node.name}</CardTitle>
-                      <div className="flex gap-2 mt-2">
-                        <Badge variant={
-                          node.status === 'APPROVED' ? 'default' :
-                          node.status === 'REVIEW' ? 'outline' :
-                          node.status === 'DEPRECATED' ? 'destructive' :
-                          'secondary'
-                        }>
-                          {nodeStatusLabel(t, node.status)}
-                        </Badge>
-                        <Badge variant={
-                          node.priority === 'HIGH' ? 'destructive' :
-                          node.priority === 'LOW' ? 'secondary' :
-                          'outline'
-                        }>
-                          {priorityLongLabel(t, node.priority)}
-                        </Badge>
-                      </div>
-                    </div>
+          <div
+            ref={listContainerRef}
+            className="overflow-auto max-h-[calc(100vh-16rem)] rounded-xl border border-[var(--color-border-default)] bg-[var(--color-bg-elevated)] p-4"
+          >
+            <div style={{ height: `${cardVirtualizer.getTotalSize()}px`, position: 'relative' }}>
+              {cardVirtualizer.getVirtualItems().map((virtualItem) => {
+                const node = nodes[virtualItem.index]
+                return (
+                  <div
+                    key={node.id}
+                    data-index={virtualItem.index}
+                    ref={cardVirtualizer.measureElement}
+                    className="absolute left-0 w-full px-2"
+                    style={{ transform: `translateY(${virtualItem.start}px)` }}
+                  >
+                    <Card className="hover:shadow-md transition-shadow mb-4">
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <CardTitle className="text-lg">{node.name}</CardTitle>
+                            <div className="flex gap-2 mt-2">
+                              <Badge variant={
+                                node.status === 'APPROVED' ? 'default' :
+                                node.status === 'REVIEW' ? 'outline' :
+                                node.status === 'DEPRECATED' ? 'destructive' :
+                                'secondary'
+                              }>
+                                {nodeStatusLabel(t, node.status)}
+                              </Badge>
+                              <Badge variant={
+                                node.priority === 'HIGH' ? 'destructive' :
+                                node.priority === 'LOW' ? 'secondary' :
+                                'outline'
+                              }>
+                                {priorityLongLabel(t, node.priority)}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      {node.summary && (
+                        <CardContent className="pt-0">
+                          <p className="text-sm text-[var(--color-text-secondary)] line-clamp-2 mb-4">{node.summary}</p>
+                          <div className="flex items-center justify-between text-sm text-[var(--color-text-secondary)]">
+                            <span>
+                              {t('logic.branchesCount', { count: node.branches?.length || 0 })} |{' '}
+                              {t('logic.edgeCasesCount', { count: node.edgeCases?.length || 0 })}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <NodeApprovalActions node={node} userRole={userRole} size="sm" />
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleOpenVersions(node)}
+                              >
+                                <History className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEdit(node)}
+                                title={node.status === 'APPROVED' ? '已确认节点需先「撤销确认」后才能编辑' : '编辑'}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDelete(node.id)}
+                                className="text-[var(--color-error-icon)] hover:text-[var(--color-error-text)]"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      )}
+                    </Card>
                   </div>
-                </CardHeader>
-                {node.summary && (
-                  <CardContent className="pt-0">
-                    <p className="text-sm text-[var(--color-text-secondary)] line-clamp-2 mb-4">{node.summary}</p>
-                    <div className="flex items-center justify-between text-sm text-[var(--color-text-secondary)]">
-                      <span>
-                        {t('logic.branchesCount', { count: node.branches?.length || 0 })} |{' '}
-                        {t('logic.edgeCasesCount', { count: node.edgeCases?.length || 0 })}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <NodeApprovalActions node={node} userRole={userRole} size="sm" />
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleOpenVersions(node)}
-                        >
-                          <History className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(node)}
-                          title={node.status === 'APPROVED' ? '已确认节点需先「撤销确认」后才能编辑' : '编辑'}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(node.id)}
-                          className="text-[var(--color-error-icon)] hover:text-[var(--color-error-text)]"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                )}
-              </Card>
-            ))}
+                )
+              })}
+            </div>
           </div>
         )}
       </main>
