@@ -466,6 +466,13 @@ function LogicGraphInner() {
 
   const moduleNodes = graphData?.nodes.map((n) => ({ id: n.id, name: n.name })) ?? []
 
+  const isEmpty = (graphData?.nodes.length ?? 0) === 0
+
+  const setFlowContainer = useCallback((el: HTMLDivElement | null) => {
+    flowRef.current = el
+    setContainerRef(el)
+  }, [setContainerRef])
+
   if (isLoading) {
     // 呼吸骨架：形状忠实于节点卡轮廓，减少加载完成时的布局跳动
     return (
@@ -489,13 +496,6 @@ function LogicGraphInner() {
       </div>
     )
   }
-
-  const isEmpty = (graphData?.nodes.length ?? 0) === 0
-
-  const setFlowContainer = useCallback((el: HTMLDivElement | null) => {
-    flowRef.current = el
-    setContainerRef(el)
-  }, [setContainerRef])
 
   return (
     <div className="relative w-full h-[calc(100vh-3.5rem)] bg-[var(--color-bg-base)]">
