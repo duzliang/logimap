@@ -10,8 +10,8 @@ import { useAuthStore } from '@/stores/auth.store'
 import { Button, Input, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@logimap/ui'
 import { toast } from 'sonner'
 import { Layers, Plus, Pencil, Trash2, ExternalLink, Sparkles, GitBranch } from 'lucide-react'
-import { BatchGenerateDialog } from '@/components/ai/BatchGenerateDialog'
-import { GitImportDialog } from '@/components/git/GitImportDialog'
+import { LazyBatchGenerateDialog } from '@/components/ai/LazyBatchGenerateDialog'
+import { LazyGitImportDialog } from '@/components/git/LazyGitImportDialog'
 import { useTranslation } from '@/i18n'
 
 export function SystemsPage() {
@@ -305,12 +305,12 @@ export function SystemsPage() {
           </form>
         </DialogContent>
       </Dialog>
-      <BatchGenerateDialog
+      <LazyBatchGenerateDialog
         open={isBatchOpen}
         onOpenChange={setIsBatchOpen}
         teamId={currentTeamId || ''}
       />
-      <GitImportDialog
+      <LazyGitImportDialog
         open={isImportOpen}
         onOpenChange={setIsImportOpen}
         teamId={currentTeamId || ''}

@@ -4,6 +4,7 @@ import { Bell, CheckCheck, Settings } from 'lucide-react'
 import { Button, Badge } from '@logimap/ui'
 import { NotificationItem } from './NotificationItem.js'
 import type { Notification } from '@logimap/types'
+import { useTranslation } from '@/i18n'
 
 interface NotificationDropdownProps {
   notifications: Notification[]
@@ -14,6 +15,8 @@ interface NotificationDropdownProps {
   onDelete: (id: string) => void
   onMarkAllRead: () => void
   onLoadMore?: () => void
+  hasNextPage?: boolean
+  isFetchingNextPage?: boolean
 }
 
 export function NotificationDropdown({
@@ -24,11 +27,14 @@ export function NotificationDropdown({
   onMarkUnread,
   onDelete,
   onMarkAllRead,
-  onLoadMore
+  onLoadMore,
+  hasNextPage,
+  isFetchingNextPage
 }: NotificationDropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -48,7 +54,7 @@ export function NotificationDropdown({
         size="icon"
         className="relative"
         onClick={() => setIsOpen(!isOpen)}
-        aria-label="通知"
+        aria-label={t('nav.notifications')}
       >
         <Bell className="h-5 w-5 text-[var(--color-text-secondary)]" />
         {unreadCount > 0 && (
@@ -62,14 +68,14 @@ export function NotificationDropdown({
         <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-xl border border-[var(--color-border-default)] bg-[var(--color-bg-elevated)] shadow-dialog"
         >
           <div className="flex items-center justify-between border-b border-[var(--color-border-default)] px-4 py-3">
-            <span className="font-medium text-[var(--color-text-primary)]">通知</span>
+            <span className="font-medium text-[var(--color-text-primary)]">{t('notifications.title')}</span>
             <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
                 onClick={() => onMarkAllRead()}
-                title="全部标记为已读"
+                title={t('notifications.markAllRead')}
                 disabled={unreadCount === 0}
               >
                 <CheckCheck className="h-4 w-4" />
@@ -82,7 +88,7 @@ export function NotificationDropdown({
                   setIsOpen(false)
                   navigate('/notifications')
                 }}
-                title="通知中心"
+                title={t('notifications.notificationCenter')}
               >
                 <Settings className="h-4 w-4" />
               </Button>
@@ -91,9 +97,9 @@ export function NotificationDropdown({
 
           <div className="max-h-96 overflow-y-auto p-2">
             {isLoading ? (
-              <div className="py-8 text-center text-sm text-[var(--color-text-tertiary)]">加载中...</div>
+              <div className="py-8 text-center text-sm text-[var(--color-text-tertiary)]">{t('common.loading')}</div>
             ) : notifications.length === 0 ? (
-              <div className="py-8 text-center text-sm text-[var(--color-text-tertiary)]">暂无通知</div>
+              <div className="py-8 text-center text-sm text-[var(--color-text-tertiary)]">{t('notifications.empty')}</div>
             ) : (
               <div className="space-y-1">
                 {notifications.map((notification) => (
@@ -105,13 +111,14 @@ export function NotificationDropdown({
                     onDelete={onDelete}
                   />
                 ))}
-                {onLoadMore && (
+                {onLoadMore && hasNextPage && (
                   <Button
                     variant="ghost"
                     className="w-full text-sm text-[var(--color-text-tertiary)]"
                     onClick={() => onLoadMore()}
+                    disabled={isFetchingNextPage}
                   >
-                    加载更多
+                    {isFetchingNextPage ? t('common.loading') : t('notifications.loadMore')}
                   </Button>
                 )}
               </div>

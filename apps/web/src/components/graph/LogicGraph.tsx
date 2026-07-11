@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useRef } from 'react'
+import { useCallback, useEffect, useState, useRef, useMemo } from 'react'
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -37,12 +37,14 @@ import { LogicEdge } from './LogicEdge'
 import { GraphToolbar } from './GraphToolbar'
 import { EdgeEditDialog } from './EdgeEditDialog'
 import { NodeDetailDialog } from './NodeDetailDialog'
-import { ImpactAnalysisDialog } from '@/components/impact/ImpactAnalysisDialog'
+import { LazyImpactAnalysisDialog } from '@/components/impact/LazyImpactAnalysisDialog'
 import { toast } from 'sonner'
 import { ArrowLeft, Plus } from 'lucide-react'
 import { Button, EmptyState, Skeleton } from '@logimap/ui'
 import { useAuthStore } from '@/stores/auth.store'
 import type { ImpactScope } from '@logimap/types'
+import { useVisibleGraph } from './useVisibleGraph'
+import { useTranslation } from '@/i18n'
 
 const nodeTypes: NodeTypes = {
   logicNode: LogicNodeComponent
@@ -112,7 +114,8 @@ function LogicGraphInner() {
   const [searchParams] = useSearchParams()
   const queryClient = useQueryClient()
   const { fitView } = useReactFlow()
-  const flowRef = useRef<HTMLDivElement>(null)
+  const { t } = useTranslation()
+  const flowRef = useRef<HTMLDivElement | null>(null)
   const { currentTeamId, teams } = useAuthStore()
   const currentTeam = teams.find((t) => t.id === currentTeamId)
   const userRole = currentTeam?.role || 'VIEWER'
@@ -222,70 +225,89 @@ function LogicGraphInner() {
     }
   })
 
-  // 转换图谱数据为 React Flow 格式
-  useEffect(() => {
-    if (graphData) {
-      const searchHighlightSet = new Set(matchedNodeIds)
-      // 影响分析的三层作用域 = BFS 图距（hop 1/2/3），用于墨滴涟漪的逐层错峰
-      const impactHopById = new Map<string, number>()
-      if (whatIfScope) {
-        // 源节点自己应为焦点（hop 0），不应被云雾雾化
-        impactHopById.set(whatIfScope.startNodeId, 0)
-        whatIfScope.direct.forEach((n) => impactHopById.set(n.id, 1))
-        whatIfScope.indirect.forEach((n) => { if (!impactHopById.has(n.id)) impactHopById.set(n.id, 2) })
-        whatIfScope.thirdLevel.forEach((n) => { if (!impactHopById.has(n.id)) impactHopById.set(n.id, 3) })
-      }
-      const impactNodeIds = new Set(impactHopById.keys())
-      const hasSearchHighlight = searchHighlightSet.size > 0
-      const hasImpactHighlight = impactNodeIds.size > 0
-      const highlightSet = hasImpactHighlight ? impactNodeIds : searchHighlightSet
-      const hasHighlight = hasSearchHighlight || hasImpactHighlight
-
-      const flowNodes: Node[] = graphData.nodes.map((node) => ({
-        id: node.id,
-        type: 'logicNode',
-        position: { x: node.positionX || 0, y: node.positionY || 0 },
-        data: {
-          ...node,
-          highlighted: hasHighlight && highlightSet.has(node.id),
-          dimmed: hasHighlight && !highlightSet.has(node.id),
-          impactHop: hasImpactHighlight ? impactHopById.get(node.id) : undefined,
-          whatIf: isWhatIfMode
-        } as unknown as Record<string, unknown>
-      }))
-
-      const flowEdges: Edge[] = graphData.connections.map((conn) => {
-        const sourceHighlighted = highlightSet.has(conn.sourceId)
-        const targetHighlighted = highlightSet.has(conn.targetId)
-        return {
-          id: conn.id,
-          source: conn.sourceId,
-          target: conn.targetId,
-          type: 'default',
-          data: {
-            connectionType: conn.type,
-            label: conn.label || undefined,
-            highlighted: hasHighlight && (sourceHighlighted || targetHighlighted),
-            dimmed: hasHighlight && !sourceHighlighted && !targetHighlighted
-          } as Record<string, unknown>
-        }
-      })
-
-      setNodes(flowNodes)
-      setEdges(flowEdges)
+  // 转换图谱数据为 React Flow 格式（useMemo 保持引用稳定）
+  const { flowNodes, flowEdges, nodeCount } = useMemo(() => {
+    if (!graphData) return { flowNodes: [] as Node[], flowEdges: [] as Edge[], nodeCount: 0 }
+    const searchHighlightSet = new Set(matchedNodeIds)
+    // 影响分析的三层作用域 = BFS 图距（hop 1/2/3），用于墨滴涟漪的逐层错峰
+    const impactHopById = new Map<string, number>()
+    if (whatIfScope) {
+      // 源节点自己应为焦点（hop 0），不应被云雾雾化
+      impactHopById.set(whatIfScope.startNodeId, 0)
+      whatIfScope.direct.forEach((n) => impactHopById.set(n.id, 1))
+      whatIfScope.indirect.forEach((n) => { if (!impactHopById.has(n.id)) impactHopById.set(n.id, 2) })
+      whatIfScope.thirdLevel.forEach((n) => { if (!impactHopById.has(n.id)) impactHopById.set(n.id, 3) })
     }
+    const impactNodeIds = new Set(impactHopById.keys())
+    const hasSearchHighlight = searchHighlightSet.size > 0
+    const hasImpactHighlight = impactNodeIds.size > 0
+    const highlightSet = hasImpactHighlight ? impactNodeIds : searchHighlightSet
+    const hasHighlight = hasSearchHighlight || hasImpactHighlight
+    const compact = graphData.nodes.length > 200
+
+    const computedFlowNodes: Node[] = graphData.nodes.map((node) => ({
+      id: node.id,
+      type: 'logicNode',
+      position: { x: node.positionX || 0, y: node.positionY || 0 },
+      data: {
+        ...node,
+        compact,
+        highlighted: hasHighlight && highlightSet.has(node.id),
+        dimmed: hasHighlight && !highlightSet.has(node.id),
+        impactHop: hasImpactHighlight ? impactHopById.get(node.id) : undefined,
+        whatIf: isWhatIfMode
+      } as unknown as Record<string, unknown>
+    }))
+
+    const computedFlowEdges: Edge[] = graphData.connections.map((conn) => {
+      const sourceHighlighted = highlightSet.has(conn.sourceId)
+      const targetHighlighted = highlightSet.has(conn.targetId)
+      return {
+        id: conn.id,
+        source: conn.sourceId,
+        target: conn.targetId,
+        type: 'default',
+        data: {
+          connectionType: conn.type,
+          label: conn.label || undefined,
+          highlighted: hasHighlight && (sourceHighlighted || targetHighlighted),
+          dimmed: hasHighlight && !sourceHighlighted && !targetHighlighted
+        } as Record<string, unknown>
+      }
+    })
+
+    return { flowNodes: computedFlowNodes, flowEdges: computedFlowEdges, nodeCount: graphData.nodes.length }
   }, [graphData, matchedNodeIds, whatIfScope, isWhatIfMode])
+
+  useEffect(() => {
+    setNodes(flowNodes)
+    setEdges(flowEdges)
+  }, [flowNodes, flowEdges])
+
+  const { visibleNodes, visibleEdges, setContainerRef } = useVisibleGraph(nodes, edges)
+
+  // 拖拽保存防抖
+  const debouncedUpdatePosition = useMemo(() => {
+    const timers = new Map<string, ReturnType<typeof setTimeout>>()
+    return (nodeId: string, x: number, y: number) => {
+      const existing = timers.get(nodeId)
+      if (existing) clearTimeout(existing)
+      timers.set(
+        nodeId,
+        setTimeout(() => {
+          timers.delete(nodeId)
+          updatePositionMutation.mutate({ nodeId, x, y })
+        }, 300)
+      )
+    }
+  }, [updatePositionMutation])
 
   // 处理节点拖拽结束
   const onNodeDragStop = useCallback(
     (_: unknown, node: Node) => {
-      updatePositionMutation.mutate({
-        nodeId: node.id,
-        x: node.position.x,
-        y: node.position.y
-      })
+      debouncedUpdatePosition(node.id, node.position.x, node.position.y)
     },
-    [updatePositionMutation]
+    [debouncedUpdatePosition]
   )
 
   // 处理连线创建
@@ -444,6 +466,13 @@ function LogicGraphInner() {
 
   const moduleNodes = graphData?.nodes.map((n) => ({ id: n.id, name: n.name })) ?? []
 
+  const isEmpty = (graphData?.nodes.length ?? 0) === 0
+
+  const setFlowContainer = useCallback((el: HTMLDivElement | null) => {
+    flowRef.current = el
+    setContainerRef(el)
+  }, [setContainerRef])
+
   if (isLoading) {
     // 呼吸骨架：形状忠实于节点卡轮廓，减少加载完成时的布局跳动
     return (
@@ -468,8 +497,6 @@ function LogicGraphInner() {
     )
   }
 
-  const isEmpty = (graphData?.nodes.length ?? 0) === 0
-
   return (
     <div className="relative w-full h-[calc(100vh-3.5rem)] bg-[var(--color-bg-base)]">
       <GraphToolbar
@@ -483,7 +510,7 @@ function LogicGraphInner() {
             setIsNodeDialogOpen(false)
             setIsImpactDialogOpen(true)
           } else {
-            toast.info('请先选择一个节点')
+            toast.info(t('graph.selectNodeFirst'))
           }
         }}
         onWhatIfMode={handleWhatIfMode}
@@ -494,14 +521,20 @@ function LogicGraphInner() {
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
         <Button variant="outline" size="sm" onClick={() => navigate(`/systems/${module?.systemId}`)}>
           <ArrowLeft className="w-4 h-4 mr-2" />
-          返回系统
+          {t('graph.backToSystem')}
         </Button>
       </div>
 
-      <div ref={flowRef} className="w-full h-full">
+      {nodeCount > 500 && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20 rounded-full bg-[var(--color-warning-bg)] border border-[var(--color-warning-border)] px-4 py-2 text-sm text-[var(--color-warning-text)]">
+          {t('graph.largeGraphWarning')}
+        </div>
+      )}
+
+      <div ref={setFlowContainer} className="w-full h-full">
         <ReactFlow
-          nodes={nodes}
-          edges={edges}
+          nodes={visibleNodes}
+          edges={visibleEdges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
@@ -537,11 +570,11 @@ function LogicGraphInner() {
         <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
           <div className="pointer-events-auto">
             <EmptyState
-              message="纸墨已备，画下第一个节点。"
+              message={t('graph.emptyMessage')}
               action={
                 <Button onClick={handleCreateNode}>
                   <Plus className="mr-2 h-4 w-4" />
-                  创建节点
+                  {t('graph.emptyAction')}
                 </Button>
               }
             />
@@ -574,7 +607,7 @@ function LogicGraphInner() {
         onImpactAnalysis={handleImpactAnalysis}
       />
 
-      <ImpactAnalysisDialog
+      <LazyImpactAnalysisDialog
         open={isImpactDialogOpen}
         onOpenChange={setIsImpactDialogOpen}
         nodeId={selectedNode?.id ?? ''}
