@@ -260,6 +260,13 @@ export const zh = {
     deleteSuccess: '删除成功',
     deleteFailed: '删除失败',
     deleteConfirm: '确定要删除此节点吗？'
+  },
+  graph: {
+    backToSystem: '返回系统',
+    selectNodeFirst: '请先选择一个节点',
+    largeGraphWarning: '当前模块节点较多，建议使用列表视图或筛选条件缩小范围',
+    emptyMessage: '纸墨已备，画下第一个节点。',
+    emptyAction: '创建节点'
   }
 }
 
@@ -524,6 +531,13 @@ export const en: Messages = {
     deleteSuccess: 'Deleted',
     deleteFailed: 'Delete failed',
     deleteConfirm: 'Delete this node?'
+  },
+  graph: {
+    backToSystem: 'Back to system',
+    selectNodeFirst: 'Please select a node first',
+    largeGraphWarning: 'This module has many nodes. Use list view or filters to narrow down.',
+    emptyMessage: 'The paper and ink are ready. Draw the first node.',
+    emptyAction: 'Create node'
   }
 }
 

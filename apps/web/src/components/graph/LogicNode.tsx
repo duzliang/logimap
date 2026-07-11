@@ -83,7 +83,7 @@ export const LogicNodeComponent = memo(({ data, selected }: NodeProps<LogicNodeT
           </span>
         </div>
 
-        {data.summary && (
+        {!data.compact && data.summary && (
           <p className="text-xs text-[var(--color-text-secondary)] line-clamp-2 mb-2">
             {data.summary}
           </p>
