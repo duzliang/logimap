@@ -1,5 +1,5 @@
 import { Suspense, type ReactNode } from 'react'
-import { DialogHeader, DialogTitle, DialogDescription, Skeleton } from '@logimap/ui'
+import { Skeleton } from '@logimap/ui'
 
 interface LazyDialogBoundaryProps {
   children: ReactNode
@@ -24,13 +24,13 @@ export function LazyDialogBoundary({ children, title, description }: LazyDialogB
   return (
     <Suspense
       fallback={
-        <>
-          <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
-            {description && <DialogDescription>{description}</DialogDescription>}
-          </DialogHeader>
+        <div className="space-y-4 py-2">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">{title}</h2>
+            {description && <p className="text-sm text-[var(--color-text-secondary)]">{description}</p>}
+          </div>
           <DialogSkeleton />
-        </>
+        </div>
       }
     >
       {children}

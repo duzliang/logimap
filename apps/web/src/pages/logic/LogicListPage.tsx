@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   flexRender,
@@ -239,6 +240,17 @@ export function LogicListPage() {
     getCoreRowModel: getCoreRowModel()
   })
 
+  const tableContainerRef = useRef<HTMLDivElement>(null)
+
+  const rowVirtualizer = useVirtualizer({
+    count: table.getRowModel().rows.length,
+    getScrollElement: () => tableContainerRef.current,
+    estimateSize: () => 64,
+    overscan: 10
+  })
+
+  const virtualItems = rowVirtualizer.getVirtualItems()
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -285,15 +297,24 @@ export function LogicListPage() {
             />
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
+          <div ref={tableContainerRef} className="overflow-auto max-h-[calc(100vh-16rem)] rounded-md border border-[var(--color-border-default)]">
+            <table className="w-full table-fixed">
+              <thead className="sticky top-0 z-10 bg-[var(--color-bg-elevated)]">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id} className="border-b border-[var(--color-border-default)]">
-                    {headerGroup.headers.map((header) => (
+                    {headerGroup.headers.map((header, idx) => (
                       <th
                         key={header.id}
-                        className="h-12 px-4 text-left align-middle font-medium text-[var(--color-text-secondary)]"
+                        className={[
+                          'h-12 px-4 text-left align-middle font-medium text-[var(--color-text-secondary)]',
+                          idx === 0 ? 'w-[30%]' :
+                          idx === 1 ? 'w-[12%]' :
+                          idx === 2 ? 'w-[12%]' :
+                          idx === 3 ? 'w-[10%]' :
+                          idx === 4 ? 'w-[12%]' :
+                          idx === 5 ? 'w-[16%]' :
+                          'w-[18%]'
+                        ].join(' ')}
                       >
                         {flexRender(
                           header.column.columnDef.header,
@@ -304,19 +325,28 @@ export function LogicListPage() {
                   </tr>
                 ))}
               </thead>
-              <tbody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="border-b border-[var(--color-border-default)] hover:bg-[var(--color-bg-base)]">
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="p-4">
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
+              <tbody className="relative w-full" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+                {virtualItems.map((virtualRow) => {
+                  const row = table.getRowModel().rows[virtualRow.index]
+                  return (
+                    <tr
+                      key={row.id}
+                      data-index={virtualRow.index}
+                      ref={rowVirtualizer.measureElement}
+                      className="border-b border-[var(--color-border-default)] hover:bg-[var(--color-bg-base)] absolute left-0 w-full"
+                      style={{ transform: `translateY(${virtualRow.start}px)` }}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <td key={cell.id} className="p-4 overflow-hidden text-ellipsis whitespace-nowrap">
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
 
