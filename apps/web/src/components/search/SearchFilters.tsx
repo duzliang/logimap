@@ -100,7 +100,7 @@ export function SearchFilters({ filters, systems, modules, members, onChange }: 
           value={filters.moduleId}
           onChange={(e) => onChange({ ...filters, moduleId: e.target.value })}
           disabled={!filters.systemId}
-          className="w-full h-9 px-3 rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-base)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-default)] disabled:opacity-50"
+          className="w-full h-9 px-3 rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-base)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-default)] disabled:cursor-not-allowed disabled:bg-[var(--color-bg-sunken)] disabled:text-[var(--color-text-disabled)]"
         >
           <option value="">全部模块</option>
           {modules.map((module) => (

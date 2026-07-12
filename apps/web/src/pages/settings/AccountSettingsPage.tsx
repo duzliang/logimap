@@ -73,7 +73,7 @@ export function AccountSettingsPage() {
                   disabled={mutation.isPending}
                   onClick={() => mutation.mutate(!enabled)}
                   className={cn(
-                    'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-border-focus)] disabled:opacity-50',
+                    'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-border-focus)] disabled:cursor-wait disabled:opacity-90',
                     enabled ? 'bg-[var(--color-brand-default)]' : 'bg-[var(--color-border-strong)]'
                   )}
                 >
