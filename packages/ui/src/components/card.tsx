@@ -12,9 +12,10 @@ const Card = React.forwardRef<
   const variantStyles = {
     default: '',
     interactive:
-      'cursor-pointer hover:border-neutral-300 hover:shadow-panel transition-[border-color,box-shadow,transform] duration-fast ease-settle dark:hover:border-neutral-600',
+      'cursor-pointer hover:border-neutral-300 hover:shadow-panel transition-[border-color,box-shadow,transform] duration-fast ease-settle dark:hover:border-neutral-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2',
+    // 选中态：用 border（非 border-2）避免与默认卡片 1px 边框宽度差导致的布局跳动，靠 ring 强调
     selected:
-      'border-2 border-violet-600 ring-4 ring-violet-100 dark:border-violet-500 dark:ring-violet-900/30',
+      'border-violet-600 ring-4 ring-violet-100 dark:border-violet-500 dark:ring-violet-900/30',
   }
 
   return (
