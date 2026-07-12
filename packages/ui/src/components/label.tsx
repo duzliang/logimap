@@ -9,8 +9,9 @@ const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
       ref={ref}
       className={cn(
         'text-sm font-medium text-neutral-700 leading-none',
-        'peer-disabled:cursor-not-allowed peer-disabled:opacity-50',
-        'dark:text-neutral-300',
+        // 关联控件禁用时，标签随之褪为石灰（与「石」禁用态一致，不用 opacity）
+        'peer-disabled:cursor-not-allowed peer-disabled:text-neutral-400',
+        'dark:text-neutral-300 dark:peer-disabled:text-neutral-600',
         className
       )}
       {...props}
