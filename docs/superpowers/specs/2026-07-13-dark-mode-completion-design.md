@@ -21,7 +21,8 @@
 | # | 位置 | 问题 | 影响 |
 |---|------|------|------|
 | 1 | `packages/ui/src/styles/tokens.css:117-135` | success/warning/error/info 的**暗色值被写在 `:root` 块内**（紧跟 96-115 行的浅色定义之后），无条件覆盖浅色值；且 `.dark` 块（199 起）未再定义它们 | 🔴 **浅色模式**下所有 Alert/状态提示用的是暗色配色（半透明底 + 浅色文字），浅底上发灰不可读；暗色模式"歪打正着"正确 |
-| 2 | `packages/ui/src/components/` 的 Button / Input / Textarea / Card / Label 等 | 静息态（resting）硬编码 `neutral-*` / `white`；仅最近补的**禁用态 / aria-invalid 错误态**带 `dark:` 变体 | 🔴 暗色下 secondary/outline/ghost 按钮、输入框、卡片仍是浅底深字，破损 |
+| 2 | `packages/ui/src/components/button.tsx` | secondary/outline/ghost/link **静息态无 `dark:` 变体**（仅禁用态有） | 🔴 暗色下这些按钮浅底深字，破损 |
+| 2b | `input` / `textarea` / `card` / `label` | 静息态硬编码 `neutral-*`，但**已有完整 `dark:` 变体，暗色下工作正常** | 🟢 非 bug；用户选择随方案 B 一并迁移到 token，统一词汇（纯一致性重构，需防回归） |
 | 3 | `apps/web/src/styles/graph.css` + React Flow 内部 | React Flow 自带 `--xy-*` 默认变量全为浅色（minimap 底 `#fff`、edge stroke `#b1b1b7`、controls 按钮 `#fefefe`、handle `#1a192b`、attribution 底 `rgba(255,255,255,.5)` 等）；LogicGraph 只覆盖了容器 className，未覆盖这些内部默认 | 🟠 暗色图谱的边线/连线/控件/缩略图/连接点发白刺眼 |
 | 4 | `NotificationsPage`、`NotificationItem`、`NotificationDropdown`、`AccountSettingsPage` 等 | 页面级硬编码 `bg-violet-*` / `text-violet-*` / `bg-white` / `text-white`（部分已有 `dark:` 兜底，部分无） | 🟡 局部色斑，影响面小但破坏一致性 |
 
@@ -47,7 +48,10 @@
 
 - 浅色取值沿用当前视觉：`control-bg = neutral-100`、`hover = neutral-200`、`active = neutral-300`、`surface-hover = neutral-100/50`、`control-text = neutral-700`。
 - 暗色取值：`control-bg = neutral-800`、`hover = neutral-700`、`active = neutral-600`、`surface-hover = neutral-800`、`control-text = neutral-200`（与既有 `dark:disabled` 色阶同源，视觉连贯）。
-- 在 `tailwind.preset.js` 的 `backgroundColor` / `textColor` / `borderColor` 中登记对应工具类（如 `bg-control`、`bg-control-hover`、`text-control`、`bg-surface-hover`），供组件使用。
+**代码库既有约定（实现须遵循）：** 背景色用 preset 已注册的工具类（`bg-base`/`bg-elevated`/`bg-sunken`）；文字/边框/环用 **arbitrary-value** 写法 `text-[var(--color-text-…)]` / `border-[var(--color-border-…)]` / `ring-[var(--color-border-focus)]`（页面均如此，preset 未为 text/border 注册语义工具类）。因此：
+
+- 新控件**背景** token 登记进 `tailwind.preset.js` 的 `backgroundColor`（`control` / `control-hover` / `control-active` / `surface-hover`），与 base/elevated/sunken 一致，组件用 `bg-control` / `hover:bg-control-hover` 等。
+- 控件**文字/边框/环**直接用 arbitrary `[var(--color-…)]`，不改 preset。
 
 **组件迁移**（保持浅色外观不变，仅换成 token 使得暗色生效）：
 
