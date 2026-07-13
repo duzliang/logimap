@@ -2,7 +2,20 @@
 
 - 日期：2026-07-13
 - 任务：T4-3（DEVELOPMENT_PLAN.md）暗色模式完整支持
-- 状态：已批准方向，待用户复核本 spec
+- 状态：✅ 已实现并通过整分支终审 + 逐页暗色 E2E（2026-07-13）
+
+---
+
+## 0. 实现结果与已接受的 Minor 谐化（收尾追记）
+
+实现分支 `feat/t4-3-dark-mode`（f8eb654..3030cbe，11 个功能/文档 commit）。两处真实 bug（`:root` status 泄漏、Button 静息态暗色破损）已修复；shadcn 组件（Button/Input/Textarea/Card/Label）全部迁移到语义 token 且无 `dark:` 残留；图谱 minimap 遮罩补暗色（handle 经确认已由 LogicNode `!important` token 类主题化，故移除死代码规则）；通知品牌色 token 化。
+
+**验收**：chrome-devtools-mcp 逐页暗色 E2E 全通过（dashboard/account/tokens+创建对话框/notifications/systems/module-list/graph）；双模计算样式验证：暗色 `bg-control=#292524`、`bg-input=#1C1917`；浅色 status 恢复 `*-50` 亮底（泄漏已修）、控件 token 浅值 = 原 neutral 值。
+
+**已接受的 Minor 谐化**（终审确认非回归、非阻断，多为亚感知级；因单一语义 token 无法逐一精确匹配各组件历史个例值，统一收敛到全站语义 token）：
+- Label 静息 / CardDescription 文字 → `text-secondary`（浅色比原 neutral-700/500 略浅/深一档）。
+- Input/Textarea/Card 暗色边框 → `border-default`（#292524，原 neutral-700 #44403C，略细）；Card 暗色底 → `bg-elevated`（#1C1917，原 neutral-800 #292524）；均与全站语义 token 统一。
+- 主按钮暗色品牌色 → `--color-brand-default`（#6366F1，原固定 #4F46E5），与外壳既有品牌渲染一致。
 
 ---
 
@@ -23,7 +36,7 @@
 | 1 | `packages/ui/src/styles/tokens.css:117-135` | success/warning/error/info 的**暗色值被写在 `:root` 块内**（紧跟 96-115 行的浅色定义之后），无条件覆盖浅色值；且 `.dark` 块（199 起）未再定义它们 | 🔴 **浅色模式**下所有 Alert/状态提示用的是暗色配色（半透明底 + 浅色文字），浅底上发灰不可读；暗色模式"歪打正着"正确 |
 | 2 | `packages/ui/src/components/button.tsx` | secondary/outline/ghost/link **静息态无 `dark:` 变体**（仅禁用态有） | 🔴 暗色下这些按钮浅底深字，破损 |
 | 2b | `input` / `textarea` / `card` / `label` | 静息态硬编码 `neutral-*`，但**已有完整 `dark:` 变体，暗色下工作正常** | 🟢 非 bug；用户选择随方案 B 一并迁移到 token，统一词汇（纯一致性重构，需防回归） |
-| 3 | `apps/web/src/styles/graph.css` + React Flow 内部 | React Flow 自带 `--xy-*` 默认变量全为浅色（minimap 底 `#fff`、edge stroke `#b1b1b7`、controls 按钮 `#fefefe`、handle `#1a192b`、attribution 底 `rgba(255,255,255,.5)` 等）；LogicGraph 只覆盖了容器 className，未覆盖这些内部默认 | 🟠 暗色图谱的边线/连线/控件/缩略图/连接点发白刺眼 |
+| 3 | `apps/web/src/styles/graph.css` | 已有完整 `.dark .react-flow__*` 覆盖（edge/arrowhead/edge-label/minimap/controls/controls-button+svg 均有暗色值，attribution 已隐藏）；**未覆盖**：连接点 handle（默认 `#1a192b` 深色，暗底不可见）、minimap 遮罩色 | 🟡 暗色图谱主体已正常；仅 handle / minimap 遮罩两处需补 |
 | 4 | `NotificationsPage`、`NotificationItem`、`NotificationDropdown`、`AccountSettingsPage` 等 | 页面级硬编码 `bg-violet-*` / `text-violet-*` / `bg-white` / `text-white`（部分已有 `dark:` 兜底，部分无） | 🟡 局部色斑，影响面小但破坏一致性 |
 
 > 说明：`brand`（violet-600）与 `destructive`（rose-500）这类品牌/语义强调色在明暗两侧同值、且总是配 `text-white` 前景，属可接受，不在迁移范围。
@@ -76,29 +89,21 @@
 
 ### 3.3 缺陷 #3 修法
 
-在 `graph.css` 增加暗色覆盖块，重定义 React Flow 内部变量到「砚」token：
+`graph.css` 已用 `.dark .react-flow__*` 显式选择器覆盖了 edge/arrowhead/edge-label/minimap/controls 等主体。仅需**补两处暗色缺口**（追加 `.dark` 规则，沿用文件既有硬编码色值风格）：
 
 ```css
-.dark .react-flow {
-  --xy-edge-stroke-default: var(--color-border-strong);
-  --xy-edge-stroke-selected-default: var(--color-brand-default);
-  --xy-connectionline-stroke-default: var(--color-border-strong);
-  --xy-minimap-background-color-default: var(--color-bg-elevated);
-  --xy-minimap-mask-background-color-default: rgba(0,0,0,.4);
-  --xy-minimap-node-background-color-default: var(--color-border-strong);
-  --xy-controls-button-background-color-default: var(--color-bg-elevated);
-  --xy-controls-button-background-color-hover-default: var(--color-bg-sunken);
-  --xy-controls-button-color-default: var(--color-text-secondary);
-  --xy-controls-button-border-color-default: var(--color-border-default);
-  --xy-node-border-default: 1px solid var(--color-border-default);
-  --xy-node-background-color-default: var(--color-bg-elevated);
-  --xy-handle-background-color-default: var(--color-brand-default);
-  --xy-handle-border-color-default: var(--color-bg-base);
-  --xy-attribution-background-color-default: rgba(0,0,0,.5);
+/* 连接点 handle —— 默认 #1a192b 在暗底不可见 */
+.dark .react-flow__handle {
+  background: #818CF8;        /* 品牌浅紫，暗底可辨 */
+  border-color: #0C0A09;      /* 与画布底同色，做出描边 */
+}
+/* 小地图遮罩（视口外暗化区）—— 默认浅灰，暗色应压暗 */
+.dark .react-flow__minimap-mask {
+  fill: rgba(0, 0, 0, 0.45);
 }
 ```
 
-（最终键名以运行时 React Flow 实际变量为准，实现时对照 dist CSS 校订。）
+（选择器/属性以运行时 React Flow 实际结构为准，实现时在浏览器核验后微调。）
 
 ### 3.4 缺陷 #4 修法
 

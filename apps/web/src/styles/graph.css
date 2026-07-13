@@ -89,6 +89,11 @@
   border-color: #292524;
 }
 
+/* 小地图遮罩（视口外暗化区）—— 默认浅灰，暗色应压暗 */
+.dark .react-flow__minimap-mask {
+  fill: rgba(0, 0, 0, 0.45);
+}
+
 /* 控制条 */
 .react-flow__controls {
   border: 1px solid #E7E5E4;

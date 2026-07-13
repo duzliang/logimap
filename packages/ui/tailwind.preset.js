@@ -44,6 +44,14 @@ export default {
         base: 'var(--color-bg-base)',
         elevated: 'var(--color-bg-elevated)',
         sunken: 'var(--color-bg-sunken)',
+        // 输入表面
+        input: 'var(--color-bg-input)',
+        'input-focus': 'var(--color-bg-input-focus)',
+        // 控件交互面
+        control: 'var(--color-control-bg)',
+        'control-hover': 'var(--color-control-bg-hover)',
+        'control-active': 'var(--color-control-bg-active)',
+        'surface-hover': 'var(--color-surface-hover)',
       },
       borderRadius: {
         'xs': '4px',
