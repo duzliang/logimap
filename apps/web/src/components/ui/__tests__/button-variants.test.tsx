@@ -29,4 +29,16 @@ describe('Button 变体已迁移到语义 token（无裸 neutral 静息态）', 
     expect(cls).toContain('text-[var(--color-text-brand)]')
     expect(cls).not.toContain('text-violet-600')
   })
+
+  it('禁用态背景用精确匹配 token（default→bg-control, outline→bg-elevated），不落到页面底 bg-base/bg-sunken', () => {
+    const { getByRole: getDefault, unmount } = render(<Button disabled>x</Button>)
+    expect(getDefault('button').className).toContain('disabled:bg-control')
+    unmount()
+
+    const { getByRole: getOutline } = render(<Button variant="outline" disabled>x</Button>)
+    const cls = getOutline('button').className
+    expect(cls).toContain('disabled:bg-elevated')
+    expect(cls).not.toContain('disabled:bg-base')
+    expect(cls).not.toContain('disabled:bg-[var(--color-bg-sunken)]')
+  })
 })

@@ -17,7 +17,7 @@ const disabledStyles = {
   secondary:
     'disabled:bg-control disabled:text-[var(--color-text-tertiary)]',
   outline:
-    'disabled:bg-base disabled:text-[var(--color-text-tertiary)] disabled:border-[var(--color-border-default)]',
+    'disabled:bg-elevated disabled:text-[var(--color-text-tertiary)] disabled:border-[var(--color-border-default)]',
   ghost:
     'disabled:bg-transparent disabled:text-[var(--color-text-tertiary)]',
   destructive:
