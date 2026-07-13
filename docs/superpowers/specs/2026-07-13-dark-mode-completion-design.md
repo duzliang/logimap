@@ -23,7 +23,7 @@
 | 1 | `packages/ui/src/styles/tokens.css:117-135` | success/warning/error/info 的**暗色值被写在 `:root` 块内**（紧跟 96-115 行的浅色定义之后），无条件覆盖浅色值；且 `.dark` 块（199 起）未再定义它们 | 🔴 **浅色模式**下所有 Alert/状态提示用的是暗色配色（半透明底 + 浅色文字），浅底上发灰不可读；暗色模式"歪打正着"正确 |
 | 2 | `packages/ui/src/components/button.tsx` | secondary/outline/ghost/link **静息态无 `dark:` 变体**（仅禁用态有） | 🔴 暗色下这些按钮浅底深字，破损 |
 | 2b | `input` / `textarea` / `card` / `label` | 静息态硬编码 `neutral-*`，但**已有完整 `dark:` 变体，暗色下工作正常** | 🟢 非 bug；用户选择随方案 B 一并迁移到 token，统一词汇（纯一致性重构，需防回归） |
-| 3 | `apps/web/src/styles/graph.css` + React Flow 内部 | React Flow 自带 `--xy-*` 默认变量全为浅色（minimap 底 `#fff`、edge stroke `#b1b1b7`、controls 按钮 `#fefefe`、handle `#1a192b`、attribution 底 `rgba(255,255,255,.5)` 等）；LogicGraph 只覆盖了容器 className，未覆盖这些内部默认 | 🟠 暗色图谱的边线/连线/控件/缩略图/连接点发白刺眼 |
+| 3 | `apps/web/src/styles/graph.css` | 已有完整 `.dark .react-flow__*` 覆盖（edge/arrowhead/edge-label/minimap/controls/controls-button+svg 均有暗色值，attribution 已隐藏）；**未覆盖**：连接点 handle（默认 `#1a192b` 深色，暗底不可见）、minimap 遮罩色 | 🟡 暗色图谱主体已正常；仅 handle / minimap 遮罩两处需补 |
 | 4 | `NotificationsPage`、`NotificationItem`、`NotificationDropdown`、`AccountSettingsPage` 等 | 页面级硬编码 `bg-violet-*` / `text-violet-*` / `bg-white` / `text-white`（部分已有 `dark:` 兜底，部分无） | 🟡 局部色斑，影响面小但破坏一致性 |
 
 > 说明：`brand`（violet-600）与 `destructive`（rose-500）这类品牌/语义强调色在明暗两侧同值、且总是配 `text-white` 前景，属可接受，不在迁移范围。
@@ -76,29 +76,21 @@
 
 ### 3.3 缺陷 #3 修法
 
-在 `graph.css` 增加暗色覆盖块，重定义 React Flow 内部变量到「砚」token：
+`graph.css` 已用 `.dark .react-flow__*` 显式选择器覆盖了 edge/arrowhead/edge-label/minimap/controls 等主体。仅需**补两处暗色缺口**（追加 `.dark` 规则，沿用文件既有硬编码色值风格）：
 
 ```css
-.dark .react-flow {
-  --xy-edge-stroke-default: var(--color-border-strong);
-  --xy-edge-stroke-selected-default: var(--color-brand-default);
-  --xy-connectionline-stroke-default: var(--color-border-strong);
-  --xy-minimap-background-color-default: var(--color-bg-elevated);
-  --xy-minimap-mask-background-color-default: rgba(0,0,0,.4);
-  --xy-minimap-node-background-color-default: var(--color-border-strong);
-  --xy-controls-button-background-color-default: var(--color-bg-elevated);
-  --xy-controls-button-background-color-hover-default: var(--color-bg-sunken);
-  --xy-controls-button-color-default: var(--color-text-secondary);
-  --xy-controls-button-border-color-default: var(--color-border-default);
-  --xy-node-border-default: 1px solid var(--color-border-default);
-  --xy-node-background-color-default: var(--color-bg-elevated);
-  --xy-handle-background-color-default: var(--color-brand-default);
-  --xy-handle-border-color-default: var(--color-bg-base);
-  --xy-attribution-background-color-default: rgba(0,0,0,.5);
+/* 连接点 handle —— 默认 #1a192b 在暗底不可见 */
+.dark .react-flow__handle {
+  background: #818CF8;        /* 品牌浅紫，暗底可辨 */
+  border-color: #0C0A09;      /* 与画布底同色，做出描边 */
+}
+/* 小地图遮罩（视口外暗化区）—— 默认浅灰，暗色应压暗 */
+.dark .react-flow__minimap-mask {
+  fill: rgba(0, 0, 0, 0.45);
 }
 ```
 
-（最终键名以运行时 React Flow 实际变量为准，实现时对照 dist CSS 校订。）
+（选择器/属性以运行时 React Flow 实际结构为准，实现时在浏览器核验后微调。）
 
 ### 3.4 缺陷 #4 修法
 
