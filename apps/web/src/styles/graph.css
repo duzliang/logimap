@@ -89,6 +89,17 @@
   border-color: #292524;
 }
 
+/* 连接点 handle —— 默认 #1a192b 在暗底不可见 */
+.dark .react-flow__handle {
+  background: #818CF8;   /* 品牌浅紫，暗底可辨 */
+  border-color: #0C0A09; /* 与画布底同色形成描边 */
+}
+
+/* 小地图遮罩（视口外暗化区）—— 默认浅灰，暗色应压暗 */
+.dark .react-flow__minimap-mask {
+  fill: rgba(0, 0, 0, 0.45);
+}
+
 /* 控制条 */
 .react-flow__controls {
   border: 1px solid #E7E5E4;
