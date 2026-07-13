@@ -58,7 +58,7 @@ export function NotificationDropdown({
       >
         <Bell className="h-5 w-5 text-[var(--color-text-secondary)]" />
         {unreadCount > 0 && (
-          <Badge className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-violet-600 px-1 text-[10px] text-white">
+          <Badge className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-brand-default)] px-1 text-[10px] text-[var(--color-text-inverse)]">
             {unreadCount > 99 ? '99+' : unreadCount}
           </Badge>
         )}
