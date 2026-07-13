@@ -13,17 +13,17 @@ export interface ButtonProps
 // 禁用态「石」：语义色全部褪去；明暗由 token 统一切换
 const disabledStyles = {
   default:
-    'disabled:bg-[var(--color-bg-sunken)] disabled:text-[var(--color-text-disabled)]',
+    'disabled:bg-control disabled:text-[var(--color-text-tertiary)]',
   secondary:
-    'disabled:bg-[var(--color-bg-sunken)] disabled:text-[var(--color-text-disabled)]',
+    'disabled:bg-control disabled:text-[var(--color-text-tertiary)]',
   outline:
-    'disabled:bg-[var(--color-bg-base)] disabled:text-[var(--color-text-disabled)] disabled:border-[var(--color-border-default)]',
+    'disabled:bg-base disabled:text-[var(--color-text-tertiary)] disabled:border-[var(--color-border-default)]',
   ghost:
-    'disabled:bg-transparent disabled:text-[var(--color-text-disabled)]',
+    'disabled:bg-transparent disabled:text-[var(--color-text-tertiary)]',
   destructive:
-    'disabled:bg-[var(--color-bg-sunken)] disabled:text-[var(--color-text-disabled)]',
+    'disabled:bg-control disabled:text-[var(--color-text-tertiary)]',
   link:
-    'disabled:text-[var(--color-text-disabled)] disabled:no-underline',
+    'disabled:text-[var(--color-text-tertiary)] disabled:no-underline',
 } as const
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -50,7 +50,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             'bg-control text-[var(--color-control-text)] hover:bg-control-hover active:bg-control-active':
               variant === 'secondary',
             // 描边按钮
-            'bg-[var(--color-bg-elevated)] text-[var(--color-control-text)] border border-[var(--color-border-default)] hover:bg-surface-hover hover:border-[var(--color-border-strong)]':
+            'bg-elevated text-[var(--color-control-text)] border border-[var(--color-border-default)] hover:bg-surface-hover hover:border-[var(--color-border-strong)]':
               variant === 'outline',
             // 幽灵按钮
             'text-[var(--color-text-secondary)] bg-transparent hover:bg-surface-hover hover:text-[var(--color-text-primary)]':

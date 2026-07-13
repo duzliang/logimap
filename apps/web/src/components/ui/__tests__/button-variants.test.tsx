@@ -13,7 +13,7 @@ describe('Button 变体已迁移到语义 token（无裸 neutral 静息态）', 
   it('outline 用 bg-elevated + surface-hover，无 bg-white', () => {
     const { getByRole } = render(<Button variant="outline">x</Button>)
     const cls = getByRole('button').className
-    expect(cls).toContain('bg-[var(--color-bg-elevated)]')
+    expect(cls).toContain('bg-elevated')
     expect(cls).toContain('hover:bg-surface-hover')
     expect(cls).not.toContain('bg-white')
   })
