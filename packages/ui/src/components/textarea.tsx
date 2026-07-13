@@ -23,7 +23,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           'aria-[invalid=true]:focus:border-[var(--color-border-error)] aria-[invalid=true]:focus:ring-rose-500',
           // 禁用态「石」
           'disabled:cursor-not-allowed',
-          'disabled:bg-[var(--color-bg-sunken)] disabled:text-[var(--color-text-disabled)] disabled:border-[var(--color-border-default)] disabled:placeholder:text-[var(--color-text-disabled)]',
+          'disabled:bg-control disabled:text-[var(--color-text-tertiary)] disabled:border-[var(--color-border-default)] disabled:placeholder:text-[var(--color-text-disabled)]',
           // 过渡动画
           'transition-[background-color,border-color,box-shadow] duration-fast ease-settle',
           className
