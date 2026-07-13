@@ -114,25 +114,14 @@
   --color-info-text:      var(--sky-900);
   --color-info-icon:      var(--sky-500);
 
-  --color-success-bg:     rgba(16, 185, 129, 0.12);
-  --color-success-border: rgba(16, 185, 129, 0.30);
-  --color-success-text:   #A7F3D0;
-  --color-success-icon:   #34D399;
-
-  --color-warning-bg:     rgba(245, 158, 11, 0.12);
-  --color-warning-border: rgba(245, 158, 11, 0.30);
-  --color-warning-text:   #FDE68A;
-  --color-warning-icon:   #FBBF24;
-
-  --color-error-bg:       rgba(239, 68, 68, 0.12);
-  --color-error-border:   rgba(239, 68, 68, 0.25);
-  --color-error-text:     #FECDD3;
-  --color-error-icon:     #F87171;
-
-  --color-info-bg:        rgba(59, 130, 246, 0.12);
-  --color-info-border:    rgba(59, 130, 246, 0.30);
-  --color-info-text:      #BFDBFE;
-  --color-info-icon:      #60A5FA;
+  /* ── 控件交互面（secondary/ghost 等中性控件）+ 输入表面 ── */
+  --color-bg-input:        var(--neutral-50);  /* 输入框静息内凹底 */
+  --color-bg-input-focus:  var(--neutral-0);   /* 输入框聚焦白底 */
+  --color-control-bg:        var(--neutral-100); /* 次要按钮静息底 */
+  --color-control-bg-hover:  var(--neutral-200);
+  --color-control-bg-active: var(--neutral-300);
+  --color-control-text:      var(--neutral-700); /* 中性控件文字 */
+  --color-surface-hover:     var(--neutral-100); /* outline/ghost 悬停轻底 */
 
   /* ── 节点状态色（LogicNode 专用）── */
   --color-node-draft-bg:        var(--neutral-100);
@@ -197,6 +186,36 @@
 /* 暗色模式 Token（通过 .dark 类切换）   */
 /* ───────────────────────────────────── */
 .dark {
+  /* status 暗色（从 :root 迁回本处）*/
+  --color-success-bg:     rgba(16, 185, 129, 0.12);
+  --color-success-border: rgba(16, 185, 129, 0.30);
+  --color-success-text:   #A7F3D0;
+  --color-success-icon:   #34D399;
+
+  --color-warning-bg:     rgba(245, 158, 11, 0.12);
+  --color-warning-border: rgba(245, 158, 11, 0.30);
+  --color-warning-text:   #FDE68A;
+  --color-warning-icon:   #FBBF24;
+
+  --color-error-bg:       rgba(239, 68, 68, 0.12);
+  --color-error-border:   rgba(239, 68, 68, 0.25);
+  --color-error-text:     #FECDD3;
+  --color-error-icon:     #F87171;
+
+  --color-info-bg:        rgba(59, 130, 246, 0.12);
+  --color-info-border:    rgba(59, 130, 246, 0.30);
+  --color-info-text:      #BFDBFE;
+  --color-info-icon:      #60A5FA;
+
+  /* ── 控件交互面 + 输入表面（暗色）── */
+  --color-bg-input:        var(--neutral-900); /* #1C1917，原 dark:bg-neutral-900 */
+  --color-bg-input-focus:  var(--neutral-800); /* #292524，原 dark:focus:bg-neutral-800 */
+  --color-control-bg:        var(--neutral-800);
+  --color-control-bg-hover:  var(--neutral-700);
+  --color-control-bg-active: var(--neutral-600);
+  --color-control-text:      var(--neutral-200);
+  --color-surface-hover:     var(--neutral-800);
+
   --color-bg-base:     #0C0A09;
   --color-bg-elevated: #1C1917;
   --color-bg-sunken:   #0C0A09;
