@@ -22,7 +22,7 @@ const Card = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        'rounded-xl border border-[var(--color-border-default)] bg-[var(--color-bg-elevated)]',
+        'rounded-xl border border-[var(--color-border-default)] bg-elevated',
         'shadow-card',
         variantStyles[variant],
         className
