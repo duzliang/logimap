@@ -40,7 +40,8 @@
 | Phase 3 (v0.4.0) | 「砚」自然设计语言 v2（T4-3 相关）：动效 token 五档 + 缓动四曲、中文字体栈、图谱四签名动效（云雾聚焦/墨滴涟漪/落印/墨线流动）、统一组件状态层、EmptyState/Skeleton 三态、reduced-motion 降级 | ✅ 已提交（规范 + 前端落地，5 commit） |
 | Phase 3 (v0.4.0) | 国际化 i18n（T4-2）收尾：search/team/tokens/code-links/logic 页面文案迁移 t() + 共享标签助手 lib/i18n-labels（节点状态/优先级/角色） | ✅ 已提交 |
 | Phase 3 (v0.4.0) | 性能优化（T4-1）路由级代码分割：全部页面 React.lazy + Suspense 懒加载，重型图谱页（React Flow）独立 chunk；主 bundle 966KB→457KB，图谱拆出 268KB。/chrome 验证各懒加载路由渲染正常、无 chunk/Suspense 报错，35 web 单测通过 | ✅ 已提交 |
-| **下一步** | **T4-1 续（虚拟滚动 / 图谱分层 / 组件级懒加载）或 T4-3 暗色模式完善 / T4-4 CI/CD** | 🔄 待定 |
+| Phase 3 (v0.4.0) | 暗色模式完整支持（T4-3）：修 `:root` status 色暗值泄漏（浅色 Alert 恢复亮底）；扩控件/输入表面 token；Button/Input/Textarea/Card/Label 迁移到「砚」语义 token 并删 `dark:` 变体；修禁用态暗色融入页面回归；图谱 minimap 遮罩补暗；通知品牌色 token 化。chrome-devtools-mcp 逐页暗色 E2E + opus 整分支终审通过，48 web 单测绿。已合并 main（merge 52f53a9） | ✅ 已提交 |
+| **下一步** | **T4-4 CI/CD 自动化（GitHub Actions build/test/typecheck，零起步无依赖）或 T4-5 插件系统 / T4-6 知识库集成** | 🔄 待定 |
 
 > 下次会话直接从此任务开始，无需重新确认。
 > 「砚」设计规范全文见 `docs/superpowers/specs/2026-07-10-yan-design-language-design.md`；动效/字体 token 在 `packages/ui/src/styles/tokens.css` + `tailwind.preset.js`。
