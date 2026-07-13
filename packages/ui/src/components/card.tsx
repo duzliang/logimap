@@ -12,19 +12,18 @@ const Card = React.forwardRef<
   const variantStyles = {
     default: '',
     interactive:
-      'cursor-pointer hover:border-neutral-300 hover:shadow-panel transition-[border-color,box-shadow,transform] duration-fast ease-settle dark:hover:border-neutral-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2',
-    // 选中态：用 border（非 border-2）避免与默认卡片 1px 边框宽度差导致的布局跳动，靠 ring 强调
+      'cursor-pointer hover:border-[var(--color-border-strong)] hover:shadow-panel transition-[border-color,box-shadow,transform] duration-fast ease-settle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] focus-visible:ring-offset-2',
+    // 选中态：用 border（非 border-2）避免 1px 宽度差跳动，靠 ring 强调
     selected:
-      'border-violet-600 ring-4 ring-violet-100 dark:border-violet-500 dark:ring-violet-900/30',
+      'border-[var(--color-brand-default)] ring-4 ring-[var(--color-brand-muted)]',
   }
 
   return (
     <div
       ref={ref}
       className={cn(
-        'rounded-xl border border-neutral-200 bg-white',
+        'rounded-xl border border-[var(--color-border-default)] bg-[var(--color-bg-elevated)]',
         'shadow-card',
-        'dark:border-neutral-700 dark:bg-neutral-800',
         variantStyles[variant],
         className
       )}
@@ -53,8 +52,7 @@ const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      'text-lg font-semibold leading-none tracking-tight text-neutral-900',
-      'dark:text-neutral-100',
+      'text-lg font-semibold leading-none tracking-tight text-[var(--color-text-primary)]',
       className
     )}
     {...props}
@@ -69,8 +67,7 @@ const CardDescription = React.forwardRef<
   <p
     ref={ref}
     className={cn(
-      'text-sm text-neutral-500',
-      'dark:text-neutral-400',
+      'text-sm text-[var(--color-text-secondary)]',
       className
     )}
     {...props}
