@@ -115,7 +115,7 @@
 1. `pnpm --filter ui build`（若有构建产物）+ `pnpm --filter web build` 通过（类型 + 构建）。
 2. `pnpm --filter web test` 通过（现有 40 web 单测不回归）。
 3. 新增/更新 tokens 一致性单测：断言 `:root` 不再含 status 暗色泄漏、`.dark` 覆盖了 status + control token（以字符串/解析方式校验 `tokens.css`）。
-4. **真实 Chrome 逐页暗色 E2E**（dev server 已由用户启动）：切换到暗色后逐页截图核验 —— 仪表盘、系统列表/详情、逻辑列表、模块详情、搜索结果、通知中心、团队设置、API 令牌、账户设置、代码关联、**图谱页**。重点核验：方案 B 迁移过的 Button/Input/Card 在暗色的静息/hover/禁用态，以及图谱边线/控件/minimap。
+4. **真实 Chrome 逐页暗色 E2E** —— 用 **chrome-devtools-mcp**（`/chrome-devtools-mcp:chrome-devtools` 技能）驱动，dev server 已由用户启动。切换到暗色后逐页截图核验 —— 仪表盘、系统列表/详情、逻辑列表、模块详情、搜索结果、通知中心、团队设置、API 令牌、账户设置、代码关联、**图谱页**。重点核验：方案 B 迁移过的 Button/Input/Card 在暗色的静息/hover/禁用态，以及图谱边线/控件/minimap。截图对比明暗两态，确认无浅底深字、无发白刺眼。
 
 ## 6. 影响文件（预估）
 
