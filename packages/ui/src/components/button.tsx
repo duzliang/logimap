@@ -10,20 +10,20 @@ export interface ButtonProps
   loading?: boolean
 }
 
-// 禁用态「石」：语义色全部褪去，形（石灰）/静（无响应）/指（cursor）三重信号
+// 禁用态「石」：语义色全部褪去；明暗由 token 统一切换
 const disabledStyles = {
   default:
-    'disabled:bg-neutral-100 disabled:text-neutral-400 dark:disabled:bg-neutral-800 dark:disabled:text-neutral-600',
+    'disabled:bg-[var(--color-bg-sunken)] disabled:text-[var(--color-text-disabled)]',
   secondary:
-    'disabled:bg-neutral-100 disabled:text-neutral-400 dark:disabled:bg-neutral-800 dark:disabled:text-neutral-600',
+    'disabled:bg-[var(--color-bg-sunken)] disabled:text-[var(--color-text-disabled)]',
   outline:
-    'disabled:bg-neutral-50 disabled:text-neutral-400 disabled:border-neutral-200 dark:disabled:bg-neutral-900 dark:disabled:text-neutral-600 dark:disabled:border-neutral-800',
+    'disabled:bg-[var(--color-bg-base)] disabled:text-[var(--color-text-disabled)] disabled:border-[var(--color-border-default)]',
   ghost:
-    'disabled:bg-transparent disabled:text-neutral-400 dark:disabled:text-neutral-600',
+    'disabled:bg-transparent disabled:text-[var(--color-text-disabled)]',
   destructive:
-    'disabled:bg-neutral-100 disabled:text-neutral-400 dark:disabled:bg-neutral-800 dark:disabled:text-neutral-600',
+    'disabled:bg-[var(--color-bg-sunken)] disabled:text-[var(--color-text-disabled)]',
   link:
-    'disabled:text-neutral-400 disabled:no-underline dark:disabled:text-neutral-600',
+    'disabled:text-[var(--color-text-disabled)] disabled:no-underline',
 } as const
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -37,29 +37,29 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           // 基础样式
           'inline-flex items-center justify-center gap-2 whitespace-nowrap',
           'rounded-lg text-sm font-medium',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 focus-visible:ring-offset-2',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] focus-visible:ring-offset-2',
           // 统一状态层：hover 走「疾·落定」，按下如收笔轻按（scale 0.98）
           'transition-[color,background-color,border-color,box-shadow,transform] duration-fast ease-settle',
           'enabled:active:scale-[0.98] motion-reduce:active:scale-100',
           // 变体样式
           {
-            // 主按钮：品牌紫
-            'bg-violet-600 text-white hover:bg-violet-700 active:bg-violet-800':
+            // 主按钮：品牌
+            'bg-[var(--color-brand-default)] text-[var(--color-text-inverse)] hover:bg-[var(--color-brand-hover)] active:bg-[var(--color-brand-active)]':
               variant === 'default',
-            // 次要按钮：浅灰背景
-            'bg-neutral-100 text-neutral-700 hover:bg-neutral-200 active:bg-neutral-300':
+            // 次要按钮：中性控件面
+            'bg-control text-[var(--color-control-text)] hover:bg-control-hover active:bg-control-active':
               variant === 'secondary',
             // 描边按钮
-            'bg-white text-neutral-700 border border-neutral-200 hover:bg-neutral-50 hover:border-neutral-300':
+            'bg-[var(--color-bg-elevated)] text-[var(--color-control-text)] border border-[var(--color-border-default)] hover:bg-surface-hover hover:border-[var(--color-border-strong)]':
               variant === 'outline',
             // 幽灵按钮
-            'text-neutral-600 bg-transparent hover:bg-neutral-100 hover:text-neutral-900':
+            'text-[var(--color-text-secondary)] bg-transparent hover:bg-surface-hover hover:text-[var(--color-text-primary)]':
               variant === 'ghost',
-            // 危险按钮
-            'bg-rose-500 text-white hover:bg-rose-600 active:bg-rose-700 focus-visible:ring-rose-500':
+            // 危险按钮：rose 语义（明暗同值），白字走 inverse
+            'bg-rose-500 text-[var(--color-text-inverse)] hover:bg-rose-600 active:bg-rose-700 focus-visible:ring-rose-500':
               variant === 'destructive',
             // 链接按钮
-            'text-violet-600 underline-offset-4 hover:underline':
+            'text-[var(--color-text-brand)] underline-offset-4 hover:underline':
               variant === 'link',
           },
           // 禁用态：不可点必须一眼可辨——hover 由 enabled: 前缀隔离，光标给出「不可」反馈
