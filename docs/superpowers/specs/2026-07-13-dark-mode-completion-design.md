@@ -2,7 +2,20 @@
 
 - 日期：2026-07-13
 - 任务：T4-3（DEVELOPMENT_PLAN.md）暗色模式完整支持
-- 状态：已批准方向，待用户复核本 spec
+- 状态：✅ 已实现并通过整分支终审 + 逐页暗色 E2E（2026-07-13）
+
+---
+
+## 0. 实现结果与已接受的 Minor 谐化（收尾追记）
+
+实现分支 `feat/t4-3-dark-mode`（f8eb654..3030cbe，11 个功能/文档 commit）。两处真实 bug（`:root` status 泄漏、Button 静息态暗色破损）已修复；shadcn 组件（Button/Input/Textarea/Card/Label）全部迁移到语义 token 且无 `dark:` 残留；图谱 minimap 遮罩补暗色（handle 经确认已由 LogicNode `!important` token 类主题化，故移除死代码规则）；通知品牌色 token 化。
+
+**验收**：chrome-devtools-mcp 逐页暗色 E2E 全通过（dashboard/account/tokens+创建对话框/notifications/systems/module-list/graph）；双模计算样式验证：暗色 `bg-control=#292524`、`bg-input=#1C1917`；浅色 status 恢复 `*-50` 亮底（泄漏已修）、控件 token 浅值 = 原 neutral 值。
+
+**已接受的 Minor 谐化**（终审确认非回归、非阻断，多为亚感知级；因单一语义 token 无法逐一精确匹配各组件历史个例值，统一收敛到全站语义 token）：
+- Label 静息 / CardDescription 文字 → `text-secondary`（浅色比原 neutral-700/500 略浅/深一档）。
+- Input/Textarea/Card 暗色边框 → `border-default`（#292524，原 neutral-700 #44403C，略细）；Card 暗色底 → `bg-elevated`（#1C1917，原 neutral-800 #292524）；均与全站语义 token 统一。
+- 主按钮暗色品牌色 → `--color-brand-default`（#6366F1，原固定 #4F46E5），与外壳既有品牌渲染一致。
 
 ---
 
